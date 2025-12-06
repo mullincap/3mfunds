@@ -35,24 +35,30 @@
 
                     <!-- Start::header-content-right -->
                     <div class="header-content-right">
+                      <!-- Start::header-element -->
+                      <div class="header-element header-fullscreen">
+                          <!-- Start::header-link -->
+                          <a onclick="openFullscreen();" href="javascript:void(0);" class="header-link">
+                              <i class="bx bx-fullscreen full-screen-open header-link-icon"></i>
+                              <i class="bx bx-exit-fullscreen full-screen-close header-link-icon d-none"></i>
+                          </a>
+                          <!-- End::header-link -->
+                      </div>
+                      <!-- End::header-element -->
 
                         <!-- Start::header-element -->
-                        <div class="header-element header-search">
-                            <!-- Start::header-link -->
+                        <!--<div class="header-element header-search">
                             <a href="javascript:void(0);" class="header-link" data-bs-toggle="modal" data-bs-target="#searchModal">
                                 <i class="bx bx-search-alt-2 header-link-icon"></i>
                             </a>
-                            <!-- End::header-link -->
-                        </div>
+                        </div>-->
                         <!-- End::header-element -->
 
                         <!-- Start::header-element -->
-                        <div class="header-element country-selector">
-                            <!-- Start::header-link|dropdown-toggle -->
+                        <!--<div class="header-element country-selector">
                             <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside" data-bs-toggle="dropdown">
                                 <img src="{{ url_for('static', filename='assets/images/flags/us_flag.jpg') }}" alt="img" class="rounded-circle header-link-icon">
                             </a>
-                            <!-- End::header-link|dropdown-toggle -->
                             <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);">
@@ -103,7 +109,7 @@
                                     </a>
                                 </li>
                             </ul>
-                        </div>
+                        </div>-->
                         <!-- End::header-element -->
 
                         <!-- Start::header-element -->
@@ -127,12 +133,10 @@
 
                         <!-- Start::header-element -->
                         <div class="header-element cart-dropdown">
-                            <!-- Start::header-link|dropdown-toggle -->
                             <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside" data-bs-toggle="dropdown">
                                 <i class="bx bx-cart header-link-icon"></i>
                                 <span class="badge bg-primary rounded-pill header-icon-badge" id="cart-icon-badge">5</span>
                             </a>
-                            <!-- End::header-link|dropdown-toggle -->
                             <!-- Start::main-header-dropdown -->
                             <div class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
                                 <div class="p-3">
@@ -510,17 +514,6 @@
                         <!-- End::header-element -->
 
                         <!-- Start::header-element -->
-                        <div class="header-element header-fullscreen">
-                            <!-- Start::header-link -->
-                            <a onclick="openFullscreen();" href="javascript:void(0);" class="header-link">
-                                <i class="bx bx-fullscreen full-screen-open header-link-icon"></i>
-                                <i class="bx bx-exit-fullscreen full-screen-close header-link-icon d-none"></i>
-                            </a>
-                            <!-- End::header-link -->
-                        </div>
-                        <!-- End::header-element -->
-
-                        <!-- Start::header-element -->
                         <div class="header-element">
                             <!-- Start::header-link|dropdown-toggle -->
                             <a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
@@ -529,22 +522,19 @@
                                         <img src="{{ url_for('static', filename='assets/images/faces/9.jpg') }}" alt="img" width="32" height="32" class="rounded-circle">
                                     </div>
                                     <div class="d-sm-block d-none">
-                                        <p class="fw-semibold mb-0 lh-1">Json Taylor</p>
-                                        <span class="op-7 fw-normal d-block fs-11">Web Designer</span>
+                                        <p class="fw-semibold mb-0 lh-1">John Mullin</p>
+                                        <span class="op-7 fw-normal d-block fs-11"> Investor </span>
                                     </div>
                                 </div>
                             </a>
                             <!-- End::header-link|dropdown-toggle -->
                             <ul class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile">
-                                <li><a class="dropdown-item d-flex" href="javascript:void(0);"><i class="ti ti-user-circle fs-18 me-2 op-7"></i>Profile</a></li>
-                                <li><a class="dropdown-item d-flex" href="javascript:void(0);"><i class="ti ti-inbox fs-18 me-2 op-7"></i>Inbox <span class="badge bg-success-transparent ms-auto">25</span></a></li>
-                                <li><a class="dropdown-item d-flex border-block-end" href="javascript:void(0);"><i class="ti ti-clipboard-check fs-18 me-2 op-7"></i>Task Manager</a></li>
                                 <li><a class="dropdown-item d-flex" href="javascript:void(0);"><i class="ti ti-adjustments-horizontal fs-18 me-2 op-7"></i>Settings</a></li>
-                                <li><a class="dropdown-item d-flex border-block-end" href="javascript:void(0);"><i class="ti ti-wallet fs-18 me-2 op-7"></i>Bal: $7,12,950</a></li>
+                                <li><a class="dropdown-item d-flex border-block-end" href="javascript:void(0);"><i class="ti ti-wallet fs-18 me-2 op-7"></i>Bal: $7,950</a></li>
                                 <li><a class="dropdown-item d-flex" href="javascript:void(0);"><i class="ti ti-headset fs-18 me-2 op-7"></i>Support</a></li>
                                 <li><a class="dropdown-item d-flex" href="javascript:void(0);"><i class="ti ti-logout fs-18 me-2 op-7"></i>Log Out</a></li>
                             </ul>
-                        </div>  
+                        </div>
                         <!-- End::header-element -->
 
                         <!-- Start::header-element -->
