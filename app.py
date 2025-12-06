@@ -9,6 +9,5 @@ def index():
     return render_template('components/dashboards/index.html')
 
 
-
 if __name__ == '__main__':
     app.run(debug=True)
