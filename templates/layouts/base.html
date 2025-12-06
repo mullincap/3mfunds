@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
+<html lang="en" dir="ltr" data-nav-layout="horizontal" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
 
     <head>
 
@@ -10,9 +10,9 @@
         <meta name="Description" content="Starterkit - Flask Bootstrap5 Admin & Dashboard Template">
         <meta name="Author" content="Spruko Technologies Private Limited">
         <meta name="keywords" content="admin dashboard, flask template, bootstrap template, flask bootstrap template, admin template, python flask template, dashboard template bootstrap, flask admin, dashboard bootstrap 5, bootstrap admin, admin panel bootstrap, bootstrap 5 admin template">
-        
+
         <!-- TITLE -->
-        <title>{% block title %}Starterkit - Flask Bootstrap5 Admin & Dashboard Template{% endblock %}</title>
+        <title>{% block title %} 3M Funds {% endblock %}</title>
 
         <!-- FAVICON -->
         <link rel="icon" href="{{ url_for('static', filename='assets/images/brand-logos/favicon.ico') }}" type="image/x-icon">
@@ -25,7 +25,7 @@
 
         <!-- STYLES CSS -->
         <link href="{{ url_for('static', filename='assets/css/styles.css') }}" rel="stylesheet">
-        
+
         <!-- MAIN JS -->
         <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
 
@@ -55,13 +55,13 @@
             <!-- SIDEBAR -->
             {% include 'includes/sidebar.html' %}
             <!-- END SIDEBAR -->
-        
+
             <!-- MAIN-CONTENT -->
             <div class="main-content app-content">
                 {% block content %}{% endblock %}
             </div>
             <!-- END MAIN-CONTENT -->
-        
+
             <!-- SEARCHMODAL -->
             {% include 'includes/searchmodal.html' %}
             <!-- SEARCHMODAL -->
