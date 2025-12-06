@@ -1,10 +1,10 @@
 :root {
 	--body-bg-rgb : 									240, 241, 247;
-	--primary-rgb: 										132, 90, 223;
+	--primary-rgb: 										2, 245, 157;
 	--secondary-rgb :									35, 183, 229;
 	--warning-rgb :										245, 184, 73;
 	--info-rgb :										73, 182, 245;
-	--success-rgb :										38, 191, 148; 
+	--success-rgb :										38, 191, 148;
 	--danger-rgb :										230, 83, 60;
 	--light-rgb :										243, 246, 248;
 	--dark-rgb :										35, 35, 35;
@@ -12,7 +12,7 @@
 	--pink-rgb :                                       	231, 145, 188;
 	--teal-rgb : 										18, 194, 194;
 	--purple-rgb : 										137, 32, 173;
-	--default-body-bg-color:							rgb(var(--body-bg-rgb));		
+	--default-body-bg-color:							rgb(var(--body-bg-rgb));
 	--primary-color:	 								rgb(var(--primary-rgb));
 	--primary-border: 									rgb(var(--primary-rgb));
 	--primary01: 										rgba(var(--primary-rgb), 0.1);
@@ -27,10 +27,10 @@
 	--primary005: 										rgba(var(--primary-rgb), 0.05);
 	--default-font-family:    							'Inter', sans-serif;
 	--default-font-weight:								400;
-	--default-text-color:       						#333335;	
+	--default-text-color:       						#333335;
 	--default-border:									#f3f3f3;
-	--default-background: 								#f7f8f9;		
-	--menu-bg:											#fff;	
+	--default-background: 								#f7f8f9;
+	--menu-bg:											#fff;
 	--menu-prime-color:									#536485;
 	--menu-border-color:								#f3f3f3;
 	--header-bg:                                        #fff;
@@ -65,7 +65,7 @@
 	--white-7:											rgba(255,255,255, 0.7);
 	--white-8:											rgba(255,255,255, 0.8);
 	--white-9:											rgba(255,255,255, 0.9);
-	
+
 	/* Black set */
 	--black-1:											rgba(0,0,0, 0.1);
 	--black-2:											rgba(0,0,0, 0.2);
@@ -101,7 +101,7 @@ $default-border:										var(--default-border);
 /*Border Radius*/
 $default-radius:										0.5rem;
 
-/*Box Shadow*/ 
+/*Box Shadow*/
 // $box-shadow: 											0 4px 4px rgba(169, 184, 200, 0.15);
 $box-shadow: 											0 0.125rem 0 rgba(10, 10, 10, .04);
 
@@ -218,20 +218,20 @@ $black-9:												var(--black-9);
 	--menu-bg:										  	rgb(var(--body-bg-rgb));
 	--menu-border-color:								rgba(255,255,255,0.1);
 	--menu-prime-color: 								rgba(255,255,255,0.6);
-	--header-bg:										rgb(var(--body-bg-rgb));	
+	--header-bg:										rgb(var(--body-bg-rgb));
 	--header-prime-color: 								rgba(255,255,255,0.6);
 	--header-border-color:								rgba(255,255,255,0.1);
-	--custom-white:										rgb(var(--body-bg-rgb));		
-	--custom-black:										#fff;		
-	--default-border:									rgba(255,255,255,0.1);	
+	--custom-white:										rgb(var(--body-bg-rgb));
+	--custom-black:										#fff;
+	--default-border:									rgba(255,255,255,0.1);
 	--default-text-color:       						rgba(255,255,255,0.7);
-	--light-rgb:										43 ,46 ,49;	
-	--dark-rgb :										240 ,245 ,248; 	
-	--bootstrap-card-border:							rgba(255,255,255,0.1);		
+	--light-rgb:										43 ,46 ,49;
+	--dark-rgb :										240 ,245 ,248;
+	--bootstrap-card-border:							rgba(255,255,255,0.1);
 	--list-hover-focus-bg:								rgba(255,255,255,0.1);
 	--default-background:								rgba(255,255,255,0.07);
-	// --default-body-bg-color:							rgb(var(--body-bg-rgb),0.95);	
-	--default-body-bg-color:							rgb(var(--body-bg-rgb2));	
+	// --default-body-bg-color:							rgb(var(--body-bg-rgb),0.95);
+	--default-body-bg-color:							rgb(var(--body-bg-rgb2));
 	--text-muted: 										rgba(255,255,255,0.5);
 	--input-border: 									#313335;
 	--form-control-bg: 									#232628;
@@ -239,7 +239,7 @@ $black-9:												var(--black-9);
 	/* Gray Set */
     --gray-100: 										#110f0f;
     --gray-200: 										#17171c;
-    --gray-300: 										#393946;	
+    --gray-300: 										#393946;
     --gray-400: 										#505062;
     --gray-500: 										#73738c;
     --gray-600: 										#8f8fa3;
@@ -257,7 +257,7 @@ $black-9:												var(--black-9);
 	--white-7:											rgba(0,0,0,0.7);
 	--white-8:											rgba(0,0,0,0.8);
 	--white-9:											rgba(0,0,0,0.9);
-	
+
 	/* black set */
 	--black-1:											rgba(255,255,255,0.05);
 	--black-2:											rgba(255,255,255,0.2);
