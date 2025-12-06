@@ -27,7 +27,7 @@
                             <li class="slide__category"><span class="category-name">Main</span></li>
                             <!-- End::slide__category -->
 
-                            <!-- Start::slide -->
+                            <!--
                             <li class="slide has-sub">
                                 <a href="javascript:void(0);" class="side-menu__item">
                                     <i class="bx bx-home side-menu__icon"></i>
@@ -76,13 +76,22 @@
                                     </li>
                                 </ul>
                             </li>
+                          -->
+
+                            <!-- Start::slide -->
+                            <li class="slide">
+                                <a href="{{ url_for('index') }}" class="side-menu__item">
+                                    <i class="bx bx-store-alt side-menu__icon"></i>
+                                    <span class="side-menu__label">Home</span>
+                                </a>
+                            </li>
                             <!-- End::slide -->
 
                             <!-- Start::slide -->
                             <li class="slide has-sub">
                                 <a href="javascript:void(0);" class="side-menu__item">
                                     <i class="bx bx-layer side-menu__icon"></i>
-                                    <span class="side-menu__label">Nested Menu</span>
+                                    <span class="side-menu__label"> Market Data</span>
                                     <i class="fe fe-chevron-right side-menu__angle"></i>
                                 </a>
                                 <ul class="slide-menu child1">
@@ -116,6 +125,45 @@
                                 </ul>
                             </li>
                             <!-- End::slide -->
+                            <!-- Start::slide -->
+                            <li class="slide has-sub">
+                                <a href="javascript:void(0);" class="side-menu__item">
+                                    <i class="bx bx-layer side-menu__icon"></i>
+                                    <span class="side-menu__label"> Portfolio Data</span>
+                                    <i class="fe fe-chevron-right side-menu__angle"></i>
+                                </a>
+                                <ul class="slide-menu child1">
+                                    <li class="slide side-menu__label1">
+                                        <a href="javascript:void(0)">Nested Menu</a>
+                                    </li>
+                                    <li class="slide">
+                                        <a href="javascript:void(0);" class="side-menu__item">Nested-1</a>
+                                    </li>
+                                    <li class="slide has-sub">
+                                        <a href="javascript:void(0);" class="side-menu__item">Nested-2
+                                            <i class="fe fe-chevron-right side-menu__angle"></i></a>
+                                        <ul class="slide-menu child2">
+                                            <li class="slide">
+                                                <a href="javascript:void(0);" class="side-menu__item">Nested-2-1</a>
+                                            </li>
+                                            <li class="slide has-sub">
+                                                <a href="javascript:void(0);" class="side-menu__item">Nested-2-2
+                                                    <i class="fe fe-chevron-right side-menu__angle"></i></a>
+                                                <ul class="slide-menu child3">
+                                                    <li class="slide">
+                                                        <a href="javascript:void(0);" class="side-menu__item">Nested-2-2-1</a>
+                                                    </li>
+                                                    <li class="slide">
+                                                        <a href="javascript:void(0);" class="side-menu__item">Nested-2-2-2</a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                            <!-- End::slide -->
+
 
                         </ul>
                         <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"> <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path> </svg></div>
