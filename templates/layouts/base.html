@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light" data-menu-styles="dark" data-toggled="close">
+
+    <head>
+
+        <!-- META DATA -->
+        <meta charset="UTF-8">
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="Description" content="Starterkit - Flask Bootstrap5 Admin & Dashboard Template">
+        <meta name="Author" content="Spruko Technologies Private Limited">
+        <meta name="keywords" content="admin dashboard, flask template, bootstrap template, flask bootstrap template, admin template, python flask template, dashboard template bootstrap, flask admin, dashboard bootstrap 5, bootstrap admin, admin panel bootstrap, bootstrap 5 admin template">
+        
+        <!-- TITLE -->
+        <title>{% block title %}Starterkit - Flask Bootstrap5 Admin & Dashboard Template{% endblock %}</title>
+
+        <!-- FAVICON -->
+        <link rel="icon" href="{{ url_for('static', filename='assets/images/brand-logos/favicon.ico') }}" type="image/x-icon">
+
+        <!-- BOOTSTRAP CSS -->
+	    <link  id="style" href="{{ url_for('static', filename='assets/libs/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+        <!-- ICONS CSS -->
+        <link href="{{ url_for('static', filename='assets/css/icons.css') }}" rel="stylesheet">
+
+        <!-- STYLES CSS -->
+        <link href="{{ url_for('static', filename='assets/css/styles.css') }}" rel="stylesheet">
+        
+        <!-- MAIN JS -->
+        <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+
+        {% include 'includes/styles.html' %}
+        {% block styles %}{% endblock %}
+    </head>
+
+    <body>
+
+        <!-- SWITCHER -->
+        {% include 'includes/switcher.html' %}
+        <!-- SWITCHER END-->
+
+        <!-- GLOBAL LOADER -->
+        <div id="loader" >
+            <img src="{{ url_for('static', filename='assets/images/media/loader.svg') }}" alt="">
+        </div>
+        <!-- END GLOBAL LOADER -->
+
+        <!-- PAGE -->
+        <div class="page">
+
+            <!-- HEADER -->
+            {% include 'includes/header.html' %}
+            <!-- END HEADER -->
+
+            <!-- SIDEBAR -->
+            {% include 'includes/sidebar.html' %}
+            <!-- END SIDEBAR -->
+        
+            <!-- MAIN-CONTENT -->
+            <div class="main-content app-content">
+                {% block content %}{% endblock %}
+            </div>
+            <!-- END MAIN-CONTENT -->
+        
+            <!-- SEARCHMODAL -->
+            {% include 'includes/searchmodal.html' %}
+            <!-- SEARCHMODAL -->
+
+            <!-- FOOTER -->
+            {% include 'includes/footer.html' %}
+            <!-- FOOTER -->
+
+        </div>
+        <!-- END PAGE-->
+
+        <!-- SCRIPTS -->
+        {% include 'includes/scripts.html' %}
+        {% block scripts %}
+        {% endblock %}
+
+        <!-- Sticky JS -->
+        <script src="{{ url_for('static', filename='assets/js/sticky.js') }}"></script>
+
+        <!-- Custom JS -->
+        <script src="{{ url_for('static', filename='assets/js/custom.js') }}"></script>
+
+        <!-- Custom-Switcher JS -->
+        <script src="{{ url_for('static', filename='assets/js/custom-switcher.js') }}"></script>
+
+    </body>
+
+</html>
