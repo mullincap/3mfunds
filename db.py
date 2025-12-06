@@ -1,5 +1,7 @@
 import pymysql
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 print("connecting to db")
 def connect_db():
