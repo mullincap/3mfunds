@@ -94,15 +94,15 @@ window.loadMainChart = function(days) {
 
             const options = {
                 series: [
+                  {
+                      name: "Invested Capital",
+                      type: "area",
+                      data: investedSeries
+                  },
                     {
                         name: "Portfolio Value",
                         type: "area",
                         data: portfolioSeries
-                    },
-                    {
-                        name: "Invested Capital",
-                        type: "area",
-                        data: investedSeries
                     }
                 ],
 
@@ -116,17 +116,23 @@ window.loadMainChart = function(days) {
                 },
 
                 fill: {
-                    gradient: {colors: ["#4ecc48", "#23b7e5"], 
+                    gradient: {
+                        colors: ["#4ecc48", "#23b7e5"],
                         shade: "dark",
                         type: "vertical",
                         shadeIntensity: 0.3,
                         opacityFrom: 0.5,
                         opacityTo: 0.05,
                         stops: [0, 90, 100]
-                    }
+                    },
+                    opacity: [0.05, 1]
                 },
 
-                stroke: { curve: "smooth", width: 2 },
+                stroke: {
+                  curve: "smooth",
+                  width: [1,2],
+                  dashArray: [5, 0]     // Portfolio solid, Invested dashed
+                },
 
                 yaxis: {
                   labels: {
