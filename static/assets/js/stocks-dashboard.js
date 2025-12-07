@@ -208,4 +208,4 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
 // =====================================================
 //  DEFAULT LOAD — 1D
 // =====================================================
-loadMainChart(30);
+loadMainChart(1);
