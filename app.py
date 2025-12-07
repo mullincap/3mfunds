@@ -107,6 +107,8 @@ def index():
         kpi_returns=returns,
         kpi_returnrate=return_rate,
         kpi_returns_compact = format_compact_currency(returns),
+        kpi_portfolio_compact = format_compact_currency(portfolio),
+        kpi_invested_compact = format_compact_currency(invested),
 
         kpi_today_change= kpi_today_change,
         kpi_today_change_pct=kpi_today_change_pct,

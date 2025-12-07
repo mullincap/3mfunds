@@ -83,8 +83,38 @@ window.loadMainChart = function(days) {
 
             const investedSeries  = safePairs(data.timestamps, data.invested_value);
             const portfolioSeries = safePairs(data.timestamps, data.portfolio_value);
-
             const pnlSeries       = safePairs(data.timestamps, data.returns_diff);
+
+            // =========================================
+            // UPDATE RETURN KPI WHEN RANGE CHANGES
+            // =========================================
+            if (portfolioSeries.length > 1) {
+
+                let first = portfolioSeries[0][1];
+                let last  = portfolioSeries[portfolioSeries.length - 1][1];
+
+                let diff = last - first;
+                let pct  = (diff / first) * 100;
+
+                // Update Return Value
+                document.getElementById("kpi-return-amount").innerText =
+                    "$" + diff.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                // Update Return Percentage
+                let pctElem = document.getElementById("kpi-return-pct");
+
+                pctElem.innerHTML = `
+                    <span class="${pct >= 0 ? "text-success" : "text-danger"} fw-semibold">
+                        <i class="ti ti-chevron-${pct >= 0 ? "up" : "down"}"></i>
+                        ${pct.toFixed(2)}%
+                    </span>
+                `;
+            }
+
+            // ======== your existing chart code continues here ========
 
             // Destroy prior chart
             if (chart2) chart2.destroy();
@@ -182,9 +212,10 @@ window.loadMainChart = function(days) {
 //  RANGE BUTTON LOGIC (1D, 1W, 1M, etc.)
 // =====================================================
 document.querySelectorAll(".btn-group button").forEach(btn => {
-    btn.addEventListener("click", function() {
+    btn.addEventListener("click", function () {
 
-        // Update button appearance
+
+        // Reset styles on buttons
         document.querySelectorAll(".btn-group button").forEach(b => {
             b.classList.remove("btn-primary");
             b.classList.add("btn-primary-light");
@@ -193,9 +224,16 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
         this.classList.add("btn-primary");
         this.classList.remove("btn-primary-light");
 
-        // Determine range
-        const label = this.textContent.trim();
+        let label = this.textContent.trim();
+
+        console.log("Clicked:", label);
+
+        // ⭐ Update KPI label
+        document.getElementById("kpi-return-label").innerText = `${label} Return`;
+
+        // Load correct window
         if (label === "1D") loadMainChart(1);
+        else if (label === "3D") loadMainChart(3);
         else if (label === "1W") loadMainChart(7);
         else if (label === "1M") loadMainChart(30);
         else if (label === "3M") loadMainChart(90);
@@ -205,7 +243,15 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
 });
 
 
+
+
+
 // =====================================================
 //  DEFAULT LOAD — 1D
 // =====================================================
-loadMainChart(1);
+loadMainChart(3);
+
+const kpiLabel = document.getElementById("kpi-return-label");
+if (kpiLabel) {
+    kpiLabel.innerText = "3D Return";
+};

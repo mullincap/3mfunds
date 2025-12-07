@@ -47,7 +47,7 @@
                                         </div>
                                         <div class="d-flex flex-wrap align-items-center mt-md-0 mt-3 justify-content-evenly gap-4">
                                             <div class="text-md-end">
-                                                <span class="d-block fw-semibold">Total Cash</span>
+                                                <span class="d-block fw-semibold">Current Cash</span>
                                                 <span class="text-primary">
                                                   <div id="kpi-returns">
                                                       {{ kpi_returns_compact }}
@@ -192,37 +192,49 @@
                                                     </div>
                                                     <div class="btn-group" role="group" aria-label="Basic example">
 
-                                                        <button type="button" class="btn btn-primary btn-sm btn-wave waves-effect waves-light">1D</button>
+                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1D</button>
+                                                        <button type="button" class="btn btn-primary btn-sm btn-wave waves-effect waves-light">3D</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1W</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1M</button>
-                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">3M</button>
-                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">6M</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1Y</button>
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="d-flex alilgn-items-center justify-content-between gap-3 flex-wrap">
-                                                        <div class="d-flex flex-wrap flex-fill gap-3 ms-sm-5 ms-0">
+                                                      <div class="d-flex align-items-center">
+
+
+                                                        <div class="d-flex flex-wrap gap-3">
                                                             <div>
-                                                                <span class="d-block text-muted mb-1">Total Cash</span>
-                                                                <span class="d-block fw-semibold">
-                                                                  $5,384.40
-                                                                <span class="text-success ms-1 fs-12"><i class="ti ti-chevron-up"></i>1.22%</span></span>
-                                                            </div>
-                                                            <div>
-                                                                <span class="d-block text-muted mb-1">Total Returns</span>
-                                                                <span class="d-block fw-semibold">$25,458.20<span class="text-success ms-1 fs-12"><i class="ti ti-chevron-up"></i>10.14%</span></span>
+                                                                <span id="kpi-return-label" class="d-block text-muted mb-1">Return</span>
+
+                                                                <!-- Amount + Percentage side-by-side -->
+                                                                <div class="d-flex align-items-center">
+
+                                                                    <span id="kpi-return-amount" class="fw-semibold me-2">
+                                                                        $0
+                                                                    </span>
+
+                                                                    <span id="kpi-return-pct" class="fs-12 fw-semibold">
+                                                                        <i class="ti ti-chevron-up"></i> 0.00%
+                                                                    </span>
+
+                                                                </div>
                                                             </div>
                                                         </div>
+
+
+                                                          </div>
                                                         <div class="d-flex flex-wrap gap-3 text-end">
                                                             <div>
-                                                                <span class="d-block text-muted mb-1">Today Change</span>
+                                                                <span class="d-block text-muted mb-1">Today</span>
                                                                 <span class="d-block fw-semibold">
-                                                                  <div id="kpi-todaychange"><div id="kpi-today-change">{{ fmt_currency(kpi_today_change) }}</div></div>
+                                                                  <div id="kpi-todaychange">
+                                                                    <div id="kpi-today-change">{{ fmt_currency(kpi_today_change) }}</div></div>
                                                                 </span>
                                                             </div>
                                                             <div>
-                                                                <span class="d-block text-muted mb-1">Change In %</span>
+                                                                <span class="d-block text-muted mb-1">% Chg</span>
 
                                                                 <span class="d-block fw-semibold">
 
@@ -865,8 +877,6 @@
         <!-- STOCKS DASHBOARD JS -->
         <script src="{{ url_for('static', filename='assets/js/stocks-dashboard.js') }}"></script>
 
-        <!-- Load chart JS -->
-        <script src="{{ url_for('static', filename='js/stocks-dashboard.js') }}"></script>
 
 
 {% endblock %}
