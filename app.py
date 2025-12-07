@@ -23,38 +23,57 @@ def index():
 
 @app.route("/api/investments/timeseries")
 def investments_timeseries():
-    from datetime import datetime, timedelta
-
     days = request.args.get("days", None)
 
     conn = connect_db()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-    if days is not None:
-        days = int(days)
-        sql = """
+    if days:
+        cursor.execute("""
             SELECT timestamp_utc, invested_value, total_returns, portfolio_value
             FROM investments_timeseries
             WHERE timestamp_utc >= NOW() - INTERVAL %s DAY
             ORDER BY timestamp_utc ASC
-        """
-        cursor.execute(sql, (days,))
+        """, (int(days),))
     else:
-        sql = """
+        cursor.execute("""
             SELECT timestamp_utc, invested_value, total_returns, portfolio_value
             FROM investments_timeseries
             ORDER BY timestamp_utc ASC
-        """
-        cursor.execute(sql)
+        """)
 
     rows = cursor.fetchall()
     conn.close()
 
+    timestamps = []
+    invested = []
+    portfolio = []
+    returns = []
+    pnl = []
+
+    for r in rows:
+        try:
+            ts = r["timestamp_utc"].isoformat()
+            i  = float(r["invested_value"])
+            p  = float(r["portfolio_value"])
+            t  = float(r["total_returns"])
+            d  = p - i
+
+            timestamps.append(ts)
+            invested.append(i)
+            portfolio.append(p)
+            returns.append(t)
+            pnl.append(d)
+
+        except Exception as e:
+            print("BAD ROW:", r, e)  # Debug output    
+
     return jsonify({
-        "timestamps": [r["timestamp_utc"].isoformat() for r in rows],
-        "invested_value": [float(r["invested_value"]) for r in rows],
-        "total_returns": [float(r["total_returns"]) for r in rows],
-        "portfolio_value": [float(r["portfolio_value"]) for r in rows]
+        "timestamps": timestamps,
+        "invested_value": invested,
+        "portfolio_value": portfolio,
+        "total_returns": returns,
+        "returns_diff": pnl
     })
 
 if __name__ == '__main__':

@@ -62,10 +62,10 @@
                                                 <span class="d-block fw-semibold">Dividend</span>
                                                 <span class="text-info">$1.3k</span>
                                             </div>
-                                            <div class="text-md-end">
+                                            <!-- <div class="text-md-end">
                                                 <span class="d-block fw-semibold">Gain</span>
                                                 <span class="text-success">$116</span>
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                 </div>
@@ -115,7 +115,7 @@
                                                             </div>
                                                             <div>
                                                                 <span class="d-block text-muted">Portfolio Value</span>
-                                                                <span class="fs-16 fw-semibold">$25,920.20<i class="ti ti-arrow-narrow-up ms-1 text-success"></i></span>
+                                                                <span class="fs-16 fw-semibold">$23,920.20<i class="ti ti-arrow-narrow-up ms-1 text-success"></i></span>
                                                             </div>
                                                         </div>
                                                         <div>
@@ -137,7 +137,7 @@
                                                             </div>
                                                             <div>
                                                                 <span class="d-block text-muted">Total Returns</span>
-                                                                <span class="fs-16 fw-semibold">$5,920.20<i class="ti ti-arrow-narrow-up ms-1 text-success"></i></span>
+                                                                <span class="fs-16 fw-semibold">$3,920.20<i class="ti ti-arrow-narrow-up ms-1 text-success"></i></span>
                                                             </div>
                                                         </div>
                                                         <div>
@@ -159,7 +159,7 @@
                                                             </div>
                                                             <div>
                                                                 <span class="d-block text-muted">Return Rate</span>
-                                                                <span class="fs-16 fw-semibold">+29.6%<i class="ti ti-arrow-narrow-up ms-1 text-success"></i></span>
+                                                                <span class="fs-16 fw-semibold">+14.6%<i class="ti ti-arrow-narrow-up ms-1 text-success"></i></span>
                                                             </div>
                                                         </div>
                                                         <div>
@@ -178,8 +178,10 @@
                                                         Total Investments
                                                     </div>
                                                     <div class="btn-group" role="group" aria-label="Basic example">
-                                                        <button type="button" class="btn btn-primary btn-sm btn-wave waves-effect waves-light">1D</button>
+                                                        
+                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1D</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1W</button>
+                                                        <button type="button" class="btn btn-primary btn-sm btn-wave waves-effect waves-light">1M</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1M</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">3M</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">6M</button>
@@ -825,7 +827,7 @@
         <script src="{{ url_for('static', filename='assets/js/stocks-dashboard.js') }}"></script>
 
         <!-- Load chart JS -->
-
+        <script src="{{ url_for('static', filename='js/stocks-dashboard.js') }}"></script>
 
 
 {% endblock %}
