@@ -2,7 +2,8 @@ from flask import Flask, render_template, jsonify, request
 from db import connect_db
 from decimal import Decimal
 import pymysql
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import pytz
 
 
 from dotenv import load_dotenv
@@ -37,6 +38,52 @@ def fmt_currency(v):
     if v < 0:
         return f"-${abs(v):,.2f}"
     return f"${v:,.2f}"
+
+
+def get_daily_closes():
+    connection = connect_db()
+    phx = pytz.timezone("America/Phoenix")
+
+    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("""
+            SELECT timestamp_utc, portfolio_value
+            FROM investments_timeseries
+            WHERE timestamp_utc >= NOW() - INTERVAL 8 DAY
+            ORDER BY timestamp_utc ASC
+        """)
+        rows = cursor.fetchall()
+
+    # Group by day → pick last row of each day
+    daily = {}
+    for r in rows:
+        ts = r["timestamp_utc"].astimezone(phx)
+        day_key = ts.strftime("%Y-%m-%d")
+        daily[day_key] = r  # overwrite → ensures last row of day is the close
+
+    # Convert to sorted list, newest first
+    sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
+
+    results = []
+    for idx, (day_key, rec) in enumerate(sorted_days):
+        ts = rec["timestamp_utc"].astimezone(phx)
+        value = rec["portfolio_value"]
+
+        # Compute percent change vs previous day
+        if idx + 1 < len(sorted_days):
+            prev_value = sorted_days[idx + 1][1]["portfolio_value"]
+            pct_change = ((value - prev_value) / prev_value) * 100 if prev_value else 0
+        else:
+            pct_change = 0
+
+        results.append({
+            "day": ts.strftime("%a"),            # Mon, Tue, Wed
+            "date": ts.strftime("%b %d"),        # Dec 06
+            "value": value,
+            "pct": pct_change,
+            "datetime_obj": ts                   # ← REAL datetime for template
+        })
+
+    return results[1:8]   # 7 most recent days
 
 #dashboards
 @app.route('/')
@@ -96,7 +143,11 @@ def index():
         kpi_today_change = 0
         kpi_today_change_pct = 0
 
+    daily_closes = get_daily_closes()
+
     conn.close()
+
+
 
 
 
@@ -112,9 +163,20 @@ def index():
 
         kpi_today_change= kpi_today_change,
         kpi_today_change_pct=kpi_today_change_pct,
-        fmt_currency=fmt_currency
+        fmt_currency=fmt_currency,
+        daily_closes=daily_closes
 
     )
+
+
+@app.route("/historical")
+def historical():
+    message = "Hello world"
+    return render_template(
+        "components/historical/index.html",
+        message = message
+    )
+
 
 
 @app.route("/api/investments/timeseries")
