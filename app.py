@@ -40,9 +40,10 @@ def fmt_currency(v):
     return f"${v:,.2f}"
 
 
-def get_daily_closes():
+def get_daily_closes(tz):
     connection = connect_db()
     phx = pytz.timezone("America/Phoenix")
+    utc = pytz.UTC
 
     with connection.cursor(pymysql.cursors.DictCursor) as cursor:
         cursor.execute("""
@@ -56,8 +57,14 @@ def get_daily_closes():
     # Group by day → pick last row of each day
     daily = {}
     for r in rows:
-        ts = r["timestamp_utc"].astimezone(phx)
-        day_key = ts.strftime("%Y-%m-%d")
+        ts_utc = r["timestamp_utc"]
+
+        if ts_utc.tzinfo is None: ts_utc = utc.localize(ts_utc)
+
+        ts_local = ts_utc.astimezone(tz)
+
+        # ts = r["timestamp_utc"].astimezone(phx)
+        day_key = ts_local.strftime("%Y-%m-%d")
         daily[day_key] = r  # overwrite → ensures last row of day is the close
 
     # Convert to sorted list, newest first
@@ -83,7 +90,7 @@ def get_daily_closes():
             "datetime_obj": ts                   # ← REAL datetime for template
         })
 
-    return results[1:8]   # 7 most recent days
+    return results[:8]   # 7 most recent days
 
 #dashboards
 @app.route('/')
@@ -143,7 +150,14 @@ def index():
         kpi_today_change = 0
         kpi_today_change_pct = 0
 
-    daily_closes = get_daily_closes()
+    tz_arg = request.args.get("tz", "phx")   # default Phoenix
+
+    if tz_arg == "utc":
+        tz = pytz.UTC
+    else:
+        tz = pytz.timezone("America/Phoenix")
+
+    daily_closes = get_daily_closes(tz=tz)
 
     conn.close()
 
@@ -164,7 +178,9 @@ def index():
         kpi_today_change= kpi_today_change,
         kpi_today_change_pct=kpi_today_change_pct,
         fmt_currency=fmt_currency,
-        daily_closes=daily_closes
+
+        daily_closes=daily_closes,
+        tz_selected=tz_arg
 
     )
 
