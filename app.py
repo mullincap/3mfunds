@@ -245,48 +245,53 @@ def historical():
     conn = connect_db()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
 
+    # ---------- Full series for chart ----------
     cursor.execute("""
         SELECT timestamp_utc, cum_roi
         FROM historical_roi
         ORDER BY timestamp_utc ASC
     """)
-    rows = cursor.fetchall()
+    all_rows = cursor.fetchall()
 
-    chart_series = {
-        "labels": [row["timestamp_utc"].strftime("%Y-%m-%d %H:%M") for row in rows],
-        "values": [float(row["cum_roi"]) for row in rows]
+    chart_labels = [
+        row["timestamp_utc"].strftime("%Y-%m-%d %H:%M")
+        for row in all_rows
+    ]
+    chart_values = [float(row["cum_roi"]) for row in all_rows]
+
+    series_payload = {
+        "labels": chart_labels,
+        "values": chart_values,
     }
 
-    # Weekly snapshot query
+    # ---------- Wednesday 19:00 UTC snapshot table ----------
     cursor.execute("""
         SELECT timestamp_utc, cum_roi
         FROM historical_roi
-        WHERE WEEKDAY(timestamp_utc) = 2
+        WHERE WEEKDAY(timestamp_utc) = 2   -- 0=Mon,1=Tue,2=Wed
           AND HOUR(timestamp_utc) = 19
           AND MINUTE(timestamp_utc) = 0
         ORDER BY timestamp_utc ASC
     """)
-    summary_rows = cursor.fetchall()
+    wed_rows = cursor.fetchall()
     conn.close()
 
-    # Build output w/ week-over-week changes
     wed_summaries = []
     prev_cum = None
-
-    for row in summary_rows:
+    for row in wed_rows:
         cum = float(row["cum_roi"])
-        wow = cum - prev_cum if prev_cum is not None else None
-        prev_cum = cum
+        week_change = cum - prev_cum if prev_cum is not None else None
 
         wed_summaries.append({
             "date_utc": row["timestamp_utc"].strftime("%Y-%m-%d"),
             "cum_roi": cum,
-            "wow_change": wow   # may be None for first row
+            "week_change": week_change,
         })
+        prev_cum = cum
 
     return render_template(
         "components/historical/historical.html",
-        chart_series=chart_series,
+        series_payload=series_payload,
         wed_summaries=wed_summaries,
     )
 
