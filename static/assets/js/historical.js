@@ -138,42 +138,54 @@ document.addEventListener("DOMContentLoaded", function () {
             },
 
             series: [
-                {
-                    name: "Cumulative ROI",
-                    type: "area",
-                    data: mainSeries
-                },
-                {
-                    name: "Linear Avg",
-                    type: "line",
-                    data: linearAvgSeries,
-                    color: "#38bdf8",
-                    stroke: {
-                        width: 2,
-                        opacity: 1,
-                    },
-                    markers: {
-                        size: 0,
-                        strokeOpacity: 1,
-                        fillOpacity: 1
-                    }
-                },
-                {
-                    name: "Linear Regression",
-                    type: "line",
-                    data: regressionSeries,
-                    color: "#facc15",
-                    stroke: {
-                        width: 2,
-                        opacity: 1,
-                    },
-                    markers: {
-                        size: 0,
-                        strokeOpacity: 1,
-                        fillOpacity: 1
-                    }
-                }
-            ],
+                  // MAIN AREA SERIES
+                  {
+                      name: "Cumulative ROI",
+                      type: "line",
+                      data: mainSeries,
+                      stroke: {
+                          width: 2,
+                          curve: "smooth",
+                          colors: ["#00e676"],
+                          opacity: 0.2
+                      },
+                      zIndex: 1
+                  },
+
+                  // LINEAR AVG (FULL OPACITY ON TOP OF AREA)
+                  {
+                      name: "Linear Avg",
+                      type: "line",
+                      data: linearAvgSeries,
+                      color: "#3b82f6",
+                      stroke: {
+                          width: 3,
+                          curve: "straight",
+                          colors: ["#3b82f6"],
+                          opacity: 1
+                      },
+                      fill: { type: "solid", opacity: 1 },
+                      markers: { size: 0 },
+                      zIndex: 9999    // ← FORCES LINE ON TOP
+                  },
+
+                  // LINEAR REGRESSION (FULL OPACITY ON TOP OF AREA)
+                  {
+                      name: "Linear Regression",
+                      type: "line",
+                      data: regressionSeries,
+                      color: "#facc15",
+                      stroke: {
+                          width: 3,
+                          curve: "straight",
+                          colors: ["#facc15"],
+                          opacity: 1
+                      },
+                      fill: { type: "solid", opacity: 1 },
+                      markers: { size: 0 },
+                      zIndex: 9998   // just under Linear Avg
+                  }
+              ],
 
             colors: [
                 "#22c55e",
@@ -183,22 +195,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             stroke: {
                 curve: "smooth",
-                width: [2, 2, 2],
-                dashArray: [0, 4, 0],
+                width: [2, 1, 1],
+                dashArray: [0, 4, 4],
                 opacity: 1
             },
 
-            fill: {
-                type: "gradient",
-                gradient: {
-                    shade: "dark",
-                    type: "vertical",
-                    shadeIntensity: 0.4,
-                    opacityFrom: 0.35,
-                    opacityTo: 0.0,
-                    stops: [0, 90, 100]
-                }
-            },
+
 
             xaxis: { type: "datetime" },
             yaxis: {
