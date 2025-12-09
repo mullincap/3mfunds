@@ -267,7 +267,8 @@
                                             </div>
                                         </div>
                                         <div class="col-xl-4">
-                                            <div class="card custom-card">
+                                          <div class="row">
+                                            <div class="card custom-card" style="margin-bottom: 12px;">
                                                 <div class="card-header justify-content-between">
                                                     <div class="card-title">
                                                         This Week
@@ -347,6 +348,30 @@
                                                   </ul>
                                                 </div>
                                             </div>
+                                          </div>
+
+                                        <!-- Earnings Chart (Right Column) -->
+                                        <!-- Earnings Chart Row -->
+                                        <div class="row">
+
+                                                <div class="card custom-card">
+                                                    <div class="card-header justify-content-between">
+                                                        <div class="card-title">Daily Earnings</div>
+                                                        <div class="dropdown">
+                                                            <a href="javascript:void(0);" class="p-2 fs-12 text-muted" data-bs-toggle="dropdown">
+                                                                View All <i class="ri-arrow-down-s-line align-middle ms-1"></i>
+                                                            </a>                                                            
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="card-body">
+                                                        <div id="earnings-labels" data-json='{{ earnings_labels | tojson }}'></div>
+                                                        <div id="earnings-values" data-json='{{ earnings_values | tojson }}'></div>
+                                                        <div id="earnings"></div>
+                                                    </div>
+                                                </div>
+
+                                        </div>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -375,8 +400,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button type="button" class="btn btn-sm btn-light flex-fill">Short</button>
-                                                            <button type="button" class="btn btn-sm btn-primary-light flex-fill">Buy</button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -400,8 +424,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button type="button" class="btn btn-sm btn-light flex-fill">Short</button>
-                                                            <button type="button" class="btn btn-sm btn-primary-light flex-fill">Buy</button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -425,8 +448,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button type="button" class="btn btn-sm btn-light flex-fill">Short</button>
-                                                            <button type="button" class="btn btn-sm btn-primary-light flex-fill">Buy</button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -450,8 +472,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button type="button" class="btn btn-sm btn-light flex-fill">Short</button>
-                                                            <button type="button" class="btn btn-sm btn-primary-light flex-fill">Buy</button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -475,8 +496,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button type="button" class="btn btn-sm btn-light flex-fill">Short</button>
-                                                            <button type="button" class="btn btn-sm btn-primary-light flex-fill">Buy</button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -500,8 +520,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex gap-2">
-                                                            <button type="button" class="btn btn-sm btn-light flex-fill">Short</button>
-                                                            <button type="button" class="btn btn-sm btn-primary-light flex-fill">Buy</button>
+
                                                         </div>
                                                     </div>
                                                 </div>

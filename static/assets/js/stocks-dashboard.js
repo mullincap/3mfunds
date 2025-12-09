@@ -138,7 +138,7 @@ window.loadMainChart = function(days) {
 
                 chart: {
                     id: "investChart",
-                    height: 700,
+                    height: 720,
                     type: "area",
                     stacked: false,
                     toolbar: { show: false },
@@ -255,3 +255,69 @@ const kpiLabel = document.getElementById("kpi-return-label");
 if (kpiLabel) {
     kpiLabel.innerText = "3D Return";
 };
+
+
+
+// =====================================================
+//  EARNINGS CHART
+// =====================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Pull JSON from hidden divs
+    const labelsEl = document.getElementById("earnings-labels");
+    const valuesEl = document.getElementById("earnings-values");
+
+    if (!labelsEl || !valuesEl) {
+        console.warn("Earnings data not found in DOM.");
+        return;
+    }
+
+    const earningsLabels = JSON.parse(labelsEl.dataset.json);
+    const earningsValues = JSON.parse(valuesEl.dataset.json);
+
+    // -- Earnings Chart Rendering --
+    const element = document.getElementById("earnings");
+    if (element) {
+        const options = {
+            series: [{
+                name: "Daily Earnings",
+                data: earningsValues
+            }],
+            chart: { type: "bar", height: 200 },
+
+            colors: earningsValues.map((v, idx) =>
+                idx === earningsValues.length - 1
+                    ? "rgb(132, 90, 223)"        // highlight latest day
+                    : "rgba(132, 90, 223, 0.3)"
+            ),
+
+            plotOptions: {
+                bar: {
+                    columnWidth: "25%",
+                    distributed: true,
+                    borderRadius: 7,
+                }
+            },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+
+            xaxis: {
+                categories: earningsLabels,
+                axisTicks: { show: false },
+                axisBorder: { show: false },
+                labels: { rotate: -45 }
+            },
+
+            yaxis: {
+                labels: {
+                    formatter: (v) => "$" + v.toFixed(0)
+                }
+            },
+
+            grid: { borderColor: "rgba(255,255,255,0.06)" }
+        };
+
+        new ApexCharts(element, options).render();
+    }
+});

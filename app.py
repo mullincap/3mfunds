@@ -4,21 +4,15 @@ from decimal import Decimal
 import pymysql
 from datetime import datetime, timezone, timedelta
 import pytz
-
-
 from dotenv import load_dotenv
 load_dotenv()
 
 
-conn = connect_db()
-cursor = conn.cursor()
-cursor.execute("SELECT * FROM investments_timeseries LIMIT 3")
-print(cursor.fetchall())
-
 app = Flask(__name__)
 
 
-# helpers
+# helpers ==========================================
+
 def format_compact_currency(value):
     try:
         value = float(value)
@@ -38,6 +32,9 @@ def fmt_currency(v):
     if v < 0:
         return f"-${abs(v):,.2f}"
     return f"${v:,.2f}"
+
+
+# INDEX - helpers ==========================================
 
 
 def get_daily_closes(tz):
@@ -90,7 +87,51 @@ def get_daily_closes(tz):
             "datetime_obj": ts                   # ← REAL datetime for template
         })
 
-    return results[:8]   # 7 most recent days
+    return results[:7]   # 7 most recent days
+
+
+def get_daily_earnings():
+    connection = connect_db()
+    phx = pytz.timezone("America/Phoenix")
+
+    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("""
+            SELECT timestamp_utc, portfolio_value
+            FROM investments_timeseries
+            WHERE timestamp_utc >= NOW() - INTERVAL 30 DAY
+            ORDER BY timestamp_utc ASC
+        """)
+        rows = cursor.fetchall()
+
+    # Group closes by day
+    closes = {}
+    for r in rows:
+        ts = r["timestamp_utc"].astimezone(phx)
+        day_key = ts.strftime("%Y-%m-%d")
+        closes[day_key] = r["portfolio_value"]  # last value becomes daily close
+
+    # Convert to list sorted oldest → newest
+    day_items = sorted(closes.items())
+
+    earnings = []
+    prev_val = None
+
+    for day, value in day_items:
+        if prev_val is not None:
+            earnings.append({
+                "day": day,
+                "earn": value - prev_val
+            })
+        prev_val = value
+
+
+
+    return earnings[-7:]  # last 12 days for chart
+
+
+
+
+# INDEX - route ==========================================
 
 #dashboards
 @app.route('/')
@@ -159,10 +200,21 @@ def index():
 
     daily_closes = get_daily_closes(tz=tz)
 
+    earnings = get_daily_earnings()
+    print("EARNINGS STRUCTURE:", earnings)
+
+    #earnings_labels = [e['date'] for e in earnings]
+    #earnings_values = [e['earn'] for e in earnings]
+    # Convert day (YYYY-MM-DD) → 'Dec 02'
+    earnings_labels = [
+        datetime.strptime(e["day"], "%Y-%m-%d").strftime("%b %d")
+        for e in earnings
+        ]
+
+        # Convert Decimal → float
+    earnings_values = [float(e["earn"]) for e in earnings]
+
     conn.close()
-
-
-
 
 
     return render_template(
@@ -180,20 +232,63 @@ def index():
         fmt_currency=fmt_currency,
 
         daily_closes=daily_closes,
-        tz_selected=tz_arg
+        tz_selected=tz_arg,
+
+        earnings_data=earnings,
+        earnings_labels=earnings_labels,
+        earnings_values=earnings_values,
 
     )
-
 
 @app.route("/historical")
 def historical():
-    message = "Hello world"
+    conn = connect_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute("""
+        SELECT timestamp_utc, cum_roi
+        FROM historical_roi
+        ORDER BY timestamp_utc ASC
+    """)
+    rows = cursor.fetchall()
+
+    chart_series = {
+        "labels": [row["timestamp_utc"].strftime("%Y-%m-%d %H:%M") for row in rows],
+        "values": [float(row["cum_roi"]) for row in rows]
+    }
+
+    # Weekly snapshot query
+    cursor.execute("""
+        SELECT timestamp_utc, cum_roi
+        FROM historical_roi
+        WHERE WEEKDAY(timestamp_utc) = 2
+          AND HOUR(timestamp_utc) = 19
+          AND MINUTE(timestamp_utc) = 0
+        ORDER BY timestamp_utc ASC
+    """)
+    summary_rows = cursor.fetchall()
+    conn.close()
+
+    # Build output w/ week-over-week changes
+    wed_summaries = []
+    prev_cum = None
+
+    for row in summary_rows:
+        cum = float(row["cum_roi"])
+        wow = cum - prev_cum if prev_cum is not None else None
+        prev_cum = cum
+
+        wed_summaries.append({
+            "date_utc": row["timestamp_utc"].strftime("%Y-%m-%d"),
+            "cum_roi": cum,
+            "wow_change": wow   # may be None for first row
+        })
+
     return render_template(
-        "components/historical/index.html",
-        message = message
+        "components/historical/historical.html",
+        chart_series=chart_series,
+        wed_summaries=wed_summaries,
     )
-
-
 
 @app.route("/api/investments/timeseries")
 def investments_timeseries():
