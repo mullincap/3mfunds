@@ -3,7 +3,6 @@
 // =====================================================
 let chart2 = null;
 
-
 // =====================================================
 //  MINI SPARKLINE CHARTS
 // =====================================================
@@ -165,14 +164,21 @@ window.loadMainChart = function(days) {
                 },
 
                 yaxis: {
+                  min: undefined,
+                  max: function (max) {
+                      return max * 1.3;   // 33.33% expansion above the highest value
+                  },
                   labels: {
-                        formatter: function (value) {
-                            return "$" + Number(value).toLocaleString();
-                        },
-                        style: { colors: "#aaa" },
-                        title: { text: "Value", style: { color: "#ddd" } }
-                   }
-                },
+                      formatter: function (value) {
+                          return "$" + Number(value).toLocaleString();
+                      },
+                      style: { colors: "#aaa" }
+                  },
+                  title: {
+                      text: "Value",
+                      style: { color: "#ddd" }
+                  }
+              },
 
                 xaxis: {
                     type: "datetime",
@@ -255,6 +261,67 @@ const kpiLabel = document.getElementById("kpi-return-label");
 if (kpiLabel) {
     kpiLabel.innerText = "3D Return";
 };
+
+
+
+// =====================================================
+//  LOAD ADVANCED KPIS
+// =====================================================
+function loadKPIs() {
+    fetch("/kpis")
+        .then(r => r.json())
+        .then(k => {
+
+            // Runtime in days
+            document.getElementById("kpi-runtime").innerText =
+                k.runtime_days + " days";
+
+            // Daily %
+            document.getElementById("kpi-dpr").innerHTML =
+                k.dpr_pct !== null
+                ? `<span class="${k.dpr_pct >= 0 ? "text-success" : "text-danger"}">
+                     ${k.dpr_pct.toFixed(2)}%
+                   </span>`
+                : "--";
+
+            // Weekly %
+            document.getElementById("kpi-wpr").innerHTML =
+                k.wpr_pct !== null
+                ? `<span class="${k.wpr_pct >= 0 ? "text-success" : "text-danger"}">
+                     ${k.wpr_pct.toFixed(2)}%
+                   </span>`
+                : "--";
+
+            // APR %
+            // document.getElementById("kpi-apr").innerHTML =
+            //     `<span class="${k.apr_pct >= 0 ? "text-success" : "text-danger"}">
+            //         ${k.apr_pct.toFixed(2)}%
+            //      </span>`;
+            document.getElementById("kpi-maxdd").innerHTML =
+                k.max_dd_pct !== null
+                ? `<span class="text-danger">
+                     ${Math.abs(k.max_dd_pct).toFixed(2)}%
+                   </span>`
+                : "--";
+
+
+            // This week (dollars)
+            document.getElementById("kpi-week").innerText =
+                k.rtw_dollars !== null
+                ? "$" + Number(k.rtw_dollars).toLocaleString()
+                : "--";
+
+            // This month (dollars)
+            document.getElementById("kpi-month").innerText =
+                k.rtm_dollars !== null
+                ? "$" + Number(k.rtm_dollars).toLocaleString()
+                : "--";
+        })
+        .catch(err => console.error("KPI load error:", err));
+}
+
+// Call KPI loader on page load
+loadKPIs();
 
 
 

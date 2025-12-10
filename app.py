@@ -5,6 +5,7 @@ import pymysql
 from datetime import datetime, timezone, timedelta
 import pytz
 from dotenv import load_dotenv
+from math import floor
 load_dotenv()
 
 
@@ -12,6 +13,120 @@ app = Flask(__name__)
 
 
 # helpers ==========================================
+
+@app.route("/kpis")
+def get_kpis():
+    connection = connect_db()
+    with connection.cursor(pymysql.cursors.DictCursor) as cur:
+        cur.execute("""
+            SELECT timestamp_utc, portfolio_value
+            FROM investments_timeseries
+            ORDER BY timestamp_utc ASC
+        """)
+        rows = cur.fetchall()
+
+    if len(rows) < 2:
+        return jsonify({"error": "Not enough data"}), 400
+
+    # Convert timestamps to aware UTC
+    for r in rows:
+        r["timestamp_utc"] = r["timestamp_utc"].replace(tzinfo=timezone.utc)
+
+    ts = [r["timestamp_utc"] for r in rows]
+    eq = [float(r["portfolio_value"]) for r in rows]
+
+    first_eq = eq[0]
+    last_eq = eq[-1]
+    now_ts = ts[-1]
+
+    # -------------------------------
+    # Helper: get equity at/before time
+    # -------------------------------
+    def equity_at_or_before(target):
+        prior = [r for r in rows if r["timestamp_utc"] <= target]
+        return float(prior[-1]["portfolio_value"]) if prior else None
+
+    # ======================
+    # 1. Runtime (Days)
+    # ======================
+    START_TIME = datetime(2025, 11, 22, 6, 0, 0, tzinfo=timezone.utc)
+    runtime_days = max(0, int((now_ts - START_TIME).total_seconds() // 86400))
+
+    # ======================
+    # 2. Daily Return %
+    # ======================
+    ts_24h = now_ts - timedelta(hours=24)
+    eq_24h = equity_at_or_before(ts_24h)
+    # dpr = (last_eq / eq_24h - 1) * 100 if eq_24h else None
+
+    total_return_pct = (last_eq / first_eq - 1) * 100
+    dpr = total_return_pct / runtime_days if runtime_days > 0 else None
+
+    # ======================
+    # 3. Weekly Return %
+    # ======================
+    ts_7d = now_ts - timedelta(days=7)
+    eq_7d = equity_at_or_before(ts_7d)
+    #wpr = (last_eq / eq_7d - 1) * 100 if eq_7d else None
+    wpr = dpr * 7
+
+    # ======================
+    # 4. Annual Percentage Return
+    # ======================
+    total_days = (now_ts - ts[0]).total_seconds() / 86400
+    apr = ((last_eq / first_eq) ** (365 / total_days) - 1) * 100 if total_days > 0 else None
+
+    # ======================
+    # 4. Max Drawdown (%)
+    # ======================
+    running_max = eq[0]
+    max_dd = 0.0
+
+    for value in eq:
+        running_max = max(running_max, value)
+        dd = (value - running_max) / running_max   # negative %
+        max_dd = min(max_dd, dd)
+
+    max_dd_pct = max_dd * 100
+
+
+    # ======================
+    # 5. Returns This Week (Dollars)
+    # ======================
+    weekday = now_ts.weekday()   # Monday=0 ... Sunday=6
+    sunday_offset = (weekday + 1) % 7
+
+    # Sunday 00:00 UTC
+    sunday_start = datetime(
+        now_ts.year, now_ts.month, now_ts.day,
+        tzinfo=timezone.utc
+    ) - timedelta(days=sunday_offset, hours=now_ts.hour, minutes=now_ts.minute)
+
+    eq_sunday = equity_at_or_before(sunday_start)
+    rtw_dollars = last_eq - eq_sunday if eq_sunday else None
+
+    # ======================
+    # 6. Returns This Month (Dollars)
+    # ======================
+    month_start = datetime(now_ts.year, now_ts.month, 1, tzinfo=timezone.utc)
+    eq_month = equity_at_or_before(month_start)
+    rtm_dollars = last_eq - eq_month if eq_month else None
+
+    print(runtime_days)
+
+    return jsonify({
+        "runtime_days": runtime_days,
+        "dpr_pct": dpr,
+        "wpr_pct": wpr,
+        "apr_pct": apr,
+        "rtw_dollars": rtw_dollars,
+        "rtm_dollars": rtm_dollars,
+        "equity": last_eq,
+        "max_dd_pct": max_dd_pct
+    })
+
+
+
 
 def format_compact_currency(value):
     try:
@@ -201,7 +316,6 @@ def index():
     daily_closes = get_daily_closes(tz=tz)
 
     earnings = get_daily_earnings()
-    print("EARNINGS STRUCTURE:", earnings)
 
     #earnings_labels = [e['date'] for e in earnings]
     #earnings_values = [e['earn'] for e in earnings]
@@ -236,7 +350,7 @@ def index():
 
         earnings_data=earnings,
         earnings_labels=earnings_labels,
-        earnings_values=earnings_values,
+        earnings_values=earnings_values
 
     )
 
