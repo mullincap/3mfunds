@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             stroke: {
                 curve: "smooth",
-                width: [3, 2, 2],
+                width: [3, 2, 1],
                 dashArray: [0, 4, 4],
                 opacity: 1
             },
