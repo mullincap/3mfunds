@@ -105,6 +105,28 @@ def get_kpis():
     eq_sunday = equity_at_or_before(sunday_start)
     rtw_dollars = last_eq - eq_sunday if eq_sunday else None
 
+    # -------------------------------------------
+    # LOWEST DAILY RETURN (LDR)
+    # -------------------------------------------
+
+    # Build day → last equity of that day
+    by_day = {}
+    for t, e in zip(ts, eq):
+        day = t.date()
+        by_day.setdefault(day, e)
+
+    # Sort by date
+    daily_vals = [by_day[d] for d in sorted(by_day.keys())]
+
+    daily_returns = []
+    for i in range(1, len(daily_vals)):
+        dr = (daily_vals[i] / daily_vals[i-1] - 1) * 100
+        daily_returns.append(dr)
+
+    lowest_daily_return = min(daily_returns) if daily_returns else None
+
+
+
     # ======================
     # 6. Returns This Month (Dollars)
     # ======================
@@ -122,7 +144,7 @@ def get_kpis():
         "rtw_dollars": rtw_dollars,
         "rtm_dollars": rtm_dollars,
         "equity": last_eq,
-        "max_dd_pct": max_dd_pct
+        "lowest_daily_return": lowest_daily_return
     })
 
 

@@ -300,7 +300,7 @@ function loadKPIs() {
             document.getElementById("kpi-maxdd").innerHTML =
                 k.max_dd_pct !== null
                 ? `<span class="text-danger">
-                     ${Math.abs(k.max_dd_pct).toFixed(2)}%
+                     ${Math.abs(k.lowest_daily_return).toFixed(2)}%
                    </span>`
                 : "--";
 
