@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__)
 
 
-# helpers ==========================================
+# ============ HELPERS ==========================================
 
 @app.route("/kpis")
 def get_kpis():
@@ -171,8 +171,6 @@ def fmt_currency(v):
     return f"${v:,.2f}"
 
 
-# INDEX - helpers ==========================================
-
 
 def get_daily_closes(tz):
     connection = connect_db()
@@ -202,7 +200,8 @@ def get_daily_closes(tz):
         daily[day_key] = r  # overwrite → ensures last row of day is the close
 
     # Convert to sorted list, newest first
-    sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
+    #sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
+    sorted_days = sorted(daily.items(), key=lambda x: x[0])   # oldest → newest
 
     results = []
     for idx, (day_key, rec) in enumerate(sorted_days):
@@ -260,15 +259,12 @@ def get_daily_earnings():
                 "earn": value - prev_val
             })
         prev_val = value
-
-
-
-    return earnings[-7:]  # last 12 days for chart
+    return earnings[-7:]  # last 7 days for chart
 
 
 
 
-# INDEX - route ==========================================
+# ============ PAGES ==========================================
 
 #dashboards
 @app.route('/')
@@ -431,6 +427,34 @@ def historical():
         wed_summaries=wed_summaries,
     )
 
+
+@app.route("/deploys")
+def deploys():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("SELECT * FROM deploys ORDER BY timestamp_utc ASC")
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template("components/portfolios/deploys.html", rows=rows)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ============ DATA ==========================================
+
 @app.route("/api/investments/timeseries")
 def investments_timeseries():
     days = request.args.get("days", None)
@@ -486,6 +510,82 @@ def investments_timeseries():
         "returns_diff": pnl
     })
 
+@app.route("/api/daily_closes_full")
+def api_daily_closes_full():
+    """
+    Computes full OHLC-style daily metrics from investments_timeseries.
+    Uses UTC days.
+    """
+
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    # Pull last 90 days of intraday data (adjust if needed)
+    cur.execute("""
+        SELECT timestamp_utc, portfolio_value
+        FROM investments_timeseries
+        WHERE timestamp_utc >= NOW() - INTERVAL 90 DAY
+        ORDER BY timestamp_utc ASC
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    if not rows:
+        return jsonify([])
+
+    # Attach UTC timezone
+    for r in rows:
+        if r["timestamp_utc"].tzinfo is None:
+            r["timestamp_utc"] = r["timestamp_utc"].replace(tzinfo=timezone.utc)
+
+    # Group rows by day
+    days = {}  # key = YYYY-MM-DD, value = list of floats
+
+    for r in rows:
+        day_key = r["timestamp_utc"].strftime("%Y-%m-%d")
+        days.setdefault(day_key, []).append(float(r["portfolio_value"]))
+
+    # Sort days
+    sorted_days = sorted(days.keys())
+
+    output = []
+    cumulative_pnl = 0.0
+    cumulative_pct = 0.0
+    initial_portfolio = days[sorted_days[0]][0]  # first value of entire dataset
+
+    for day in sorted_days:
+        values = days[day]
+
+        start_balance = values[0]
+        high = max(values)
+        low = min(values)
+        close_balance = values[-1]
+
+        spread_usd = high - low
+        volatility_pct = ((high - low) / start_balance) * 100 if start_balance else 0
+
+        return_usd = close_balance - start_balance
+        roi_pct = (return_usd / start_balance) * 100 if start_balance else 0
+
+        # update cumulative values
+        cumulative_pnl += return_usd
+        cumulative_pct = ((close_balance / initial_portfolio) - 1) * 100
+
+        output.append({
+            "date": day,
+            "start_balance": start_balance,
+            "high": high,
+            "low": low,
+            "close_balance": close_balance,
+            "spread_usd": spread_usd,
+            "volatility_pct": volatility_pct,
+            "return_usd": return_usd,
+            "roi_pct": roi_pct,
+            "cum_pnl_usd": cumulative_pnl,
+            "cum_pnl_pct": cumulative_pct
+        })
+
+    return jsonify(output)
 
 
 

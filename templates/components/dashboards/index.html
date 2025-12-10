@@ -538,11 +538,11 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-xl-5">
+                                        <div class="col-xl-6">
                                             <div class="card custom-card">
                                                 <div class="card-header justify-content-between">
                                                     <div class="card-title">
-                                                        Daily Closes
+                                                        Daily Stats
                                                     </div>
                                                     <div class="dropdown">
                                                         <a href="javascript:void(0);" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
@@ -555,114 +555,37 @@
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table text-nowrap table-bordered border-primary">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th scope="col">Symbol</th>
-                                                                    <th scope="col">Date</th>
-                                                                    <th scope="col">Type</th>
-                                                                    <th scope="col">Amount</th>
-                                                                    <th scope="col">Shares</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        EPA:THI
-                                                                    </th>
-                                                                    <td>
-                                                                        12-06-2023
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="badge bg-primary">Buy</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">-$1,290</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">+20</span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        EPA:SCB
-                                                                    </th>
-                                                                    <td>
-                                                                        11-06-2023
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="badge bg-primary">Buy</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">-$2,150</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">+15</span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        EPA:CGIO
-                                                                    </th>
-                                                                    <td>
-                                                                        11-06-2023
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="badge bg-warning">Sell</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">+$22,625</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">-12</span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        EPA:NTIX
-                                                                    </th>
-                                                                    <td>
-                                                                        05-06-2023
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="badge bg-primary">Buy</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">-$3,680</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">+36</span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        EPA:MOD
-                                                                    </th>
-                                                                    <td>
-                                                                        20-05-2023
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="badge bg-warning">Sell</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">+$30,750</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">-25</span>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                                  <div class="table-responsive">
+                                                    <table class="table text-nowrap table-bordered border-primary">
+                                                        <thead>
+                                                            <tr>
+                                                                <th scope="col">Date</th>
+                                                                <th scope="col">Start</th>
+                                                                <th scope="col">High</th>
+                                                                <th scope="col">Low</th>
+                                                                <th scope="col">Close</th>
+                                                                <th scope="col">Spread</th>
+                                                                <th scope="col">Volatility</th>
+                                                                <th scope="col">Return</th>
+                                                                <th scope="col">ROI</th>
+                                                                <th scope="col">Cumulative PnL</th>
+                                                                <th scope="col">Cumulative ROI</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        <tbody id="daily-closes-body">
+                                                            <!-- Rows injected by JS -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-xl-7">
+                                        <div class="col-xl-6">
                                             <div class="card custom-card">
                                                 <div class="card-header justify-content-between">
                                                     <div class="card-title">
-                                                        Weekly Closes
+                                                        Portfolio Stats
                                                     </div>
                                                     <div class="d-flex flex-wrap gap-2">
                                                         <div class="me-2">

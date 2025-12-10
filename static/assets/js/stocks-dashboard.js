@@ -388,3 +388,34 @@ document.addEventListener("DOMContentLoaded", function () {
         new ApexCharts(element, options).render();
     }
 });
+
+function loadDailyClosesTable() {
+    fetch("/api/daily_closes_full")
+        .then(r => r.json())
+        .then(rows => {
+            const tbody = document.getElementById("daily-closes-body");
+            tbody.innerHTML = "";
+
+            rows.forEach(r => {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${r.date}</td>
+                    <td>$${r.start_balance.toLocaleString()}</td>
+                    <td>$${r.high.toLocaleString()}</td>
+                    <td>$${r.low.toLocaleString()}</td>
+                    <td>$${r.close_balance.toLocaleString()}</td>
+                    <td>$${r.spread_usd.toLocaleString()}</td>
+                    <td>${r.volatility_pct.toFixed(2)}%</td>
+                    <td>$${r.return_usd.toLocaleString()}</td>
+                    <td>${r.roi_pct.toFixed(2)}%</td>
+                    <td>$${r.cum_pnl_usd.toLocaleString()}</td>
+                    <td>${r.cum_pnl_pct.toFixed(2)}%</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        });
+}
+
+loadDailyClosesTable();

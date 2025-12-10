@@ -1,0 +1,48 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card custom-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">Deploy Snapshots</h4>
+                <span class="badge bg-primary-transparent">Top 30 Assets Per Day</span>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table text-nowrap table-bordered border-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                {% for i in range(1, 31) %}
+                                <th scope="col">R{{ i }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in rows %}
+                            <tr>
+                                <!-- Format timestamp -->
+                                <td>{{ row.timestamp_utc.strftime("%Y-%m-%d") }}</td>
+
+                                {% for i in range(1, 31) %}
+                                <td>
+                                    <span class="fw-semibold text-primary">
+                                        {{ row["R" + i|string] }}
+                                    </span>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
