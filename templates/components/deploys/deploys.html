@@ -1,0 +1,83 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h3 class="card-title">Deploys</h3>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-nowrap border-primary">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp (UTC)</th>
+                                    <th>R1</th>
+                                    <th>R2</th>
+                                    <th>R3</th>
+                                    <th>R4</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                    <th>R5</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for d in rows %}
+                                <tr>
+                                    <td>
+                                        <a href="/deploys/{{ d.id }}" class="text-primary fw-semibold">
+                                            {{ d.id }}
+                                        </a>
+                                    </td>
+
+                                    <td>
+                                        <a href="/deploys/{{ d.id }}" class="text-primary">
+                                            {{ d.timestamp_utc }}
+                                        </a>
+                                    </td>
+
+                                    <td>{{ d.R1 }}</td>
+                                    <td>{{ d.R2 }}</td>
+                                    <td>{{ d.R3 }}</td>
+                                    <td>{{ d.R4 }}</td>
+                                    <td>{{ d.R5 }}</td>
+                                    <td>{{ d.R6 }}</td>
+                                    <td>{{ d.R7 }}</td>
+                                    <td>{{ d.R8 }}</td>
+                                    <td>{{ d.R9 }}</td>
+                                    <td>{{ d.R10 }}</td>
+                                    <td>{{ d.R11 }}</td>
+                                    <td>{{ d.R12 }}</td>
+                                    <td>{{ d.R13 }}</td>
+                                    <td>{{ d.R14 }}</td>
+                                    <td>{{ d.R15 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

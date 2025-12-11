@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+
+<div class="card custom-card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">
+            Deploy {{ deploy.id }} — {{ deploy.timestamp_utc }}
+        </h3>
+        <p class="text-muted mb-0">
+            Portfolio of {{ deploy.R1 }}, {{ deploy.R2 }}, {{ deploy.R3 }} … (up to 30 assets)
+        </p>
+    </div>
+</div>
+
+<!-- ==============================
+     PORTFOLIO BALANCE CHART
+================================= -->
+<!-- <div class="card custom-card mb-4">
+    <div class="card-header"><h4 class="card-title">Portfolio Balance</h4></div>
+    <div class="card-body">
+        <div id="balance-chart" style="height: 350px;"></div>
+    </div>
+</div> -->
+
+<!-- ==============================
+     PORTFOLIO ROI CHART
+================================= -->
+<div class="card custom-card mb-4">
+    <div class="card-header"><h4 class="card-title">Portfolio ROI</h4></div>
+    <div class="card-body">
+        <div id="roi-chart" style="height: 350px;"></div>
+    </div>
+</div>
+
+<!-- ==============================
+     ASSET-LEVEL ROI CHARTS
+================================= -->
+<div class="card custom-card mb-4">
+    <div class="card-header"><h4 class="card-title">Asset-Level ROI Curves</h4></div>
+
+    <div class="card-body">
+        <div id="asset-roi-chart" style="height: 450px;"></div>
+    </div>
+</div>
+
+<!-- Pass data to JS -->
+<script>
+    const ts = {{ timestamps|tojson }};
+    const balance = {{ balance|tojson }};
+    const roi = {{ roi|tojson }};
+    const assetSeries = {{ asset_series|tojson }};
+</script>
+
+<script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/deploy_detail.js') }}"></script>
+
+{% endblock %}

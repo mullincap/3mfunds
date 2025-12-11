@@ -14,6 +14,133 @@ app = Flask(__name__)
 
 # ============ HELPERS ==========================================
 
+
+def to_float_safe(x):
+    if x is None:
+        return 0.0
+    try:
+        return float(str(x).replace('%',''))  # handles "0.52%" and raw decimals
+    except:
+        return 0.0
+
+
+def format_compact_currency(value):
+    try:
+        value = float(value)
+    except Exception:
+        return "$0"
+
+    abs_val = abs(value)
+
+    if abs_val >= 1_000_000:
+        return f"${value/1_000_000:.2f}m"
+    elif abs_val >= 1_000:
+        return f"${value/1_000:.2f}k"
+    else:
+        return f"${value:.2f}"
+
+def fmt_currency(v):
+    if v < 0:
+        return f"-${abs(v):,.2f}"
+    return f"${v:,.2f}"
+
+
+
+def get_daily_closes(tz):
+    connection = connect_db()
+    phx = pytz.timezone("America/Phoenix")
+    utc = pytz.UTC
+
+    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("""
+            SELECT timestamp_utc, portfolio_value
+            FROM investments_timeseries
+            WHERE timestamp_utc >= NOW() - INTERVAL 8 DAY
+            ORDER BY timestamp_utc ASC
+        """)
+        rows = cursor.fetchall()
+
+    # Group by day → pick last row of each day
+    daily = {}
+    for r in rows:
+        ts_utc = r["timestamp_utc"]
+
+        if ts_utc.tzinfo is None: ts_utc = utc.localize(ts_utc)
+
+        ts_local = ts_utc.astimezone(tz)
+
+        # ts = r["timestamp_utc"].astimezone(phx)
+        day_key = ts_local.strftime("%Y-%m-%d")
+        daily[day_key] = r  # overwrite → ensures last row of day is the close
+
+    # Convert to sorted list, newest first
+    #sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
+    sorted_days = sorted(daily.items(), key=lambda x: x[0])   # oldest → newest
+
+    results = []
+    for idx, (day_key, rec) in enumerate(sorted_days):
+        ts = rec["timestamp_utc"].astimezone(phx)
+        value = rec["portfolio_value"]
+
+        # Compute percent change vs previous day
+        if idx + 1 < len(sorted_days):
+            prev_value = sorted_days[idx + 1][1]["portfolio_value"]
+            pct_change = ((value - prev_value) / prev_value) * 100 if prev_value else 0
+        else:
+            pct_change = 0
+
+        results.append({
+            "day": ts.strftime("%a"),            # Mon, Tue, Wed
+            "date": ts.strftime("%b %d"),        # Dec 06
+            "value": value,
+            "pct": pct_change,
+            "datetime_obj": ts                   # ← REAL datetime for template
+        })
+
+    return results[:7]   # 7 most recent days
+
+
+def get_daily_earnings():
+    connection = connect_db()
+    phx = pytz.timezone("America/Phoenix")
+
+    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("""
+            SELECT timestamp_utc, portfolio_value
+            FROM investments_timeseries
+            WHERE timestamp_utc >= NOW() - INTERVAL 30 DAY
+            ORDER BY timestamp_utc ASC
+        """)
+        rows = cursor.fetchall()
+
+    # Group closes by day
+    closes = {}
+    for r in rows:
+        ts = r["timestamp_utc"].astimezone(phx)
+        day_key = ts.strftime("%Y-%m-%d")
+        closes[day_key] = r["portfolio_value"]  # last value becomes daily close
+
+    # Convert to list sorted oldest → newest
+    day_items = sorted(closes.items())
+
+    earnings = []
+    prev_val = None
+
+    for day, value in day_items:
+        if prev_val is not None:
+            earnings.append({
+                "day": day,
+                "earn": value - prev_val
+            })
+        prev_val = value
+    return earnings[-7:]  # last 7 days for chart
+
+
+
+
+# ============ PAGES ==========================================
+
+
 @app.route("/kpis")
 def get_kpis():
     connection = connect_db()
@@ -147,124 +274,6 @@ def get_kpis():
         "lowest_daily_return": lowest_daily_return
     })
 
-
-
-
-def format_compact_currency(value):
-    try:
-        value = float(value)
-    except Exception:
-        return "$0"
-
-    abs_val = abs(value)
-
-    if abs_val >= 1_000_000:
-        return f"${value/1_000_000:.2f}m"
-    elif abs_val >= 1_000:
-        return f"${value/1_000:.2f}k"
-    else:
-        return f"${value:.2f}"
-
-def fmt_currency(v):
-    if v < 0:
-        return f"-${abs(v):,.2f}"
-    return f"${v:,.2f}"
-
-
-
-def get_daily_closes(tz):
-    connection = connect_db()
-    phx = pytz.timezone("America/Phoenix")
-    utc = pytz.UTC
-
-    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-        cursor.execute("""
-            SELECT timestamp_utc, portfolio_value
-            FROM investments_timeseries
-            WHERE timestamp_utc >= NOW() - INTERVAL 8 DAY
-            ORDER BY timestamp_utc ASC
-        """)
-        rows = cursor.fetchall()
-
-    # Group by day → pick last row of each day
-    daily = {}
-    for r in rows:
-        ts_utc = r["timestamp_utc"]
-
-        if ts_utc.tzinfo is None: ts_utc = utc.localize(ts_utc)
-
-        ts_local = ts_utc.astimezone(tz)
-
-        # ts = r["timestamp_utc"].astimezone(phx)
-        day_key = ts_local.strftime("%Y-%m-%d")
-        daily[day_key] = r  # overwrite → ensures last row of day is the close
-
-    # Convert to sorted list, newest first
-    #sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
-    sorted_days = sorted(daily.items(), key=lambda x: x[0])   # oldest → newest
-
-    results = []
-    for idx, (day_key, rec) in enumerate(sorted_days):
-        ts = rec["timestamp_utc"].astimezone(phx)
-        value = rec["portfolio_value"]
-
-        # Compute percent change vs previous day
-        if idx + 1 < len(sorted_days):
-            prev_value = sorted_days[idx + 1][1]["portfolio_value"]
-            pct_change = ((value - prev_value) / prev_value) * 100 if prev_value else 0
-        else:
-            pct_change = 0
-
-        results.append({
-            "day": ts.strftime("%a"),            # Mon, Tue, Wed
-            "date": ts.strftime("%b %d"),        # Dec 06
-            "value": value,
-            "pct": pct_change,
-            "datetime_obj": ts                   # ← REAL datetime for template
-        })
-
-    return results[:7]   # 7 most recent days
-
-
-def get_daily_earnings():
-    connection = connect_db()
-    phx = pytz.timezone("America/Phoenix")
-
-    with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-        cursor.execute("""
-            SELECT timestamp_utc, portfolio_value
-            FROM investments_timeseries
-            WHERE timestamp_utc >= NOW() - INTERVAL 30 DAY
-            ORDER BY timestamp_utc ASC
-        """)
-        rows = cursor.fetchall()
-
-    # Group closes by day
-    closes = {}
-    for r in rows:
-        ts = r["timestamp_utc"].astimezone(phx)
-        day_key = ts.strftime("%Y-%m-%d")
-        closes[day_key] = r["portfolio_value"]  # last value becomes daily close
-
-    # Convert to list sorted oldest → newest
-    day_items = sorted(closes.items())
-
-    earnings = []
-    prev_val = None
-
-    for day, value in day_items:
-        if prev_val is not None:
-            earnings.append({
-                "day": day,
-                "earn": value - prev_val
-            })
-        prev_val = value
-    return earnings[-7:]  # last 7 days for chart
-
-
-
-
-# ============ PAGES ==========================================
 
 #dashboards
 @app.route('/')
@@ -439,9 +448,60 @@ def deploys():
     cur.close()
     conn.close()
 
-    return render_template("components/portfolios/deploys.html", rows=rows)
+    return render_template("components/deploys/deploys.html", rows=rows)
 
 
+
+@app.route("/deploys/<int:deploy_id>")
+def deploy_detail(deploy_id):
+    conn = connect_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    # --- Fetch Deploy Metadata ---
+    cursor.execute("""
+        SELECT *
+        FROM deploys
+        WHERE id = %s
+        LIMIT 1
+    """, (deploy_id,))
+    deploy = cursor.fetchone()
+
+    if not deploy:
+        conn.close()
+        return f"Deploy {deploy_id} not found", 404
+
+    # --- Fetch Portfolio History Rows (216 rows expected) ---
+    cursor.execute("""
+        SELECT *
+        FROM portfolio_history
+        WHERE deploy_id = %s
+        ORDER BY timestamp_utc ASC
+    """, (deploy_id,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    # =============================
+    # Format for charts
+    # =============================
+    timestamps = [r["timestamp_utc"].isoformat() for r in rows]
+    balance = [float(r["portfolio_balance"]) for r in rows]
+    roi = [float(r["portfolio_roi"]) for r in rows]
+
+    # Detect all p#_roi columns dynamically
+    roi_columns = [col for col in rows[0].keys() if col.endswith("_roi") and col.startswith("p")]
+    asset_series = {}
+
+    for col in roi_columns:        
+        asset_series[col] = [to_float_safe(r[col]) for r in rows]
+
+    return render_template(
+        "components/deploys/detail.html",
+        deploy=deploy,
+        timestamps=timestamps,
+        balance=balance,
+        roi=roi,
+        asset_series=asset_series,
+    )
 
 
 
