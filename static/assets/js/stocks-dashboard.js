@@ -402,10 +402,10 @@ function loadDailyClosesTable() {
                 tr.innerHTML = `
                     <td>${r.date}</td>
                     <td>$${r.start_balance.toLocaleString()}</td>
-                    <td>$${r.high.toLocaleString()}</td>
-                    <td>$${r.low.toLocaleString()}</td>
+                    <!-- <td>$${r.high.toLocaleString()}</td> -->
+                    <!-- <td>$${r.low.toLocaleString()}</td> -->
                     <td>$${r.close_balance.toLocaleString()}</td>
-                    <td>$${r.spread_usd.toLocaleString()}</td>
+                    <!-- <td>$${r.spread_usd.toLocaleString()}</td> -->
                     <td>${r.volatility_pct.toFixed(2)}%</td>
                     <td>$${r.return_usd.toLocaleString()}</td>
                     <td>${r.roi_pct.toFixed(2)}%</td>

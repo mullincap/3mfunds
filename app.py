@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 import pytz
 from dotenv import load_dotenv
 from math import floor
+import numpy as np
 load_dotenv()
 
 
@@ -19,9 +20,56 @@ def to_float_safe(x):
     if x is None:
         return 0.0
     try:
-        return float(str(x).replace('%',''))  # handles "0.52%" and raw decimals
+        return float(str(x).replace('%', ''))  # handles "0.52%" and raw decimals
     except:
         return 0.0
+
+def normalize_roi(val):
+    if val is None:
+        return None
+
+    # Convert strings like "-8.5%" → -8.5
+    s = str(val).replace("%", "").strip()
+
+    try:
+        num = float(s)
+    except:
+        return None
+
+    # If ROI is whole number (like -8.5), convert to decimal (-0.085)
+    # If already decimal (-0.085), keep it.
+    if num <= -1 or num >= 1:
+        num = num / 100.0
+
+    return num
+
+def parse_roi_decimal(val):
+    """
+    Normalize ROI values coming from DB/Sheets.
+
+    Accepts:
+      - "3.59%"  -> 0.0359
+      - "3.59"   -> 0.0359
+      - 0.0359   -> 0.0359
+      - None / "" -> None
+    """
+    if val is None:
+        return None
+
+    s = str(val).replace('%', '').replace(',', '').strip()
+    if s == "":
+        return None
+
+    try:
+        num = float(s)
+    except ValueError:
+        return None
+
+    # If the magnitude looks like a percent (e.g. 3.5), convert to decimal.
+    if abs(num) > 1:
+        num /= 100.0
+
+    return num
 
 
 def format_compact_currency(value):
@@ -39,11 +87,11 @@ def format_compact_currency(value):
     else:
         return f"${value:.2f}"
 
+
 def fmt_currency(v):
     if v < 0:
         return f"-${abs(v):,.2f}"
     return f"${v:,.2f}"
-
 
 
 def get_daily_closes(tz):
@@ -65,17 +113,15 @@ def get_daily_closes(tz):
     for r in rows:
         ts_utc = r["timestamp_utc"]
 
-        if ts_utc.tzinfo is None: ts_utc = utc.localize(ts_utc)
+        if ts_utc.tzinfo is None:
+            ts_utc = utc.localize(ts_utc)
 
         ts_local = ts_utc.astimezone(tz)
-
-        # ts = r["timestamp_utc"].astimezone(phx)
         day_key = ts_local.strftime("%Y-%m-%d")
         daily[day_key] = r  # overwrite → ensures last row of day is the close
 
     # Convert to sorted list, newest first
     sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
-    #sorted_days = sorted(daily.items(), key=lambda x: x[0])   # oldest → newest
 
     results = []
     for idx, (day_key, rec) in enumerate(sorted_days):
@@ -136,8 +182,6 @@ def get_daily_earnings():
     return earnings[-7:]  # last 7 days for chart
 
 
-
-
 # ============ PAGES ==========================================
 
 
@@ -184,7 +228,6 @@ def get_kpis():
     # ======================
     ts_24h = now_ts - timedelta(hours=24)
     eq_24h = equity_at_or_before(ts_24h)
-    # dpr = (last_eq / eq_24h - 1) * 100 if eq_24h else None
 
     total_return_pct = (last_eq / first_eq - 1) * 100
     dpr = total_return_pct / runtime_days if runtime_days > 0 else None
@@ -194,8 +237,7 @@ def get_kpis():
     # ======================
     ts_7d = now_ts - timedelta(days=7)
     eq_7d = equity_at_or_before(ts_7d)
-    #wpr = (last_eq / eq_7d - 1) * 100 if eq_7d else None
-    wpr = dpr * 7
+    wpr = dpr * 7 if dpr is not None else None
 
     # ======================
     # 4. Annual Percentage Return
@@ -215,7 +257,6 @@ def get_kpis():
         max_dd = min(max_dd, dd)
 
     max_dd_pct = max_dd * 100
-
 
     # ======================
     # 5. Returns This Week (Dollars)
@@ -240,19 +281,17 @@ def get_kpis():
     by_day = {}
     for t, e in zip(ts, eq):
         day = t.date()
-        by_day.setdefault(day, e)
+        by_day[day] = e  # last value for the day
 
     # Sort by date
     daily_vals = [by_day[d] for d in sorted(by_day.keys())]
 
     daily_returns = []
     for i in range(1, len(daily_vals)):
-        dr = (daily_vals[i] / daily_vals[i-1] - 1) * 100
+        dr = (daily_vals[i] / daily_vals[i - 1] - 1) * 100
         daily_returns.append(dr)
 
     lowest_daily_return = min(daily_returns) if daily_returns else None
-
-
 
     # ======================
     # 6. Returns This Month (Dollars)
@@ -275,7 +314,7 @@ def get_kpis():
     })
 
 
-#dashboards
+# dashboards
 @app.route('/')
 @app.route("/index")
 def index():
@@ -291,7 +330,6 @@ def index():
     """)
 
     row = cursor.fetchone()
-    #conn.close()
 
     # Default values
     invested = 0.0
@@ -307,8 +345,7 @@ def index():
         if invested > 0:
             return_rate = (portfolio - invested) / invested * 100
 
-    # Determine today's midnight (UTC or Phoenix?)
-    # You logged timestamps in UTC, so compute midnight UTC.
+    # Determine today's midnight (UTC)
     now = datetime.now(timezone.utc)
     midnight_utc = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -341,22 +378,18 @@ def index():
         tz = pytz.timezone("America/Phoenix")
 
     daily_closes = get_daily_closes(tz=tz)
-
     earnings = get_daily_earnings()
 
-    #earnings_labels = [e['date'] for e in earnings]
-    #earnings_values = [e['earn'] for e in earnings]
     # Convert day (YYYY-MM-DD) → 'Dec 02'
     earnings_labels = [
         datetime.strptime(e["day"], "%Y-%m-%d").strftime("%b %d")
         for e in earnings
-        ]
+    ]
 
-        # Convert Decimal → float
+    # Convert Decimal → float
     earnings_values = [float(e["earn"]) for e in earnings]
 
     conn.close()
-
 
     return render_template(
         "components/dashboards/index.html",
@@ -364,11 +397,11 @@ def index():
         kpi_portfolio=portfolio,
         kpi_returns=returns,
         kpi_returnrate=return_rate,
-        kpi_returns_compact = format_compact_currency(returns),
-        kpi_portfolio_compact = format_compact_currency(portfolio),
-        kpi_invested_compact = format_compact_currency(invested),
+        kpi_returns_compact=format_compact_currency(returns),
+        kpi_portfolio_compact=format_compact_currency(portfolio),
+        kpi_invested_compact=format_compact_currency(invested),
 
-        kpi_today_change= kpi_today_change,
+        kpi_today_change=kpi_today_change,
         kpi_today_change_pct=kpi_today_change_pct,
         fmt_currency=fmt_currency,
 
@@ -378,8 +411,8 @@ def index():
         earnings_data=earnings,
         earnings_labels=earnings_labels,
         earnings_values=earnings_values
-
     )
+
 
 @app.route("/historical")
 def historical():
@@ -448,8 +481,13 @@ def deploys():
     cur.close()
     conn.close()
 
-    return render_template("components/deploys/deploys.html", rows=rows)
-
+    # rows used for main table; deploys_list used for sidebar
+    return render_template(
+        "components/deploys/deploys.html",
+        rows=rows,
+        deploys_list=rows,
+        show_deploy_sidebar=True
+    )
 
 
 @app.route("/deploys/<int:deploy_id>")
@@ -470,7 +508,15 @@ def deploy_detail(deploy_id):
         conn.close()
         return f"Deploy {deploy_id} not found", 404
 
-    # --- Fetch Portfolio History Rows (216 rows expected) ---
+    # --- Fetch all deploys for sidebar nav (descending so most recent on top) ---
+    cursor.execute("""
+        SELECT id, timestamp_utc
+        FROM deploys
+        ORDER BY timestamp_utc DESC
+    """)
+    deploys_list = cursor.fetchall()
+
+    # --- Fetch Portfolio History Rows (expected ~216 rows) ---
     cursor.execute("""
         SELECT *
         FROM portfolio_history
@@ -480,6 +526,20 @@ def deploy_detail(deploy_id):
     rows = cursor.fetchall()
     conn.close()
 
+    if not rows:
+        # No history rows; render page with empty charts
+        return render_template(
+            "components/deploys/detail.html",
+            deploy=deploy,
+            deploys_list=deploys_list,
+            show_deploy_sidebar=True,
+            timestamps=[],
+            balance=[],
+            roi=[],
+            asset_series={},
+            active_deploy_id=deploy_id,
+        )
+
     # =============================
     # Format for charts
     # =============================
@@ -487,30 +547,98 @@ def deploy_detail(deploy_id):
     balance = [float(r["portfolio_balance"]) for r in rows]
     roi = [float(r["portfolio_roi"]) for r in rows]
 
-    # Detect all p#_roi columns dynamically
-    roi_columns = [col for col in rows[0].keys() if col.endswith("_roi") and col.startswith("p")]
+
+    # --------------------------------------------------------
+    # DEPLOY-LEVEL KPIs
+    # --------------------------------------------------------
+
+    # 1. Total Return (%)
+    initial_bal = balance[0]
+    final_bal = balance[-1]
+    total_return_pct = ((final_bal / initial_bal) - 1) * 100 if initial_bal else 0
+
+    # 2. Max Drawdown (%)
+    equity_curve = [1 + r for r in roi]   # synthetic curve
+    running_max = equity_curve[0]
+    max_dd = 0.0
+
+    for v in equity_curve:
+        if v > running_max:
+            running_max = v
+        dd = (v - running_max) / running_max   # negative fraction
+        if dd < max_dd:
+            max_dd = dd
+
+    max_dd_pct = max_dd * 100
+
+    # 3. BTC Performance (%)
+    btc_vals = [float(r["BTC_close"]) for r in rows]
+    btc_perf_pct = ((btc_vals[-1] / btc_vals[0]) - 1) * 100 if btc_vals[0] else 0
+
+    # 4. Volatility (std deviation of ROI curve)
+    roi_floats = np.array([float(x) for x in roi])
+    volatility = float(np.std(roi_floats))
+
+    # 5. Stop Losses (-8.5%)
+    STOP_LOSS_TARGET = -0.085
+    stop_loss_count = 0
+
+    for col in [c for c in rows[0].keys() if c.endswith("_roi")]:
+        raw_val = rows[-1][col]
+        normalized = parse_roi_decimal(raw_val)   # → always returns decimal or None
+
+        if normalized is None:
+            continue
+
+        # check if it equals -0.085 within tolerance
+        if abs(normalized - STOP_LOSS_TARGET) < 1e-6:
+            stop_loss_count += 1
+
+    # 6. Average ROI (%)
+    avg_roi_pct = float(np.mean(roi_floats)) * 100
+
+    lowest_roi_pct = min(roi) * 100 if roi else 0
+
+
+
+    # ---------------------------------------
+    # DETECT WHICH ASSET ROI COLUMNS ARE REAL
+    # ---------------------------------------
+    # All ROI-like columns except portfolio-level ones
+    roi_columns = [
+        c for c in rows[0].keys()
+        if c.endswith("_roi") and c not in ("portfolio_roi", "portfolio_roi_lev")
+    ]
+
     asset_series = {}
 
+    # Build per-asset series, but only keep columns that have *any* non-null data
     for col in roi_columns:
-        asset_series[col] = [to_float_safe(r[col]) for r in rows]
+        series = [parse_roi_decimal(r[col]) for r in rows]
+        # keep only non-empty assets (at least one non-None value)
+        if any(v is not None for v in series):
+            asset_name = col.replace("_roi", "").upper()
+            asset_series[asset_name] = series
 
     return render_template(
         "components/deploys/detail.html",
         deploy=deploy,
+        deploys_list=deploys_list,
+        show_deploy_sidebar=True,
         timestamps=timestamps,
         balance=balance,
         roi=roi,
         asset_series=asset_series,
+            # NEW KPIs
+        total_return_pct=total_return_pct,
+        max_dd_pct=max_dd_pct,
+        btc_perf_pct=btc_perf_pct,
+        volatility=volatility,
+        stop_loss_count=stop_loss_count,
+        avg_roi_pct=avg_roi_pct,
+        lowest_roi_pct=lowest_roi_pct
+
     )
-
-
-
-
-
-
-
-
-
 
 
 # ============ DATA ==========================================
@@ -548,10 +676,10 @@ def investments_timeseries():
     for r in rows:
         try:
             ts = r["timestamp_utc"].isoformat()
-            i  = float(r["invested_value"])
-            p  = float(r["portfolio_value"])
-            t  = float(r["total_returns"])
-            d  = p - i
+            i = float(r["invested_value"])
+            p = float(r["portfolio_value"])
+            t = float(r["total_returns"])
+            d = p - i
 
             timestamps.append(ts)
             invested.append(i)
@@ -569,6 +697,7 @@ def investments_timeseries():
         "total_returns": returns,
         "returns_diff": pnl
     })
+
 
 @app.route("/api/daily_closes_full")
 def api_daily_closes_full():
@@ -646,7 +775,6 @@ def api_daily_closes_full():
         })
 
     return jsonify(output)
-
 
 
 if __name__ == '__main__':
