@@ -74,8 +74,8 @@ def get_daily_closes(tz):
         daily[day_key] = r  # overwrite → ensures last row of day is the close
 
     # Convert to sorted list, newest first
-    #sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
-    sorted_days = sorted(daily.items(), key=lambda x: x[0])   # oldest → newest
+    sorted_days = sorted(daily.items(), key=lambda x: x[0], reverse=True)
+    #sorted_days = sorted(daily.items(), key=lambda x: x[0])   # oldest → newest
 
     results = []
     for idx, (day_key, rec) in enumerate(sorted_days):
@@ -491,7 +491,7 @@ def deploy_detail(deploy_id):
     roi_columns = [col for col in rows[0].keys() if col.endswith("_roi") and col.startswith("p")]
     asset_series = {}
 
-    for col in roi_columns:        
+    for col in roi_columns:
         asset_series[col] = [to_float_safe(r[col]) for r in rows]
 
     return render_template(

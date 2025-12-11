@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
         chart: { type: "area", height: 500, toolbar: { show: false } },
         series: [{ name: "Portfolio ROI %", data: roi }],
         xaxis: { categories: ts, type: "datetime" },
-        yaxis: { labels: { formatter: v => v.toFixed(2) + "%" } },
+        yaxis: { labels: { formatter: v => (v*100).toFixed(2) + "%" } },
         stroke: { curve: "smooth", width: 2 },
         dataLabels: { enabled: false }
     }).render();
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         chart: { type: "line", height: 800, toolbar: { show: true } },
         series: assetSeriesFormatted,
         xaxis: { categories: ts, type: "datetime" },
-        yaxis: { labels: { formatter: v => v.toFixed(2) + "%" } },
+        yaxis: { labels: { formatter: v => (v*100).toFixed(2) + "%" } },
         stroke: { curve: "smooth", width: 1.5 }
     }).render();
 
