@@ -548,7 +548,7 @@ function switcherClick() {
     let rtlVar = rtlBtn.addEventListener('click', () => {
         localStorage.setItem("ynexrtl", true);
         localStorage.removeItem("ynexltr");
-        rtlFn(); 
+        rtlFn();
         if (document.querySelector(".noUi-target")) {
             console.log("working");
             document.querySelectorAll(".noUi-origin").forEach((e) => {
@@ -594,7 +594,7 @@ function switcherClick() {
         document.querySelector("html").setAttribute("loader","enable");
         localStorage.setItem("loaderEnable","true")
     }
-    
+
     loaderDisable.onclick = ()=>{
         document.querySelector("html").setAttribute("loader","disable");
         localStorage.setItem("loaderEnable","false")
@@ -642,8 +642,8 @@ function lightFn() {
     checkOptions();
     html.style.removeProperty('--body-bg-rgb');
     html.style.removeProperty('--body-bg-rgb2');
-    html.style.removeProperty("--light-rgb");	
-    html.style.removeProperty("--form-control-bg");	
+    html.style.removeProperty("--light-rgb");
+    html.style.removeProperty("--form-control-bg");
     html.style.removeProperty("--input-border");
 
     document.querySelector("#switcher-background4").checked = false
@@ -663,7 +663,7 @@ function darkFn() {
     html.setAttribute('data-menu-styles', 'dark');
     if(!localStorage.getItem('primaryRGB')){
         html.setAttribute('style','')
-    }   
+    }
     document.querySelector('#switcher-menu-dark').checked = true;
     document.querySelector('#switcher-header-dark').checked = true;
     document.querySelector('html').style.removeProperty('--body-bg-rgb');
@@ -723,7 +723,7 @@ function horizontalClickFn() {
         checkOptions();
     }
     checkOptions();
-    checkHoriMenu(); 
+    checkHoriMenu();
 }
 
 function ResetAllFn() {
@@ -976,7 +976,7 @@ function updateColors() {
 
     //get variable
     myVarVal = localStorage.getItem("primaryRGB") || primaryRGB;
-    
+
 
     //index
     if (document.querySelector("#crm-total-customers") !== null) {
@@ -993,9 +993,9 @@ function updateColors() {
     }
 
     //index2
-    if (document.querySelector("#earnings") !== null) {
-        Earnings();
-    }
+    // if (document.querySelector("#earnings") !== null) {
+    //     Earnings();
+    // }
 
     //index3
     if (document.querySelector("#crypto") !== null) {
@@ -1057,15 +1057,15 @@ function updateColors() {
     }
 
     //index10
-    if (document.querySelector("#total-invested") !== null) {
-        stockstotalInvested();
-    }
-    if (document.querySelector("#totalInvestmentsStats") !== null) {
-        totalInvestmentsStats();
-    }
-    if (document.querySelector("#stocks-marketcap") !== null) {
-        stocksMarketcap();
-    }
+    // if (document.querySelector("#total-invested") !== null) {
+    //     stockstotalInvested();
+    // }
+    // if (document.querySelector("#totalInvestmentsStats") !== null) {
+    //     totalInvestmentsStats();
+    // }
+    // if (document.querySelector("#stocks-marketcap") !== null) {
+    //     stocksMarketcap();
+    // }
 
     //index11
     if (document.querySelector("#courses-earnings") !== null) {
@@ -1087,7 +1087,7 @@ function updateColors() {
     if (document.querySelector("#views") !== null) {
         pageviews();
     }
-    
+
 }
 updateColors()
 
