@@ -2,6 +2,25 @@
 
 {% block styles %}
 
+<style>
+/* Subtle zebra striping */
+#daily-closes-body tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.02);
+}
+
+/* Hover highlight */
+#daily-closes-body tr:hover {
+    background-color: rgba(94,118,255,0.08); /* primary color tint */
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+/* Cells: tighter, sharper visuals */
+#daily-closes-body td {
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+</style>
 
 {% endblock %}
 
@@ -98,7 +117,7 @@
                                                             </div>
                                                             <div>
                                                                 <span class="d-block text-muted">Portfolio Value</span>
-                                                                <span class="fs-16 fw-semibold">
+                                                                <span class="fs-18">
                                                                   <div id="kpi-portfolio">${{ "{:,.2f}".format(kpi_portfolio) }}</div>
                                                                 </span>
                                                             </div>
@@ -116,14 +135,39 @@
                                                     <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
                                                         <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
                                                             <div class="me-3">
-                                                                <span class="avatar avatar-rounded bg-secondary">
-                                                                    <i class="ti ti-arrow-big-up-line fs-16"></i>
+                                                              <span class="avatar avatar-rounded bg-secondary">
+                                                                  <i class="ti ti-arrow-big-up-line fs-16"></i>
+                                                              </span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block text-muted">Total Deployed</span>
+                                                                <span class="fs-18">
+                                                                  <div id="kpi-invested">${{ "{:,.2f}".format(kpi_invested) }}</div>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div id="total-invested"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xl-3 col-sm-6">
+                                            <div class="card custom-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
+                                                        <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
+                                                            <div class="me-3">
+                                                                <span class="avatar avatar-rounded bg-primary">
+                                                                    <i class="ti ti-wallet fs-16"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
                                                                 <span class="d-block text-muted">Total Returns</span>
-                                                                <span class="fs-16 fw-semibold">
-                                                                  <div id="kpi-returns">{{ fmt_currency(kpi_returns) }}</div>
+                                                                <span class="fs-18 fw-semibold">
+                                                                  <!-- <div id="kpi-returns">{{ fmt_currency(kpi_returns) }}</div> -->
+                                                                  <div id="kpi-total-return"></div>
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -145,38 +189,14 @@
                                                                 </span>
                                                             </div>
                                                             <div>
-                                                                <span class="d-block text-muted">Return Rate</span>
-                                                                <span class="fs-16 fw-semibold">
-                                                                  <div id="kpi-returnrate">{{ "{:.2f}%".format(kpi_returnrate) }}</div>
+                                                                <span class="d-block text-muted">Total ROI</span>
+                                                                <span class="fs-18 fw-semibold">
+                                                                  <div id="kpi-total-return-rate"></div>
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <div>
                                                             <div id="returns-rate"></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-xl-3 col-sm-6">
-                                            <div class="card custom-card">
-                                                <div class="card-body">
-                                                    <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
-                                                        <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
-                                                            <div class="me-3">
-                                                                <span class="avatar avatar-rounded bg-primary">
-                                                                    <i class="ti ti-wallet fs-16"></i>
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <span class="d-block text-muted">Total Funds</span>
-                                                                <span class="fs-16 fw-semibold">
-                                                                  <div id="kpi-invested">${{ "{:,.2f}".format(kpi_invested) }}</div>
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div id="total-invested"></div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -316,7 +336,7 @@
                                                               <!-- Value + percent change -->
                                                               <div class="text-end me-3">
                                                                   <span class="d-block fw-semibold mb-1">
-                                                                      ${{ "{:,.2f}".format(row.value) }}
+                                                                      ${{ "{:,.0f}".format(row.value) }}
                                                                   </span>
 
                                                                   {% if row.pct > 0 %}
@@ -353,24 +373,22 @@
                                         <!-- Earnings Chart (Right Column) -->
                                         <!-- Earnings Chart Row -->
                                         <div class="row">
-
                                                 <div class="card custom-card">
                                                     <div class="card-header justify-content-between">
                                                         <div class="card-title">Daily Earnings</div>
                                                         <div class="dropdown">
-                                                            <a href="javascript:void(0);" class="p-2 fs-12 text-muted" data-bs-toggle="dropdown">
+                                                            <!-- <a href="javascript:void(0);" class="p-2 fs-12 text-muted" data-bs-toggle="dropdown">
                                                                 View All <i class="ri-arrow-down-s-line align-middle ms-1"></i>
-                                                            </a>
+                                                            </a> -->
                                                         </div>
                                                     </div>
 
-                                                    <div class="card-body">
+                                                    <div class="card-body p-0">
                                                         <div id="earnings-labels" data-json='{{ earnings_labels | tojson }}'></div>
                                                         <div id="earnings-values" data-json='{{ earnings_values | tojson }}'></div>
                                                         <div id="earnings"></div>
                                                     </div>
                                                 </div>
-
                                         </div>
                                         </div>
                                     </div>
@@ -381,25 +399,22 @@
                                             </h6>
                                             <div class="row">
                                                 <div class="col-xxl-2 col-xl-4 col-lg-6 col-md-6 col-sm-12">
-                                                    <div class="p-3 card custom-card border bg-white rounded">
+                                                    <div class="p-3 card custom-card bg-white rounded">
                                                         <div class="d-flex gap-2 flex-wrap align-items-center justify-content-between mb-3">
                                                             <div class="d-flex flex-fill align-items-center">
                                                                 <div class="me-2">
                                                                     <span class="avatar avatar-rounded bg-light p-2">
-                                                                        <i class="bi bi-gift text-primary fs-18"></i>
+                                                                        <i class="ri-timer-2-line fs-18 text-primary"></i>
                                                                     </span>
                                                                 </div>
                                                                 <div class="lh-1">
                                                                     <span class="fw-semibold d-block mb-2 text-default">Runtime</span>
-                                                                    <span class="d-block text-muted fs-12">
+                                                                    <span class="d-block text-muted fs-16">
                                                                       <div id="kpi-runtime"></div>
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-success fs-12 text-end">
-                                                                <span class="d-block"> -%<i class="ti ti-arrow-bear-right"></i></span>
-                                                                <span class="d-block"></span>
-                                                            </div>
+
                                                         </div>
                                                         <div class="d-flex gap-2">
 
@@ -407,23 +422,25 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-xxl-2 col-xl-4 col-lg-6 col-md-6 col-sm-12">
-                                                    <div class="p-3 card custom-card border bg-white rounded">
+                                                    <div class="p-3 card custom-card bg-white rounded">
                                                         <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
                                                             <div class="d-flex flex-fill align-items-center">
                                                                 <div class="me-2">
                                                                     <span class="avatar avatar-rounded bg-light p-2">
-                                                                        <i class="bi bi-truck text-danger fs-18"></i>
+                                                                        <i class="ri-signal-tower-line fs-18 text-danger"></i>
                                                                     </span>
                                                                 </div>
                                                                 <div class="lh-1">
-                                                                    <span class="fw-semibold d-block mb-2 text-default">DPR</span>
-                                                                    <span class="d-block text-muted fs-12"> <div id="kpi-dpr"></div> </span>
+                                                                    <span class="fw-semibold d-block mb-2 text-default">Daily Avg. Return</span>
+                                                                    <span class="d-block text-muted fs-16">
+                                                                      <div id="kpi-dpr"></div>
+                                                                    </span>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-success fs-12 text-end">
+                                                            <!-- <div class="text-success fs-12 text-end">
                                                               <span class="d-block"> - %<i class="ti ti-arrow-bear-right"></i></span>
                                                               <span class="d-block">+$-</span>
-                                                            </div>
+                                                            </div> -->
                                                         </div>
                                                         <div class="d-flex gap-2">
 
@@ -431,25 +448,25 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-xxl-2 col-xl-4 col-lg-6 col-md-6 col-sm-12">
-                                                    <div class="p-3 card custom-card border bg-white rounded">
+                                                    <div class="p-3 card custom-card bg-white rounded">
                                                         <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
                                                             <div class="d-flex flex-fill align-items-center">
                                                                 <div class="me-2">
                                                                     <span class="avatar avatar-rounded bg-light p-2">
-                                                                        <i class="bi bi-phone text-secondary fs-18"></i>
+                                                                        <i class="ri-bar-chart-line fs-18 text-secondary"></i>
                                                                     </span>
                                                                 </div>
                                                                 <div class="lh-1">
-                                                                    <span class="fw-semibold d-block mb-2 text-default">WPR</span>
-                                                                    <span class="d-block text-muted fs-12">
+                                                                    <span class="fw-semibold d-block mb-2 text-default">Weekly Avg. Return</span>
+                                                                    <span class="d-block text-muted fs-16">
                                                                       <div id="kpi-wpr"></div>
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-success fs-12 text-end">
+                                                            <!-- <div class="text-success fs-12 text-end">
                                                               <span class="d-block"> - %<i class="ti ti-arrow-bear-right"></i></span>
                                                               <span class="d-block">+$-</span>
-                                                            </div>
+                                                            </div> -->
                                                         </div>
                                                         <div class="d-flex gap-2">
 
@@ -457,25 +474,25 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-xxl-2 col-xl-4 col-lg-6 col-md-6 col-sm-12">
-                                                    <div class="p-3 card custom-card border bg-white rounded">
+                                                    <div class="p-3 card custom-card bg-white rounded">
                                                         <div class="d-flex gap-2 flex-wrap align-items-center justify-content-between mb-3">
                                                             <div class="d-flex flex-fill align-items-center">
                                                                 <div class="me-2">
                                                                     <span class="avatar avatar-rounded bg-light p-2">
-                                                                        <i class="bi bi-apple text-muted fs-18"></i>
+                                                                        <i class="ri-arrow-down-s-line fs-18 text-danger"></i>
                                                                     </span>
                                                                 </div>
                                                                 <div class="lh-1">
                                                                     <span class="fw-semibold d-block mb-2 text-default">Max DD</span>
-                                                                    <span class="d-block text-muted fs-12">
+                                                                    <span class="d-block text-muted fs-16">
                                                                       <div id="kpi-maxdd">--</div>
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-success fs-12 text-end">
+                                                            <!-- <div class="text-success fs-12 text-end">
                                                                 <span class="d-block"> - %<i class="ti ti-arrow-bear-right"></i></span>
                                                                 <span class="d-block">+$-</span>
-                                                            </div>
+                                                            </div> -->
                                                         </div>
                                                         <div class="d-flex gap-2">
 
@@ -483,25 +500,25 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-xxl-2 col-xl-4 col-lg-6 col-md-6 col-sm-12">
-                                                    <div class="p-3 card custom-card border bg-white rounded">
+                                                    <div class="p-3 card custom-card bg-white rounded">
                                                         <div class="d-flex gap-2 flex-wrap align-items-center justify-content-between mb-3">
                                                             <div class="d-flex flex-fill align-items-center">
                                                                 <div class="me-2">
                                                                     <span class="avatar avatar-rounded bg-light p-2">
-                                                                        <i class="bi bi-currency-bitcoin text-warning fs-18"></i>
+                                                                        <i class="ri-calendar-check-line fs-18 text-warning"></i>
                                                                     </span>
                                                                 </div>
                                                                 <div class="lh-1">
                                                                     <span class="fw-semibold d-block mb-2 text-default"> This Week</span>
-                                                                    <span class="d-block text-muted fs-12">
+                                                                    <span class="d-block text-muted fs-16">
                                                                       <div id="kpi-week"></div>
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-success fs-12 text-end">
+                                                            <!-- <div class="text-success fs-12 text-end">
                                                               <span class="d-block"> - %<i class="ti ti-arrow-bear-right"></i></span>
                                                               <span class="d-block">+$-</span>
-                                                            </div>
+                                                            </div> -->
                                                         </div>
                                                         <div class="d-flex gap-2">
 
@@ -509,25 +526,25 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-xxl-2 col-xl-4 col-lg-6 col-md-6 col-sm-12">
-                                                    <div class="p-3 card custom-card border bg-white rounded">
+                                                    <div class="p-3 card custom-card bg-white rounded">
                                                         <div class="d-flex gap-2 flex-wrap align-items-center justify-content-between mb-3">
                                                             <div class="d-flex flex-fill align-items-center">
                                                                 <div class="me-2">
                                                                     <span class="avatar avatar-rounded bg-light p-2">
-                                                                        <i class="bi bi-card-list text-success fs-18"></i>
+                                                                        <i class="ri-calendar-2-fill fs-18 text-success"></i>
                                                                     </span>
                                                                 </div>
                                                                 <div class="lh-1">
                                                                     <span class="fw-semibold d-block mb-2 text-default">This Month</span>
-                                                                    <span class="d-block text-muted fs-12">
+                                                                    <span class="d-block text-muted fs-16">
                                                                       <div id="kpi-month"></div>
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-success fs-12 text-end">
+                                                            <!-- <div class="text-success fs-12 text-end">
                                                               <span class="d-block"> - %<i class="ti ti-arrow-bear-right"></i></span>
                                                               <span class="d-block">+$-</span>
-                                                            </div>
+                                                            </div> -->
                                                         </div>
                                                         <div class="d-flex gap-2">
 
@@ -538,7 +555,7 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-xl-6">
+                                        <div class="col-xl-8">
                                             <div class="card custom-card">
                                                 <div class="card-header justify-content-between">
                                                     <div class="card-title">
@@ -546,30 +563,31 @@
                                                     </div>
                                                     <div class="dropdown">
                                                         <a href="javascript:void(0);" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
-                                                            All<i class="ri-arrow-down-s-line align-middle ms-1 d-inline-block"></i>
+                                                            Last 2W <i class="ri-arrow-down-s-line align-middle ms-1 d-inline-block"></i>
                                                         </a>
                                                         <ul class="dropdown-menu" role="menu">
-                                                            <li><a class="dropdown-item" href="javascript:void(0);">Buy</a></li>
-                                                            <li><a class="dropdown-item" href="javascript:void(0);">Sell</a></li>
+                                                            <li><a class="dropdown-item" href="javascript:void(0);">Last 1W </a></li>
+                                                            <li><a class="dropdown-item" href="javascript:void(0);">Last 2W </a></li>
+                                                            <li><a class="dropdown-item" href="javascript:void(0);">Last 1M </a></li>
+                                                            <li><a class="dropdown-item" href="javascript:void(0);">All</a></li>
                                                         </ul>
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
                                                   <div class="table-responsive">
-                                                    <table class="table text-nowrap table-bordered border-primary">
+                                                    <table class="table text-nowrap table-striped table-hover">
                                                         <thead>
                                                             <tr>
-                                                                <th scope="col">Date</th>
-                                                                <th scope="col">Open</th>
-                                                                <!-- <th scope="col">High</th>
-                                                                <th scope="col">Low</th> -->
-                                                                <th scope="col">Close</th>
-                                                                <!-- <th scope="col">Spread</th> -->
-                                                                <th scope="col">Volatility</th>
-                                                                <th scope="col">Return</th>
-                                                                <th scope="col">ROI</th>
-                                                                <th scope="col">Cum PnL</th>
-                                                                <th scope="col">Cum ROI</th>
+
+                                                                <th><i class="ti ti-calendar"></i> Date</th>
+                                                                <th><i class="ti ti-arrow-up-circle"></i> Open</th>
+                                                                <th><i class="ti ti-arrow-down-circle"></i> Close</th>
+                                                                <!-- <th><i class="ti ti-activity"></i> Volatility</th> -->
+                                                                <th><i class="ti ti-arrow-right"></i> Return</th>
+                                                                <th><i class="ti ti-cash"></i> Cum PnL</th>
+                                                                <th><i class="ti ti-percentage"></i> PnL</th>
+                                                                <th><i class="ti ti-percentage"></i> Cum ROI</th>
+
                                                             </tr>
                                                         </thead>
 
@@ -581,17 +599,15 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-xl-6">
+                                        <div class="col-xl-4">
                                             <div class="card custom-card">
                                                 <div class="card-header justify-content-between">
                                                     <div class="card-title">
-                                                        Portfolio Stats
+                                                        Current Portfolio
                                                     </div>
                                                     <div class="d-flex flex-wrap gap-2">
-                                                        <div class="me-2">
-                                                            <input class="form-control form-control-sm" type="text" placeholder="Search Any Stock" aria-label=".form-control-sm example">
-                                                        </div>
-                                                        <div class="dropdown">
+
+                                                        <!-- <div class="dropdown">
                                                             <a href="javascript:void(0);" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                                                                 Sort By<i class="ri-arrow-down-s-line align-middle ms-1 d-inline-block"></i>
                                                             </a>
@@ -600,7 +616,7 @@
                                                                 <li><a class="dropdown-item" href="javascript:void(0);">Popular</a></li>
                                                                 <li><a class="dropdown-item" href="javascript:void(0);">Relevant</a></li>
                                                             </ul>
-                                                        </div>
+                                                        </div> -->
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
@@ -608,115 +624,14 @@
                                                         <table class="table text-nowrap table-bordered border-primary">
                                                             <thead>
                                                                 <tr>
-                                                                    <th scope="col">Symbol</th>
-                                                                    <th scope="col">Name</th>
-                                                                    <th scope="col">Price</th>
-                                                                    <th scope="col">1D Change</th>
-                                                                    <th scope="col">1D Return %</th>
-                                                                    <th scope="col">Volume</th>
+                                                                  <th scope="col">ID</th>
+                                                                  <th scope="col">Symbol</th>
+                                                                  <th scope="col">Base ROI</th>
+                                                                  <th scope="col">Levered ROI</th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        APPL
-                                                                    </th>
-                                                                    <td>
-                                                                        App1e Inc.<span class="fw-normal text-primary fs-10 ms-1">NASDAQ</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span>$1,116.90</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">$28.9<i class="ti ti-arrow-bear-right"></i></span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">6.8%</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        12,389.30
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        TTR
-                                                                    </th>
-                                                                    <td>
-                                                                        Twiter.com Inc.<span class="fw-normal text-primary fs-10 ms-1">NYSE</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span>$993.21</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">$11.6<i class="ti ti-arrow-bear-right"></i></span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">10.25%</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        32,125.03
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        BS
-                                                                    </th>
-                                                                    <td>
-                                                                        Boostrap.com.<span class="fw-normal text-primary fs-10 ms-1">NSE</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span>$11.00</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">$16.0<i class="ti ti-arrow-narrow-down"></i></span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">9.0%</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        27,911.16
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        NFLX
-                                                                    </th>
-                                                                    <td>
-                                                                        Netfilx.com Inc.<span class="fw-normal text-primary fs-10 ms-1">LSE</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span>$161.72</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">$9.8<i class="ti ti-arrow-narrow-down"></i></span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-danger">17.8%</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        27,161.89
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th scope="row">
-                                                                        ION
-                                                                    </th>
-                                                                    <td>
-                                                                        Ion.com Corp.<span class="fw-normal text-primary fs-10 ms-1">FSX</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span>$52.65</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">$14.2<i class="ti ti-arrow-bear-right"></i></span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span class="text-success">30.2%</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        65,785.01
-                                                                    </td>
-                                                                </tr>
+                                                            <tbody id="portfolio-stats-body">
+                                                                <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
                                                             </tbody>
                                                         </table>
                                                     </div>

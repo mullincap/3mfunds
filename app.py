@@ -230,6 +230,11 @@ def get_kpis():
     eq_24h = equity_at_or_before(ts_24h)
 
     total_return_pct = (last_eq / first_eq - 1) * 100
+    eff_total_return_pct = (last_eq / 20000 - 1) * 100
+
+    total_return = last_eq - first_eq
+    eff_total_return = last_eq - 20000
+
     dpr = total_return_pct / runtime_days if runtime_days > 0 else None
 
     # ======================
@@ -310,7 +315,9 @@ def get_kpis():
         "rtw_dollars": rtw_dollars,
         "rtm_dollars": rtm_dollars,
         "equity": last_eq,
-        "lowest_daily_return": lowest_daily_return
+        "lowest_daily_return": lowest_daily_return,
+        "eff_total_return_pct": eff_total_return_pct,
+        "eff_total_return": eff_total_return
     })
 
 
@@ -556,6 +563,7 @@ def deploy_detail(deploy_id):
     initial_bal = balance[0]
     final_bal = balance[-1]
     total_return_pct = ((final_bal / initial_bal) - 1) * 100 if initial_bal else 0
+    eff_total_returb_pct = ((final_bal / 20000) - 1) * 100 if initial_bal else 0
 
     # 2. Max Drawdown (%)
     equity_curve = [1 + r for r in roi]   # synthetic curve
@@ -775,6 +783,72 @@ def api_daily_closes_full():
         })
 
     return jsonify(output)
+
+@app.route("/api/portfolio_stats")
+def api_portfolio_stats():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    # 1 — Get latest deploy record
+    cur.execute("SELECT * FROM deploys ORDER BY timestamp_utc DESC LIMIT 1")
+    deploy = cur.fetchone()
+    if not deploy:
+        conn.close()
+        return jsonify([])
+
+    # Extract tickers: R1..R30
+    tickers = []
+    for i in range(1, 31):
+        key = f"R{i}"
+        if deploy.get(key):
+            tickers.append(deploy[key])
+
+    # 2 — Get latest portfolio_history snapshot
+    cur.execute("""
+        SELECT *
+        FROM portfolio_history
+        WHERE deploy_id = %s
+        ORDER BY timestamp_utc DESC
+        LIMIT 1
+    """, (deploy["id"],))
+    snap = cur.fetchone()
+    conn.close()
+
+    if not snap:
+        return jsonify([])
+
+    results = []
+
+    # 3 — Map p1_roi → ticker from R1, p2_roi → R2, etc.
+    for i, ticker in enumerate(tickers, start=1):
+        roi_field = f"p{i}_roi"
+        roi_val = snap.get(roi_field)
+
+        # Normalize ROI
+        if roi_val is None:
+            roi = None
+        elif isinstance(roi_val, str) and roi_val.endswith("%"):
+            roi = float(roi_val.replace("%", ""))
+        else:
+            roi = float(roi_val)
+
+        results.append({
+            "symbol": ticker,
+            "name": ticker,
+            "roi_pct": roi,
+            "roi_color": "green" if roi and roi > 0 else "red" if roi and roi < 0 else "gray"
+        })
+
+    # Sort best → worst
+    results.sort(key=lambda x: (x["roi_pct"] is not None, x["roi_pct"]), reverse=True)
+
+    return jsonify(results)
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

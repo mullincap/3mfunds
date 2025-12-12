@@ -56,7 +56,7 @@ function safePairs(tsArray, dataArray) {
 
 
 // =====================================================
-//  STACKING LOGIC (runs on legend toggle)
+//  STACKING LOGIC
 // =====================================================
 function updateStacking() {
     if (!chart2) return;
@@ -70,42 +70,32 @@ function updateStacking() {
 }
 
 
-
 // =====================================================
 //  MAIN CHART LOADER
 // =====================================================
 window.loadMainChart = function(days) {
-
     fetch(`/api/investments/timeseries?days=${days}`)
         .then(r => r.json())
         .then(data => {
 
             const investedSeries  = safePairs(data.timestamps, data.invested_value);
             const portfolioSeries = safePairs(data.timestamps, data.portfolio_value);
-            const pnlSeries       = safePairs(data.timestamps, data.returns_diff);
 
-            // =========================================
-            // UPDATE RETURN KPI WHEN RANGE CHANGES
-            // =========================================
+            // ---------- KPI Update ----------
             if (portfolioSeries.length > 1) {
-
                 let first = portfolioSeries[0][1];
                 let last  = portfolioSeries[portfolioSeries.length - 1][1];
 
                 let diff = last - first;
                 let pct  = (diff / first) * 100;
 
-                // Update Return Value
                 document.getElementById("kpi-return-amount").innerText =
                     "$" + diff.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                     });
 
-                // Update Return Percentage
-                let pctElem = document.getElementById("kpi-return-pct");
-
-                pctElem.innerHTML = `
+                document.getElementById("kpi-return-pct").innerHTML = `
                     <span class="${pct >= 0 ? "text-success" : "text-danger"} fw-semibold">
                         <i class="ti ti-chevron-${pct >= 0 ? "up" : "down"}"></i>
                         ${pct.toFixed(2)}%
@@ -113,9 +103,6 @@ window.loadMainChart = function(days) {
                 `;
             }
 
-            // ======== your existing chart code continues here ========
-
-            // Destroy prior chart
             if (chart2) chart2.destroy();
 
             const target = document.getElementById("totalInvestmentsStats");
@@ -128,11 +115,11 @@ window.loadMainChart = function(days) {
                       type: "area",
                       data: investedSeries
                   },
-                    {
-                        name: "Portfolio Value",
-                        type: "area",
-                        data: portfolioSeries
-                    }
+                  {
+                      name: "Portfolio Value",
+                      type: "area",
+                      data: portfolioSeries
+                  }
                 ],
 
                 chart: {
@@ -160,41 +147,26 @@ window.loadMainChart = function(days) {
                 stroke: {
                   curve: "smooth",
                   width: [1,2],
-                  dashArray: [5, 0]     // Portfolio solid, Invested dashed
+                  dashArray: [5, 0]
                 },
 
                 yaxis: {
-                  min: undefined,
-                  max: function (max) {
-                      return max * 1.3;   // 33.33% expansion above the highest value
-                  },
-                  labels: {
-                      formatter: function (value) {
-                          return "$" + Number(value).toLocaleString();
-                      },
-                      style: { colors: "#aaa" }
-                  },
-                  title: {
-                      text: "Value",
-                      style: { color: "#ddd" }
-                  }
-              },
+                    min: undefined,
+                    max: max => max * 1.3,
+                    labels: {
+                        formatter: v => "$" + Math.round(v).toLocaleString(),
+                        style: { colors: "#aaa" }
+                    },
+                    title: { text: "Value", style: { color: "#ddd" } }
+                },
 
                 xaxis: {
                     type: "datetime",
                     labels: { style: { colors: "#aaa" } }
                 },
+
                 tooltip: {
-                    y: {
-                        formatter: function (value) {
-                            return "$" + Number(value).toLocaleString();
-                        }
-                    },
-                    x: {
-                        formatter: function (value) {
-                            return new Date(value).toLocaleString();
-                        }
-                    }
+                    y: { formatter: v => "$" + Math.round(v).toLocaleString() }
                 },
 
                 legend: {
@@ -206,22 +178,17 @@ window.loadMainChart = function(days) {
             };
 
             chart2 = new ApexCharts(target, options);
-
-            chart2.render().then(() => {
-
-            });
+            chart2.render();
         });
 };
 
 
 // =====================================================
-//  RANGE BUTTON LOGIC (1D, 1W, 1M, etc.)
+//  RANGE BUTTON LOGIC
 // =====================================================
 document.querySelectorAll(".btn-group button").forEach(btn => {
     btn.addEventListener("click", function () {
 
-
-        // Reset styles on buttons
         document.querySelectorAll(".btn-group button").forEach(b => {
             b.classList.remove("btn-primary");
             b.classList.add("btn-primary-light");
@@ -231,13 +198,8 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
         this.classList.remove("btn-primary-light");
 
         let label = this.textContent.trim();
-
-        console.log("Clicked:", label);
-
-        // ⭐ Update KPI label
         document.getElementById("kpi-return-label").innerText = `${label} Return`;
 
-        // Load correct window
         if (label === "1D") loadMainChart(1);
         else if (label === "3D") loadMainChart(3);
         else if (label === "1W") loadMainChart(7);
@@ -248,123 +210,133 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
     });
 });
 
-
-
-
-
-// =====================================================
-//  DEFAULT LOAD — 1D
-// =====================================================
 loadMainChart(3);
-
-const kpiLabel = document.getElementById("kpi-return-label");
-if (kpiLabel) {
-    kpiLabel.innerText = "3D Return";
-};
-
+document.getElementById("kpi-return-label").innerText = "3D Return";
 
 
 // =====================================================
-//  LOAD ADVANCED KPIS
+//  KPI LOADER (UPDATED WITH TOTAL RETURN KPI)
 // =====================================================
 function loadKPIs() {
+
+    function formatDollarChange(v) {
+        if (v === null || v === undefined) return "--";
+
+        const absVal = Math.abs(v).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        if (v > 0) {
+            return `<span class="text-success" style="font-weight:400">+$${absVal}</span>`;
+        } else if (v < 0) {
+            return `<span class="text-danger" style="font-weight:400">-$${absVal}</span>`;
+        }
+        return `<span class="text-muted" style="font-weight:400">$0.00</span>`;
+    }
+
     fetch("/kpis")
         .then(r => r.json())
         .then(k => {
 
-            // Runtime in days
             document.getElementById("kpi-runtime").innerText =
                 k.runtime_days + " days";
 
-            // Daily %
             document.getElementById("kpi-dpr").innerHTML =
                 k.dpr_pct !== null
-                ? `<span class="${k.dpr_pct >= 0 ? "text-success" : "text-danger"}">
-                     ${k.dpr_pct.toFixed(2)}%
+                ? `<span class="${k.dpr_pct >= 0 ? "text-success" : "text-danger"}" style="font-weight:400">
+                        ${k.dpr_pct.toFixed(2)}%
                    </span>`
                 : "--";
 
-            // Weekly %
             document.getElementById("kpi-wpr").innerHTML =
                 k.wpr_pct !== null
-                ? `<span class="${k.wpr_pct >= 0 ? "text-success" : "text-danger"}">
-                     ${k.wpr_pct.toFixed(2)}%
+                ? `<span class="${k.wpr_pct >= 0 ? "text-success" : "text-danger"}" style="font-weight:400">
+                        ${k.wpr_pct.toFixed(2)}%
                    </span>`
                 : "--";
 
-            // APR %
-            // document.getElementById("kpi-apr").innerHTML =
-            //     `<span class="${k.apr_pct >= 0 ? "text-success" : "text-danger"}">
-            //         ${k.apr_pct.toFixed(2)}%
-            //      </span>`;
             document.getElementById("kpi-maxdd").innerHTML =
                 k.max_dd_pct !== null
-                ? `<span class="text-danger">
-                     ${Math.abs(k.lowest_daily_return).toFixed(2)}%
+                ? `<span class="text-danger" style="font-weight:400">
+                        ${Math.abs(k.lowest_daily_return).toFixed(2)}%
                    </span>`
                 : "--";
 
+            document.getElementById("kpi-week").innerHTML =
+                formatDollarChange(k.rtw_dollars);
 
-            // This week (dollars)
-            document.getElementById("kpi-week").innerText =
-                k.rtw_dollars !== null
-                ? "$" + Number(k.rtw_dollars).toLocaleString()
-                : "--";
+            document.getElementById("kpi-month").innerHTML =
+                formatDollarChange(k.rtm_dollars);
 
-            // This month (dollars)
-            document.getElementById("kpi-month").innerText =
-                k.rtm_dollars !== null
-                ? "$" + Number(k.rtm_dollars).toLocaleString()
-                : "--";
-        })
-        .catch(err => console.error("KPI load error:", err));
+            if (k.eff_total_return_pct !== null && k.eff_total_return_pct !== undefined) {
+                let tr = k.eff_total_return_pct;
+                let abs = Math.abs(tr).toFixed(2);
+                let sign = tr >= 0 ? "+" : "-";
+                let cls = tr >= 0 ? "text-success" : "text-danger";
+
+                document.getElementById("kpi-total-return-rate").innerHTML = `
+                    <span class="${cls}" style="font-weight:400">
+                        ${sign}${abs}%
+                    </span>
+                `;
+            }
+
+            if (k.eff_total_return !== null && k.eff_total_return !== undefined) {
+                let tr = k.eff_total_return;
+
+                // Round to 2 decimals, then convert to comma format
+                let abs = Number(Math.abs(tr).toFixed(2)).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                let sign = tr >= 0 ? "+" : "-";
+                let cls = tr >= 0 ? "text-success" : "text-danger";
+
+                document.getElementById("kpi-total-return").innerHTML = `
+                    <span class="${cls}" style="font-weight:400">
+                        ${sign}$${abs}
+                    </span>
+                `;
+            }
+        });
 }
 
-// Call KPI loader on page load
 loadKPIs();
-
 
 
 // =====================================================
 //  EARNINGS CHART
 // =====================================================
-
 document.addEventListener("DOMContentLoaded", function () {
-
-    // Pull JSON from hidden divs
     const labelsEl = document.getElementById("earnings-labels");
     const valuesEl = document.getElementById("earnings-values");
 
-    if (!labelsEl || !valuesEl) {
-        console.warn("Earnings data not found in DOM.");
-        return;
-    }
+    if (!labelsEl || !valuesEl) return;
 
-    const earningsLabels = JSON.parse(labelsEl.dataset.json);
+    const rawLabels = JSON.parse(labelsEl.dataset.json);
     const earningsValues = JSON.parse(valuesEl.dataset.json);
 
-    // -- Earnings Chart Rendering --
+    const dayInitial = (str) =>
+        new Date(str + " 2024")
+            .toLocaleDateString("en-US", { weekday: "short" })[0];
+
+    const earningsLabels = rawLabels.map(dayInitial);
+
     const element = document.getElementById("earnings");
+
     if (element) {
-        const options = {
-            series: [{
-                name: "Daily Earnings",
-                data: earningsValues
-            }],
-            chart: { type: "bar", height: 200 },
-
-            colors: earningsValues.map((v, idx) =>
-                idx === earningsValues.length - 1
-                    ? "rgb(132, 90, 223)"        // highlight latest day
-                    : "rgba(132, 90, 223, 0.3)"
+        new ApexCharts(element, {
+            series: [{ name: "Daily Earnings", data: earningsValues }],
+            chart: { type: "bar", height: 250, toolbar: { show: false }},
+            colors: earningsValues.map((v, i) =>
+                i === earningsValues.length - 1
+                ? "rgb(132, 90, 223)"
+                : "rgba(132, 90, 223, 0.25)"
             ),
-
             plotOptions: {
-                bar: {
-                    columnWidth: "25%",
-                    distributed: true,
-                    borderRadius: 7,
-                }
+                bar: { columnWidth: "50%", borderRadius: 6, distributed: true }
             },
             dataLabels: { enabled: false },
             legend: { show: false },
@@ -373,49 +345,140 @@ document.addEventListener("DOMContentLoaded", function () {
                 categories: earningsLabels,
                 axisTicks: { show: false },
                 axisBorder: { show: false },
-                labels: { rotate: -45 }
+                labels: { style: { colors: "#ccc", fontSize: "12px" } }
             },
 
             yaxis: {
                 labels: {
-                    formatter: (v) => "$" + v.toFixed(0)
+                    formatter: (v) => {
+                        const sign = v < 0 ? "-" : "";
+                        const abs = Math.abs(v);
+                        return abs >= 1000
+                            ? `${sign}$${(abs/1000).toFixed(0)}k`
+                            : `${sign}$${abs.toFixed(0)}`;
+                    },
+                    style: { colors: "#999", fontSize: "11px" }
                 }
             },
 
-            grid: { borderColor: "rgba(255,255,255,0.06)" }
-        };
+            grid: {
+                borderColor: "rgba(255,255,255,0.08)",
+                strokeDashArray: 4
+            },
 
-        new ApexCharts(element, options).render();
+            tooltip: {
+                y: { formatter: (v) => "$" + v.toLocaleString() }
+            }
+        }).render();
     }
 });
 
+
+// =====================================================
+//  DAILY CLOSES TABLE
+// =====================================================
 function loadDailyClosesTable() {
     fetch("/api/daily_closes_full")
         .then(r => r.json())
         .then(rows => {
+
             const tbody = document.getElementById("daily-closes-body");
             tbody.innerHTML = "";
 
-            rows.forEach(r => {
-                const tr = document.createElement("tr");
+            const fmtMoney = (v) => {
+                const r = Math.round(v);
+                const abs = Math.abs(r).toLocaleString();
+                return r < 0 ? `-$${abs}` : `$${abs}`;
+            };
 
-                tr.innerHTML = `
-                    <td>${r.date}</td>
-                    <td>$${r.start_balance.toLocaleString()}</td>
-                    <!-- <td>$${r.high.toLocaleString()}</td> -->
-                    <!-- <td>$${r.low.toLocaleString()}</td> -->
-                    <td>$${r.close_balance.toLocaleString()}</td>
-                    <!-- <td>$${r.spread_usd.toLocaleString()}</td> -->
-                    <td>${r.volatility_pct.toFixed(2)}%</td>
-                    <td>$${r.return_usd.toLocaleString()}</td>
-                    <td>${r.roi_pct.toFixed(2)}%</td>
-                    <td>$${r.cum_pnl_usd.toLocaleString()}</td>
-                    <td>${r.cum_pnl_pct.toFixed(2)}%</td>
+            const fmtPct = (v) => {
+                const pct = v.toFixed(1) + "%";
+                if (v > 0) return `<span class="text-success"><i class="ti ti-arrow-narrow-up"></i> ${pct}</span>`;
+                if (v < 0) return `<span class="text-danger"><i class="ti ti-arrow-narrow-down"></i> ${pct}</span>`;
+                return `<span class="text-muted">${pct}</span>`;
+            };
+
+            const last14 = rows.slice(-14);
+
+            let sumReturn = 0, sumPnL = 0, sumcumROI = 0, sumcumReturn = 0;
+
+            last14.forEach(r => {
+                sumReturn += r.return_usd;
+                sumPnL += r.cum_pnl_usd;
+                sumcumROI += r.roi_pct;
+                sumcumReturn += r.cum_pnl_pct;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.date}</td>
+                        <td>${fmtMoney(r.start_balance)}</td>
+                        <td>${fmtMoney(r.close_balance)}</td>
+                        <td>${fmtMoney(r.return_usd)}</td>
+                        <td>${fmtMoney(r.cum_pnl_usd)}</td>
+                        <td>${fmtPct(r.roi_pct)}</td>
+                        <td>${fmtPct(r.cum_pnl_pct)}</td>
+                    </tr>
                 `;
-
-                tbody.appendChild(tr);
             });
+
+            const avgReturn = Math.round(sumReturn / last14.length);
+            const avgPnL = Math.round(sumPnL / last14.length);
+            const avgCumRoi = (sumcumROI / last14.length).toFixed(2);
+            const avgCumReturn = (sumcumReturn / last14.length).toFixed(2);
+
+            tbody.innerHTML += `
+                <tr style="background: rgba(255,255,255,0.03)">
+                    <td><strong>Averages</strong></td>
+                    <td></td>
+                    <td></td>
+                    <td><strong>${fmtMoney(avgReturn)}</strong></td>
+                    <td><strong>${fmtMoney(avgPnL)}</strong></td>
+                    <td><strong>${avgCumRoi}%</strong></td>
+                    <td><strong>${avgCumReturn}%</strong></td>
+                </tr>
+            `;
         });
 }
 
 loadDailyClosesTable();
+
+
+// =====================================================
+//  PORTFOLIO STATS TABLE
+// =====================================================
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/api/portfolio_stats")
+        .then(r => r.json())
+        .then(rows => {
+
+            const topRows = rows.slice(0, 15);
+            const body = document.getElementById("portfolio-stats-body");
+            body.innerHTML = "";
+
+            if (topRows.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No active positions.</td></tr>`;
+                return;
+            }
+
+            topRows.forEach((r, idx) => {
+
+                const base = (r.roi_pct ?? 0) * 100;
+                const lev = base * 4;
+
+                const levColor =
+                    lev > 0 ? "text-success"
+                  : lev < 0 ? "text-danger"
+                  : "text-muted";
+
+                body.innerHTML += `
+                    <tr>
+                        <td>P${idx + 1}</td>
+                        <td>${r.symbol}</td>
+                        <td>${base.toFixed(1)}%</td>
+                        <td class="${levColor}">${lev.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+
+        });
+});

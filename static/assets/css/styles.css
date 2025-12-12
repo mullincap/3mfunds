@@ -1,5 +1,6 @@
 @import "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap";
 @import "https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap";
 
 /* static/assets/scss/styles.scss */
 :root {
@@ -68,7 +69,7 @@
   --primary08: rgba(var(--primary-rgb), 0.8);
   --primary09: rgba(var(--primary-rgb), 0.9);
   --primary005: rgba(var(--primary-rgb), 0.05);
-  --default-font-family: "Inter", sans-serif;
+  --default-font-family: "Space Mono", monospace;
   --default-font-weight: 400;
   --default-text-color: #333335;
   --default-border: #f3f3f3;
