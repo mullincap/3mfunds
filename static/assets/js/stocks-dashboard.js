@@ -210,7 +210,7 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
     });
 });
 
-loadMainChart(3);
+loadMainChart(30);
 document.getElementById("kpi-return-label").innerText = "3D Return";
 
 
