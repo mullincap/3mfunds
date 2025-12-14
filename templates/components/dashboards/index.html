@@ -66,24 +66,32 @@
                                         </div>
                                         <div class="d-flex flex-wrap align-items-center mt-md-0 mt-3 justify-content-evenly gap-4">
                                             <div class="text-md-end">
-                                                <span class="d-block fw-semibold">Current Cash</span>
+                                                <span class="d-block fw-semibold"> Total</span>
                                                 <span class="text-primary">
-                                                  <div id="kpi-returns">
-                                                      {{ kpi_returns_compact }}
-                                                  </div>
+
+                                                      {{ kpi_portfolio_compact }}
+
                                                 </span>
                                             </div>
                                             <div class="text-md-end">
-                                                <span class="d-block fw-semibold"> Daily</span>
-                                                <span class="text-warning">$600</span>
+                                                <span class="d-block fw-semibold"> Alpha</span>
+                                                <span class="text-warning">
+                                                    {{ alpha_cash_compact }}
+                                                </span>
                                             </div>
                                             <div class="text-md-end">
-                                                <span class="d-block fw-semibold">Weekly</span>
-                                                <span class="text-danger">$4.2k</span>
+                                                <span class="d-block fw-semibold">Beta</span>
+                                                <span class="text-danger">
+                                                   {{ beta_cash_compact }}
+                                                </span>
                                             </div>
                                             <div class="text-md-end">
-                                                <span class="d-block fw-semibold">Monthly</span>
-                                                <span class="text-info">$16.8k</span>
+                                                <span class="d-block fw-semibold">Cash</span>
+                                                <span class="text-info">
+                                                  <div id="kpi-returns">
+                                                    {{ rem_cash_compact }}
+                                                  </div>
+                                                </span>
                                             </div>
                                             <!-- <div class="text-md-end">
                                                 <span class="d-block fw-semibold">Gain</span>
@@ -620,8 +628,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="card-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table text-nowrap table-bordered border-primary">
+                                                    <table class="table text-nowrap table-striped table-hover">
                                                             <thead>
                                                                 <tr>
                                                                   <th scope="col">ID</th>

@@ -7,6 +7,7 @@ import pytz
 from dotenv import load_dotenv
 from math import floor
 import numpy as np
+from analytics import load_hourly_returns
 load_dotenv()
 
 
@@ -182,8 +183,47 @@ def get_daily_earnings():
     return earnings[-7:]  # last 7 days for chart
 
 
+
+
 # ============ PAGES ==========================================
 
+
+@app.route("/returns")
+def returns_page():
+    series_payload = []  # or {} depending on your JS expectations
+
+    return render_template(
+        "components/returns/returns.html",
+        series_payload=series_payload
+    )
+
+
+@app.route("/api/returns/hourly", methods=["GET"])
+def api_hourly_returns():
+    try:
+        df = load_hourly_returns()
+
+        # Convert DataFrame → JSON-safe list
+        data = [
+            {
+                "date": row["date"],
+                "hour": int(row["hour"]),
+                "hourly_return": float(row["hourly_return"])
+            }
+            for _, row in df.iterrows()
+        ]
+
+        return jsonify({
+            "status": "ok",
+            "count": len(data),
+            "data": data
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 @app.route("/kpis")
 def get_kpis():
@@ -398,6 +438,10 @@ def index():
 
     conn.close()
 
+    alpha_cash = 16000
+    beta_cash = 10000
+    rem_cash = portfolio - alpha_cash - beta_cash
+
     return render_template(
         "components/dashboards/index.html",
         kpi_invested=invested,
@@ -407,6 +451,9 @@ def index():
         kpi_returns_compact=format_compact_currency(returns),
         kpi_portfolio_compact=format_compact_currency(portfolio),
         kpi_invested_compact=format_compact_currency(invested),
+        alpha_cash_compact=format_compact_currency(alpha_cash),
+        beta_cash_compact=format_compact_currency(beta_cash),
+        rem_cash_compact=format_compact_currency(rem_cash),
 
         kpi_today_change=kpi_today_change,
         kpi_today_change_pct=kpi_today_change_pct,
@@ -450,7 +497,7 @@ def historical():
         SELECT timestamp_utc, cum_roi
         FROM historical_roi
         WHERE WEEKDAY(timestamp_utc) = 2   -- 0=Mon,1=Tue,2=Wed
-          AND HOUR(timestamp_utc) = 19
+          AND HOUR(timestamp_utc) = 20
           AND MINUTE(timestamp_utc) = 0
         ORDER BY timestamp_utc ASC
     """)

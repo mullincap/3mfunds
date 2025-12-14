@@ -1,0 +1,265 @@
+{% extends 'layouts/base.html' %}
+
+{% block styles %}
+<style>
+/* Heatmap card polish */
+#heatmap {
+    min-height: 420px;
+}
+
+/* Subtle legend spacing */
+.apexcharts-legend {
+    padding-top: 6px !important;
+}
+
+/* Slightly soften grid borders */
+.apexcharts-heatmap-rect {
+    stroke-width: 0.5;
+    stroke: rgba(255,255,255,0.08);
+}
+
+/* Tooltip polish */
+.apexcharts-tooltip {
+    background: #1e1f25 !important;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.apexcharts-title-text {
+    fill: #e5e7eb !important;
+}
+
+.apexcharts-xaxis-label,
+.apexcharts-yaxis-label {
+    fill: #9ca3af !important;
+}
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+        <div>
+            <h1 class="page-title fw-semibold fs-18 mb-1"> Analytics </h1>
+            <span class="text-muted fs-13">
+                <!-- Time-of-day return distribution (UTC) -->
+            </span>
+        </div>
+        <div class="ms-md-1 ms-0">
+            <nav>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="javascript:void(0);">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Returns
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    <!-- Page Header Close -->
+
+    <div class="row">
+        <div class="col-xxl-3 col-xl-3 col-lg-6 col-md-6">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-top">
+                        <div class="me-3">
+                            <span class="avatar avatar-sm shadow-sm avatar-rounded bg-light ">
+                                <i class="bi bi-graph-up-arrow text-success"></i>
+                            </span>
+                        </div>
+                        <div class="flex-fill">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between fs-14 mb-2">
+                                <span class="flex-fill">Total Return</span>
+                                <span class="ms-1 text-muted">ROI</span>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                              <h5 class="fw-semibold mb-0" id="kpi-total-return"></h5>
+
+                                <div class="flex-fill">
+                                    <span class="ms-2 badge bg-success-transparent rounded-pill">+25.8%</span>
+                                </div>
+                                <div id="btcCoin"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-xl-3 col-lg-6 col-md-6">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-top">
+                        <div class="me-3">
+                          <span class="avatar avatar-sm shadow-sm avatar-rounded bg-light ">
+                              <i class="bi bi-arrow-down-right-circle text-danger"></i>
+                          </span>
+                        </div>
+                        <div class="flex-fill">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between fs-14 mb-2">
+                                <span class="flex-fill">Max Drawdown</span>
+                                <span class="ms-1 text-muted">DD</span>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                              <h5 class="fw-semibold mb-0" id="kpi-max-dd"></h5>
+
+                                <div class="flex-fill">
+                                    <span class="ms-2 badge bg-success-transparent rounded-pill">+12.9%</span>
+                                </div>
+                                <div id="ethCoin"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-xl-3 col-lg-6 col-md-6">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-top">
+                        <div class="me-3">
+                          <span class="avatar avatar-sm shadow-sm avatar-rounded bg-light ">
+                              <i class="bi bi-hourglass-split text-warning"></i>
+                          </span>
+                        </div>
+                        <div class="flex-fill">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between fs-14 mb-2">
+                                <span class="flex-fill">Max DD Duration</span>
+                                <span class="ms-1 text-muted">DDD</span>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                              <h5 class="fw-semibold mb-0" id="kpi-dd-duration"></h5>
+
+                                <div class="flex-fill">
+                                    <span class="ms-2 badge bg-success-transparent rounded-pill">+15.7%</span>
+                                </div>
+                                <div id="dshCoin"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-3 col-xl-3 col-lg-6 col-md-6">
+            <div class="card custom-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-top">
+                        <div class="me-3">
+                          <span class="avatar avatar-sm shadow-sm avatar-rounded bg-light ">
+                              <i class="bi bi-arrow-counterclockwise text-info"></i>
+                          </span>
+                        </div>
+                        <div class="flex-fill">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between fs-14 mb-2">
+                                <span class="flex-fill">DD Recovery Time</span>
+                                <span class="ms-1 text-muted">DDR</span>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                <h5 class="fw-semibold mb-0" id="kpi-dd-recovery"></h5>
+                                <div class="flex-fill">
+                                    <span class="ms-2 badge bg-success-transparent rounded-pill">+12.1%</span>
+                                </div>
+                                <div id="glmCoin"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+      <div id="kpi-row"></div>
+    </div>
+
+    <!-- Heatmap Card -->
+    <div class="row">
+      <div class="col-xl-12">
+          <div class="card custom-card">
+              <div class="card-header justify-content-between">
+                  <div class="card-title">
+                      Cumulative PnL
+                  </div>
+                  <span class="badge bg-success-transparent">
+                      Last 30D
+                  </span>
+              </div>
+              <div class="card-body">
+                  <div id="cumulative-pnl-chart"></div>
+              </div>
+          </div>
+      </div>
+
+    </div>
+    <div class="row">
+        <!-- Heatmap -->
+        <div class="col-xl-8">
+            <div class="card custom-card">
+                <div class="card-header justify-content-between">
+                    <div class="card-title">
+                        Hourly Returns Heatmap (UTC)
+                    </div>
+                    <span class="badge bg-success-transparent">
+                        Last 30D
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div id="heatmap"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Avg Bar -->
+        <div class="col-xl-4">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        Avg Return by Hour
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="hourly-avg-chart"></div>
+                </div>
+            </div>
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title">
+                         Weekday Return Bias (Hourly)
+                    </div>
+                </div>
+                <div class="card-body">
+                  <div id="weekday-avg-chart"></div>
+                </div>
+            </div>
+            <!-- <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        Avg Hourly ROI
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="daily-avg-chart"></div>
+                </div>
+            </div> -->
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/returns_heatmap.js') }}"></script>
+{% endblock %}
