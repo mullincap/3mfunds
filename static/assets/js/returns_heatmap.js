@@ -40,6 +40,20 @@ function hrsToDays(hrs) {
     return `${(hrs / 24).toFixed(1)} days`;
 }
 
+function sharpeColor(value) {
+    if (value >= 2) return "text-emerald";
+    if (value >= 1) return "text-green";
+    if (value >= 0.5) return "text-yellow";
+    return "text-red";
+}
+
+function calmarColor(value) {
+    if (value >= 3) return "text-emerald";
+    if (value >= 1.5) return "text-green";
+    if (value >= 0.75) return "text-yellow";
+    return "text-red";
+}
+
 /* ================================
    Hour Order Helper
 ================================ */
@@ -166,6 +180,117 @@ function renderKPIs(stats) {
             : "Unrecovered";
 }
 
+function renderRiskKPIs({ sharpe, calmar, sortino, hitRate }) {
+    const sharpeEl = document.querySelector("#kpi-sharpe");
+    const calmarEl = document.querySelector("#kpi-calmar");
+    const sortinoEl = document.querySelector("#kpi-sortino");
+    const hitEl = document.querySelector("#kpi-hit-rate");
+
+    if (sharpeEl) {
+        sharpeEl.textContent = sharpe.toFixed(2);
+        sharpeEl.className = "kpi-value " + sharpeColor(sharpe);
+    }
+
+    if (calmarEl) {
+        calmarEl.textContent = calmar.toFixed(2);
+        calmarEl.className = "kpi-value " + calmarColor(calmar);
+    }
+
+    if (sortinoEl) {
+        sortinoEl.textContent = sortino.toFixed(2);
+        // sortinoEl.className = "kpi-value " + calmarColor(sortino);
+    }
+
+    if (hitEl) {
+        hitEl.textContent = (hitRate.toFixed(3) * 100) + "%";
+        // hitEl.className = "kpi-value " + calmarColor(hitRate);
+    }
+
+}
+
+function computeRiskMetrics(data) {
+    const returns = data
+        .map(d => d.hourly_return)
+        .filter(v => typeof v === "number");
+
+    if (returns.length < 2) {
+        return {
+            sharpe: 0,
+            annualVol: 0,
+            annualReturn: 0,
+            calmar: 0
+        };
+    }
+
+    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+
+    const variance =
+        returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) /
+        (returns.length - 1);
+
+    const std = Math.sqrt(variance);
+
+    const HOURS_PER_YEAR = 24 * 365;
+
+    const annualReturn = mean * HOURS_PER_YEAR;
+    const annualVol = std * Math.sqrt(HOURS_PER_YEAR);
+
+    const sharpe =
+        std === 0 ? 0 : (mean / std) * Math.sqrt(HOURS_PER_YEAR);
+
+    return {
+        sharpe,
+        annualVol,
+        annualReturn,
+        calmar: null // filled once max DD is known
+    };
+}
+
+/* ================================
+   Risk Metrics (Hourly)
+================================ */
+function computeRiskMetrics2(data) {
+    // Use hourly returns, exclude zeros (risk-off)
+    const returns = data
+        .map(d => d.hourly_return)
+        .filter(r => r !== 0 && !isNaN(r));
+
+    if (returns.length === 0) {
+        return {
+            sortino: 0,
+            hitRate: 0
+        };
+    }
+
+    const mean =
+        returns.reduce((a, b) => a + b, 0) / returns.length;
+
+    // Downside deviation
+    const downside = returns.filter(r => r < 0);
+    const downsideVariance =
+        downside.length
+            ? downside.reduce((sum, r) => sum + Math.pow(r, 2), 0) /
+              downside.length
+            : 0;
+
+    const downsideStd = Math.sqrt(downsideVariance);
+
+    const HOURS_PER_YEAR = 24 * 365;
+
+    const sortino =
+        downsideStd === 0
+            ? 0
+            : (mean / downsideStd) * Math.sqrt(HOURS_PER_YEAR);
+
+    // Hit Rate
+    const wins = returns.filter(r => r > 0).length;
+    const hitRate = wins / returns.length;
+
+    return {
+        sortino,
+        hitRate
+    };
+}
 
 /* ================================
    Cumulative PnL + Drawdown
@@ -706,7 +831,26 @@ async function loadHeatmap() {
     renderCumulativePnLChart(GLOBAL_RETURNS_DATA);
 
     const stats = computeCumulativeStats(GLOBAL_RETURNS_DATA);
+    const risk = computeRiskMetrics(GLOBAL_RETURNS_DATA);
+    const risk2 = computeRiskMetrics2(GLOBAL_RETURNS_DATA);
+    // Calmar = Annual Return / |Max Drawdown|
+    risk.calmar =
+        stats.maxDrawdown !== 0
+            ? risk.annualReturn / Math.abs(stats.maxDrawdown)
+            : 0;
+
+    risk.sharpe.toFixed(2);
+    risk.calmar.toFixed(2);
+
+    risk.sortino = risk2.sortino;
+    risk.hitRate = risk2.hitRate;
+
+    risk.sortino.toFixed(2);
+    (risk.hitRate * 100).toFixed(1) + "%";
+
+
     renderKPIs(stats);
+    renderRiskKPIs(risk);
 }
 
 /* ================================
