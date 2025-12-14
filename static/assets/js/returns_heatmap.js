@@ -187,23 +187,23 @@ function renderRiskKPIs({ sharpe, calmar, sortino, hitRate }) {
     const hitEl = document.querySelector("#kpi-hit-rate");
 
     if (sharpeEl) {
-        sharpeEl.textContent = sharpe.toFixed(2);
+        sharpeEl.textContent = sharpe.toFixed(1);
         sharpeEl.className = "kpi-value " + sharpeColor(sharpe);
     }
 
     if (calmarEl) {
-        calmarEl.textContent = calmar.toFixed(2);
+        calmarEl.textContent = calmar.toFixed(1);
         calmarEl.className = "kpi-value " + calmarColor(calmar);
     }
 
     if (sortinoEl) {
-        sortinoEl.textContent = sortino.toFixed(2);
-        // sortinoEl.className = "kpi-value " + calmarColor(sortino);
+        sortinoEl.textContent = sortino.toFixed(1);
+        sortinoEl.className = "kpi-value " + calmarColor(sortino);
     }
 
     if (hitEl) {
         hitEl.textContent = (hitRate.toFixed(3) * 100) + "%";
-        // hitEl.className = "kpi-value " + calmarColor(hitRate);
+        hitEl.className = "kpi-value " + calmarColor(hitRate);
     }
 
 }
@@ -839,13 +839,13 @@ async function loadHeatmap() {
             ? risk.annualReturn / Math.abs(stats.maxDrawdown)
             : 0;
 
-    risk.sharpe.toFixed(2);
-    risk.calmar.toFixed(2);
+    risk.sharpe.toFixed(1);
+    risk.calmar.toFixed(1);
 
     risk.sortino = risk2.sortino;
     risk.hitRate = risk2.hitRate;
 
-    risk.sortino.toFixed(2);
+    risk.sortino.toFixed(1);
     (risk.hitRate * 100).toFixed(1) + "%";
 
 
