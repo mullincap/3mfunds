@@ -252,7 +252,7 @@ function loadKPIs() {
             document.getElementById("kpi-wpr").innerHTML =
                 k.wpr_pct !== null
                 ? `<span class="${k.wpr_pct >= 0 ? "text-success" : "text-danger"}" style="font-weight:400">
-                        ${k.wpr_pct.toFixed(2)}%
+                        ${k.wpr_pct.toFixed(1)}%
                    </span>`
                 : "--";
 
@@ -446,42 +446,6 @@ loadDailyClosesTable();
 // =====================================================
 //  PORTFOLIO STATS TABLE
 // =====================================================
-document.addEventListener("DOMContentLoaded", function () {
-    fetch("/api/portfolio_stats")
-        .then(r => r.json())
-        .then(rows => {
-
-            const topRows = rows.slice(0, 15);
-            const body = document.getElementById("portfolio-stats-body");
-            body.innerHTML = "";
-
-            if (topRows.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No active positions.</td></tr>`;
-                return;
-            }
-
-            topRows.forEach((r, idx) => {
-
-                const base = (r.roi_pct ?? 0) * 100;
-                const lev = base * 4;
-
-                const levColor =
-                    lev > 0 ? "text-success"
-                  : lev < 0 ? "text-danger"
-                  : "text-muted";
-
-                body.innerHTML += `
-                    <tr>
-                        <td>P${idx + 1}</td>
-                        <td>${r.symbol}</td>
-                        <td>${base.toFixed(1)}%</td>
-                        <td class="${levColor}">${lev.toFixed(1)}%</td>
-                    </tr>
-                `;
-            });
-
-        });
-});
 
 
 
@@ -681,3 +645,82 @@ document.querySelectorAll('[data-fund]').forEach(tab => {
         });
     });
 });
+
+
+import { computePositionStats, fmtUSD, fmtPct, fmtUSDreg, fmtUSDshort} from "./positions_shared.js";
+
+async function loadHomePortfolio() {
+  const tbody = document.getElementById("home-portfolio-body");
+
+  tbody.innerHTML = "";
+
+
+  if (!tbody) return;
+
+
+  const res = await fetch("/api/positions");
+  const positions = await res.json();
+
+  if (!positions.length) {
+    tbody.innerHTML = `<tr><td colspan="4">No positions</td></tr>`;
+    return;
+  }
+
+  const stats = computePositionStats(positions);
+  console.log("computePositionStats output:", stats);
+
+  // ================================
+  // HOME PORTFOLIO KPIs
+  // ================================
+
+  const elBalance = document.getElementById("home-open");
+  const elMargin  = document.getElementById("home-margin");
+  const elUsed    = document.getElementById("home-pnl-perc");
+  const elPnl     = document.getElementById("home-pnl-usd");
+
+  // Open positions count
+  if (elBalance) {
+    elBalance.textContent = stats.count + "/15";
+  }
+
+  // Total margin
+  if (elMargin) {
+    elMargin.textContent = fmtUSDshort(stats.totalMargin);
+  }
+
+  // Margin used % (PnL ÷ Margin is NOT correct here — use exposure later if needed)
+  if (elUsed) {
+    elUsed.textContent = fmtPct((stats.totalPnl*100) / stats.totalMargin) ;
+  }
+
+  // Total unrealized PnL
+  if (elPnl) {
+    elPnl.textContent = fmtUSD(stats.totalPnl);
+  }
+
+  if (!stats || !Array.isArray(stats.rows)) {
+    console.warn("No portfolio rows to render");
+    return;
+  }
+
+  stats.rows
+    .sort((a, b) => b.pnl - a.pnl)
+    .forEach(r => {
+      const cls = r.pnl >= 0 ? "text-success" : "text-danger";
+
+      const marginPct = stats.totalMargin
+        ? (r.margin / stats.totalMargin) * 100
+        : 0;
+
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${r.symbol} </td>
+          <td class="${cls}">${fmtUSD(r.pnl)}</td>
+          <td class="${cls}">${fmtPct(r.pnlPct)}</td>
+          <td>${marginPct.toFixed(1)}%</td>
+        </tr>
+      `);
+    });
+};
+
+loadHomePortfolio();
