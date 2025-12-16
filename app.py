@@ -9,6 +9,8 @@ from math import floor
 import numpy as np
 from analytics import load_hourly_returns
 load_dotenv()
+from blofin import blofin_get_positions
+from blofin_client import blofin_request
 
 
 app = Flask(__name__)
@@ -436,11 +438,35 @@ def index():
     # Convert Decimal → float
     earnings_values = [float(e["earn"]) for e in earnings]
 
-    conn.close()
 
-    alpha_cash = 16000
-    beta_cash = 10000
+    # ===============================
+    # FUND CASH (LATEST EQUITY)
+    # ===============================
+    cursor.execute("""
+        SELECT fund, equity_after, invested_margin
+        FROM fund_portfolio_daily
+        WHERE (fund, snapshot_date) IN (
+            SELECT fund, MAX(snapshot_date)
+            FROM fund_portfolio_daily
+            WHERE fund IN ('ALPHA', 'BETA')
+            GROUP BY fund
+        )
+    """)
+
+    fund_rows = cursor.fetchall()
+
+    alpha_cash = 0.0
+    beta_cash = 0.0
+
+    for r in fund_rows:
+        if r["fund"] == "ALPHA":
+            alpha_cash = float(r["invested_margin"] or 0)
+        elif r["fund"] == "BETA":
+            beta_cash = float(r["invested_margin"] or 0)
+
     rem_cash = portfolio - alpha_cash - beta_cash
+
+    conn.close()
 
     return render_template(
         "components/dashboards/index.html",
@@ -522,6 +548,51 @@ def historical():
         series_payload=series_payload,
         wed_summaries=wed_summaries,
     )
+
+
+@app.route("/dailies")
+def dailies():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("SELECT * FROM deploys ORDER BY timestamp_utc ASC")
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    # rows used for main table; deploys_list used for sidebar
+    return render_template(
+        "components/deploys/dailies.html",
+        rows=rows,
+        deploys_list=rows
+    )
+
+@app.route("/api/gamma/ltv")
+def api_gamma_ltv():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("""
+        SELECT
+            snapshot_date,
+            equity_before,
+            invested_margin,
+            pnl,
+            cum_pnl,
+            total_return,
+            trade_bal,
+            profit_bal,
+            equity_0pct_reinv
+        FROM gamma_ltv_daily
+        ORDER BY snapshot_date ASC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return jsonify(rows)
+
 
 
 @app.route("/deploys")
@@ -891,12 +962,60 @@ def api_portfolio_stats():
 
     return jsonify(results)
 
+@app.route("/api/fund/<fund>/daily")
+def api_fund_daily(fund):
+    conn = connect_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT
+                snapshot_date,
+                equity_before,
+                invested_margin,
+                pnl,
+                cum_pnl,
+                total_return,
+                equity_after,
+                trade_bal,
+                profit_bal,
+                dar
+            FROM fund_portfolio_daily
+            WHERE fund = %s
+            ORDER BY snapshot_date DESC
+            LIMIT 30;
+        """, (fund,))
+        rows = cur.fetchall()
 
+    return jsonify(rows)
 
+@app.route("/api/positions")
+def api_positions():
+    data = blofin_get_positions()   # wrapper you already use
+    return jsonify(data)
 
+@app.route("/positions")
+def positions():
+    return render_template("components/positions/positions.html")
 
+@app.route("/api/account/summary")
+def api_account_summary():
+    data = blofin_request("GET", "/api/v1/account/balance")
 
+    acct = data.get("data", {})
+    details = acct.get("details", [{}])[0]
 
+    total_equity = float(acct.get("totalEquity", 0))
+    available = float(details.get("available", 0))
+    balance = float(details.get("balance", 0))
+
+    margin_used = max(balance - available, 0)
+    margin_pct = (margin_used / total_equity * 100) if total_equity else 0
+
+    return jsonify({
+        "total_balance": round(total_equity, 2),
+        "total_available": round(available, 2),
+        "total_margin": round(margin_used, 2),
+        "margin_pct": round(margin_pct, 2),
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

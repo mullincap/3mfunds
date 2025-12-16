@@ -163,6 +163,14 @@ function computeCumulativeStats(data) {
 /* ================================
    KPI Row
 ================================ */
+function r2Color(v) {
+    if (v >= 0.8) return "text-emerald";
+    if (v >= 0.6) return "text-green";
+    if (v >= 0.4) return "text-yellow";
+    return "text-red";
+}
+
+
 function renderKPIs(stats) {
     const totalEl = document.getElementById("kpi-total-return");
     const maxDDEl = document.getElementById("kpi-max-dd");
@@ -180,11 +188,17 @@ function renderKPIs(stats) {
             : "Unrecovered";
 }
 
-function renderRiskKPIs({ sharpe, calmar, sortino, hitRate }) {
+function renderRiskKPIs({ sharpe, calmar, sortino, hitRate, rsq }) {
     const sharpeEl = document.querySelector("#kpi-sharpe");
     const calmarEl = document.querySelector("#kpi-calmar");
     const sortinoEl = document.querySelector("#kpi-sortino");
     const hitEl = document.querySelector("#kpi-hit-rate");
+    const r2El = document.querySelector("#kpi-r2");
+
+    if (r2El) {
+        r2El.textContent = rsq.toFixed(2);
+        r2El.className = "kpi-value " + r2Color(rsq);
+    }
 
     if (sharpeEl) {
         sharpeEl.textContent = sharpe.toFixed(1);
@@ -202,8 +216,8 @@ function renderRiskKPIs({ sharpe, calmar, sortino, hitRate }) {
     }
 
     if (hitEl) {
-        hitEl.textContent = (hitRate.toFixed(3) * 100) + "%";
-        hitEl.className = "kpi-value " + calmarColor(hitRate);
+        hitEl.textContent = hitRate.toFixed(3)*100 + '%';
+        // hitEl.className = "kpi-value " + calmarColor(hitRate);
     }
 
 }
@@ -292,6 +306,36 @@ function computeRiskMetrics2(data) {
     };
 }
 
+
+/* ================================
+   Linear Regression Helper
+================================ */
+function computeLinearRegression(yValues) {
+    const n = yValues.length;
+    if (n === 0) return [];
+
+    let sumX = 0,
+        sumY = 0,
+        sumXY = 0,
+        sumX2 = 0;
+
+    for (let i = 0; i < n; i++) {
+        sumX += i;
+        sumY += yValues[i];
+        sumXY += i * yValues[i];
+        sumX2 += i * i;
+    }
+
+    const slope =
+        (n * sumXY - sumX * sumY) /
+        (n * sumX2 - sumX * sumX);
+
+    const intercept = (sumY - slope * sumX) / n;
+
+    return yValues.map((_, i) => slope * i + intercept);
+}
+
+
 /* ================================
    Cumulative PnL + Drawdown
 ================================ */
@@ -333,9 +377,22 @@ function computeCumulativePnL(data) {
 /* ================================
    Cumulative PnL Chart (with Max DD)
 ================================ */
+/* ================================
+   Cumulative PnL Chart (with Trendline + Max DD)
+================================ */
 function renderCumulativePnLChart(data) {
 
     const { series, maxDrawdown, maxDDIndex } = computeCumulativePnL(data);
+
+    const cumulativeValues = series.map(d => d.cumulative);
+    const trendline = computeLinearRegression(cumulativeValues);
+    const rSquared = computeRSquared(cumulativeValues, trendline);
+
+    const r2Color =
+        rSquared >= 0.8 ? "#22c55e" :
+        rSquared >= 0.6 ? "#4ade80" :
+        rSquared >= 0.4 ? "#facc15" :
+        "#f87171";
 
     const options = {
         chart: {
@@ -343,69 +400,92 @@ function renderCumulativePnLChart(data) {
             height: 800,
             toolbar: { show: false }
         },
+
+        // 🔑 Institutional header
+        title: {
+            text: "Cumulative PnL",
+            align: "left",
+            style: {
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "#e5e7eb"
+            }
+        },
+
+        subtitle: {
+            text: `Trend R²: ${rSquared.toFixed(2)}`,
+            align: "right",
+            style: {
+                fontSize: "12px",
+                fontWeight: 500,
+                color: r2Color
+            }
+        },
+
         series: [
             {
                 name: "Cumulative PnL",
-                data: series.map(d => d.cumulative)
+                data: cumulativeValues
+            },
+            {
+                name: "Trend",
+                data: trendline
             },
             {
                 name: "Drawdown",
                 data: series.map(d => d.drawdown)
             }
         ],
-        colors: ["#4ade80", "#f87171"],
+
+        colors: [
+            "#4ade80", // cumulative
+            "#94a3b8", // trendline
+            "#f87171"  // drawdown
+        ],
+
         stroke: {
             curve: "smooth",
-            width: [2, 0]
+            width: [2, 1.5, 0],
+            dashArray: [0, 6, 0] // dashed trendline
         },
+
         fill: {
-            type: ["gradient", "solid"],
+            type: ["gradient", "gradient", "solid"],
             gradient: {
                 shadeIntensity: 0.6,
                 opacityFrom: 0.35,
                 opacityTo: 0.05
             },
-            opacity: [0.35, 0.25]
+            opacity: [0.35, 0.1, 0.25]
         },
+
         xaxis: {
             categories: series.map(d => d.x),
-            tickAmount: 12,
-            labels: {
-                show: false   // 🔑 keeps it clean
-            }
+            labels: { show: false }
         },
+
         yaxis: {
             labels: {
                 formatter: v => (v * 100).toFixed(2) + "%",
                 style: { colors: "#9ca3af" }
             }
         },
+
         tooltip: {
             shared: true,
             y: {
                 formatter: v => (v * 100).toFixed(2) + "%"
             }
         },
-        annotations: {
-            points: [{
-                x: series[maxDDIndex].x,
-                y: series[maxDDIndex].cumulative,
-                marker: {
-                    size: 6,
-                    fillColor: "#f87171"
-                },
-                label: {
-                    text: `Max DD: ${(maxDrawdown * 100).toFixed(2)}%`,
-                    style: {
-                        background: "#7f1d1d",
-                        color: "#fff"
-                    }
-                }
-            }]
+
+        legend: {
+            labels: { colors: "#9ca3af" }
         },
+
         grid: {
             borderColor: "rgba(255,255,255,0.03)"
         },
+
         dataLabels: { enabled: false }
     };
 
@@ -413,6 +493,8 @@ function renderCumulativePnLChart(data) {
         document.querySelector("#cumulative-pnl-chart"),
         options
     ).render();
+
+    return rSquared;
 }
 
 
@@ -579,6 +661,27 @@ function renderWeekdayAvgChart(weekdayAvg) {
         options
     ).render();
 }
+
+/* ================================
+   R² (Trend Confidence)
+================================ */
+function computeRSquared(actual, predicted) {
+    if (!actual.length || actual.length !== predicted.length) return 0;
+
+    const mean =
+        actual.reduce((a, b) => a + b, 0) / actual.length;
+
+    let ssTot = 0;
+    let ssRes = 0;
+
+    for (let i = 0; i < actual.length; i++) {
+        ssTot += Math.pow(actual[i] - mean, 2);
+        ssRes += Math.pow(actual[i] - predicted[i], 2);
+    }
+
+    return ssTot === 0 ? 0 : 1 - ssRes / ssTot;
+}
+
 
 /* ================================
    Hourly Avg Bar Chart
@@ -828,8 +931,8 @@ async function loadHeatmap() {
     renderHourlyAvgChart(computeHourlyAverages(GLOBAL_RETURNS_DATA));
     renderDailyAvgChart(computeDailyAverages(GLOBAL_RETURNS_DATA));
     renderWeekdayAvgChart(computeWeekdayAverages(GLOBAL_RETURNS_DATA));
-    renderCumulativePnLChart(GLOBAL_RETURNS_DATA);
 
+    const rSquared = renderCumulativePnLChart(GLOBAL_RETURNS_DATA);
     const stats = computeCumulativeStats(GLOBAL_RETURNS_DATA);
     const risk = computeRiskMetrics(GLOBAL_RETURNS_DATA);
     const risk2 = computeRiskMetrics2(GLOBAL_RETURNS_DATA);
@@ -843,10 +946,10 @@ async function loadHeatmap() {
     risk.calmar.toFixed(1);
 
     risk.sortino = risk2.sortino;
-    risk.hitRate = risk2.hitRate;
+    risk.rsq = rSquared;
 
     risk.sortino.toFixed(1);
-    (risk.hitRate * 100).toFixed(1) + "%";
+    risk.hitRate = risk2.hitRate;
 
 
     renderKPIs(stats);

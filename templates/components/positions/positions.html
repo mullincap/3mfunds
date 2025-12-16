@@ -1,0 +1,308 @@
+{% extends 'layouts/base.html' %}
+
+{% block styles %}
+
+<style>
+/* =========================================
+   POSITIONS PAGE – TABLE POLISH
+   ========================================= */
+
+/* Divider between KPI cards and table */
+.positions-divider {
+  border: 0;
+  height: 1px;
+  margin: 1.25rem 0 0.75rem;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255,255,255,0.08),
+    transparent
+  );
+}
+
+/* Table header hierarchy */
+.table thead th {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
+}
+
+/* Table row spacing + hover */
+.table tbody td {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+  font-size: 0.83rem;
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(255,255,255,0.03);
+}
+
+/* Emphasize symbol column */
+.table tbody td:first-child {
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+}
+
+/* Align numeric columns cleanly */
+.table tbody td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Exposure % styling */
+.table tbody td.exposure {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.78rem;
+}
+
+/* De-emphasize liquidation column */
+.table tbody td:last-child {
+  color: rgba(255,255,255,0.35);
+  font-size: 0.75rem;
+}
+
+/* Positive / negative PnL emphasis (subtle) */
+.text-success {
+  color: #4ade80 !important;
+}
+
+.text-danger {
+  color: #f87171 !important;
+}
+/* =========================================
+   POSITIONS TABLE – PADDING & SPACING
+   ========================================= */
+
+/* Space between KPI summary and table */
+.positions-table-wrapper {
+  margin-top: 1.5rem;
+}
+
+/* Card body padding boost (table container) */
+.positions-table-wrapper .table-responsive {
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+/* Table outer breathing room */
+.table {
+  margin-bottom: 0;
+  padding-bottom: 50px;
+}
+
+/* Extra horizontal padding for readability */
+.table thead th:first-child,
+.table tbody td:first-child {
+  padding-left: 1.25rem;
+}
+
+.table thead th:last-child,
+.table tbody td:last-child {
+  padding-right: 1.25rem;
+}
+
+/* Slightly taller rows for premium look */
+.table tbody td {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+</style>
+
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+  <div class="card custom-card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div class="card-title">Open Futures Positions</div>
+
+      <!-- SORT TOGGLE -->
+      <div class="btn-group btn-group-sm">
+        <button id="sort-pnl" class="btn btn-primary">Sort: $ PnL</button>
+        <button id="sort-pct" class="btn btn-outline-primary">Sort: % PnL</button>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- =======================
+           SUMMARY KPIs
+      ======================== -->
+      <div class="row mb-4" id="positions-summary">
+
+        <!-- Row 1 -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Total Balance</p>
+              <h4 id="kpi-total-balance">$0</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Total Margin</p>
+              <h4 id="kpi-total-margin">$0</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Total Available</p>
+              <h4 id="kpi-total-available">$0</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">% Balance Used (Margin)</p>
+              <h4 id="kpi-margin-pct">0%</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Open Positions</p>
+              <h4 id="sum-count">–</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Win Rate</p>
+              <h4 id="sum-winrate">0%</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Total Unrealized PnL</p>
+              <h4 id="sum-pnl">$0</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted"> Floating PnL</p>
+              <h4 id="sum-pnl-margin-pct">0%</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Avg Unrealized %</p>
+              <h4 id="sum-pnl-pct">0%</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Gross Exposure</p>
+              <h4 id="sum-exposure">$0</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">PnL Efficiency</p>
+              <h4 id="sum-efficiency">0%</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">PnL Concentration</p>
+              <h4 id="sum-concentration">0%</h4>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+
+
+
+      <!-- =======================
+           POSITIONS TABLE
+      ======================== -->
+      <div class="table-responsive" style="margin-bottom:50px;">
+        <table class="table table-striped table-hover align-middle text-nowrap pd-1">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Side</th>
+              <th>Size</th>
+              <th>Avg Price</th>
+              <th>Mark Price</th>
+              <th>Leverage</th>
+              <th>Margin Mode</th>
+              <th>Exposure %</th>
+              <th>Unrealized PnL</th>
+              <th>Unrealized %</th>
+              <th>Liquidation</th>
+            </tr>
+          </thead>
+          <tbody id="positions-table-body">
+            <tr>
+              <td colspan="11" class="text-center text-muted">
+                Loading open positions…
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =======================
+       LAST UPDATED
+  ======================== -->
+  <div class="d-flex justify-content-end mt-3 mb-3">
+    <small class="text-muted">
+      Last updated: <span id="last-updated">–</span>
+    </small>
+  </div>
+
+
+</div>
+<!-- JS -->
+<script src="{{ url_for('static', filename='assets/js/positions.js') }}"></script>
+
+{% endblock %}

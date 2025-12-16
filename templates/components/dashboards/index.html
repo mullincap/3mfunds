@@ -20,6 +20,28 @@
     padding: 10px 12px;
     vertical-align: middle;
 }
+
+/* Base fund accent — color injected via CSS variable */
+.fund-accent {
+    --fund-color: #5e76ff;
+}
+
+
+.fund-accent tbody tr:not(.text-muted) {
+    border-left-color: var(--fund-color);
+}
+
+/* Hover glow */
+.fund-accent tbody tr:hover {
+    background-color: color-mix(in srgb, var(--fund-color) 12%, transparent);
+    transition: background-color 0.15s ease;
+}
+
+/* Header underline */
+.fund-accent thead th {
+    border-bottom: 2px solid color-mix(in srgb, var(--fund-color) 55%, transparent);
+}
+
 </style>
 
 {% endblock %}
@@ -50,17 +72,36 @@
                                     <div class="d-md-flex d-block flex-wrap align-items-center justify-content-between">
                                         <div class="flex-fill">
                                             <ul class="nav nav-pills nav-style-3" role="tablist">
-                                                <li class="nav-item">
+                                                <!-- <li class="nav-item">
                                                     <a class="nav-link active" data-bs-toggle="tab" role="tab" aria-current="page"
                                                     href="#stocks-portfolio" aria-selected="true">Overview</a>
-                                                </li>
+                                                </li> -->
+                                                <a class="nav-link active"
+                                                   data-bs-toggle="tab"
+                                                   data-fund="OVERVIEW"
+                                                   href="#stocks-portfolio">
+                                                   Overview
+                                                </a>
                                                 <li class="nav-item">
-                                                    <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page"
-                                                    href="#" aria-selected="true">Alpha</a>
+                                                    <a class="nav-link"
+                                                       data-bs-toggle="tab"
+                                                       role="tab"
+                                                       href="#fund-alpha"
+                                                       aria-selected="false"
+                                                       data-fund="ALPHA">
+                                                        Alpha
+                                                    </a>
                                                 </li>
+
                                                 <li class="nav-item">
-                                                    <a class="nav-link" data-bs-toggle="tab" role="tab" aria-current="page"
-                                                    href="#" aria-selected="true">Beta</a>
+                                                    <a class="nav-link"
+                                                       data-bs-toggle="tab"
+                                                       role="tab"
+                                                       href="#fund-beta"
+                                                       aria-selected="false"
+                                                       data-fund="BETA">
+                                                        Beta
+                                                    </a>
                                                 </li>
                                             </ul>
                                         </div>
@@ -68,9 +109,7 @@
                                             <div class="text-md-end">
                                                 <span class="d-block fw-semibold"> Total</span>
                                                 <span class="text-primary">
-
                                                       {{ kpi_portfolio_compact }}
-
                                                 </span>
                                             </div>
                                             <div class="text-md-end">
@@ -111,8 +150,6 @@
                             <div class="tab-content">
                                 <div class="tab-pane show active p-0 border-0" id="stocks-portfolio" role="tabpanel">
                                     <div class="row">
-
-
                                         <div class="col-xl-3 col-sm-6">
                                             <div class="card custom-card">
                                                 <div class="card-body">
@@ -645,11 +682,45 @@
                                                 </div>
                                             </div>
                                         </div>
+                                </div>
+
+                                <!-- GLOBAL FUND EQUITY CHART (ONE INSTANCE ONLY) -->
+                                <!-- <div class="row mb-4">
+                                    <div class="col-xl-12">
+                                        <div class="card custom-card">
+                                            <div class="card-header justify-content-between">
+                                                <div class="card-title" id="fund-equity-title">
+                                                    Fund Equity Curve
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="fund-equity-chart" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
                                     </div>
+                                </div> -->
+                                <div id="fund-equity-wrapper" style="display: none;">
+                                    <div class="card custom-card">
+                                        <div class="card-header">
+                                            <div class="card-title">Fund Equity Curve</div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="fund-equity-chart" style="height: 260px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane p-0 border-0" id="fund-alpha" role="tabpanel">
+                                    {% include "partials/fund_table.html" %}
+                                </div>
+
+                                <div class="tab-pane p-0 border-0" id="fund-beta" role="tabpanel">
+                                    {% include "partials/fund_table.html" %}
                                 </div>
                             </div>
                         </div>
                     </div>
+                  </div>
                     <!-- End::row-2 -->
 
                 </div>

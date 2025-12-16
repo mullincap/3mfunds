@@ -482,3 +482,202 @@ document.addEventListener("DOMContentLoaded", function () {
 
         });
 });
+
+
+
+
+const equityWrapper = document.getElementById("fund-equity-wrapper");
+
+
+function rollingAverage(values, window = 5) {
+    return values.map((_, i) => {
+        if (i < window - 1) return null;
+        const slice = values.slice(i - window + 1, i + 1);
+        const avg = slice.reduce((a, b) => a + b, 0) / window;
+        return Math.round(avg * 100) / 100;
+    });
+}
+
+// ===============================
+// FUND COLORS
+// ===============================
+const FUND_COLORS = {
+    ALPHA: "#7c3aed", // purple
+    BETA:  "#2563eb", // blue
+    GAMMA: "#16a34a"  // green
+};
+
+// ===============================
+// INIT CHART (ONCE)
+// ===============================
+let equityChart = new ApexCharts(
+    document.querySelector("#fund-equity-chart"),
+    {
+        chart: {
+            height: 260,
+            type: "line",
+            toolbar: { show: false },
+            animations: { enabled: true }
+        },
+        series: [],
+        stroke: {
+            width: [0, 3],
+            curve: "smooth",
+            dashArray: [0, 5] // dashed SMA
+        },
+        markers: { size: 0 },
+        xaxis: {
+            categories: [],
+            labels: { show: false }
+        },
+        yaxis: {
+            labels: {
+                formatter: v => "$" + v.toLocaleString()
+            }
+        },
+        grid: {
+            strokeDashArray: 3,
+            borderColor: "rgba(255,255,255,0.08)"
+        },
+        colors: ["#5e76ff", "#5e76ff80"], // will be overridden per fund
+        plotOptions: {
+            bar: {
+                columnWidth: "55%",
+                borderRadius: 3
+            }
+        },
+        tooltip: {
+            shared: true,
+            y: {
+                formatter: v => (v != null ? "$" + v.toLocaleString() : "—")
+            }
+        },
+        legend: {
+            labels: { colors: "#ccc" }
+        }
+    }
+);
+
+equityChart.render();
+
+// ===============================
+// TAB HANDLER
+// ===============================
+document.querySelectorAll('[data-fund]').forEach(tab => {
+    tab.addEventListener("shown.bs.tab", async (e) => {
+        const fund = e.target.dataset.fund.toUpperCase();
+        const paneId = e.target.getAttribute("href");
+        const fundColor = FUND_COLORS[fund] || "#5e76ff";
+
+        // ===============================
+        // SHOW / HIDE EQUITY CHART
+        // ===============================
+        if (fund === "OVERVIEW") {
+            equityWrapper.style.display = "none";
+            return; // ⛔ do not render chart
+        } else {
+            equityWrapper.style.display = "block";
+        }
+
+        const table = document
+            .querySelector(paneId)
+            .querySelector("table");
+
+        // Apply fund accent styling
+        table.classList.add("fund-accent");
+        table.style.setProperty("--fund-color", fundColor);
+
+        const tbody = document
+            .querySelector(paneId)
+            .querySelector(".fund-table-body");
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center text-muted">
+                    Loading ${fund}…
+                </td>
+            </tr>
+        `;
+
+        const res = await fetch(`/api/fund/${fund}/daily`);
+        const rows = await res.json();
+
+        // ===============================
+        // CHART DATA
+        // ===============================
+        const labels = rows.map(r => r.snapshot_date).reverse();
+        const equity = rows.map(r => Number(r.equity_after)).reverse();
+        const equityTrend = rollingAverage(equity, 5);
+
+        // Update axes + colors
+        equityChart.updateOptions({
+            xaxis: { categories: labels },
+            colors: [
+                fundColor,
+                `${fundColor}80`
+            ]
+        });
+
+        // Update series
+        equityChart.updateSeries([
+            {
+                name: "Equity",
+                type: "bar",
+                data: equity
+            },
+            {
+                name: "Trend (5D)",
+                type: "line",
+                data: equityTrend
+            }
+        ], true);
+
+        // Ensure correct sizing after tab visibility
+        setTimeout(() => {
+            equityChart.resize();
+        }, 50);
+
+        // ===============================
+        // TABLE RENDER
+        // ===============================
+        tbody.innerHTML = "";
+
+        rows.forEach(r => {
+            const pnlClass =
+                r.pnl > 0 ? "text-success" :
+                r.pnl < 0 ? "text-danger" :
+                "text-muted";
+
+            const retClass =
+                r.total_return > 0 ? "text-success" :
+                r.total_return < 0 ? "text-danger" :
+                "text-muted";
+
+            const darClass =
+                r.dar > 0 ? "text-success" :
+                r.dar < 0 ? "text-danger" :
+                "text-muted";
+
+            tbody.insertAdjacentHTML("beforeend", `
+                <tr>
+                    <td>${r.snapshot_date}</td>
+                    <td>$${Number(r.equity_before).toLocaleString()}</td>
+                    <td>$${Number(r.invested_margin).toLocaleString()}</td>
+                    <td class="${pnlClass}">
+                        ${r.pnl >= 0 ? "+" : ""}$${Number(r.pnl).toLocaleString()}
+                    </td>
+                    <td>$${Number(r.cum_pnl).toLocaleString()}</td>
+                    <td class="${retClass}">
+                        ${(r.total_return * 100).toFixed(2)}%
+                    </td>
+                    <td>$${Number(r.equity_after).toLocaleString()}</td>
+                    <td>$${Number(r.trade_bal).toLocaleString()}</td>
+                    <td>$${Number(r.profit_bal).toLocaleString()}</td>
+                    <td class="${darClass}">
+                        ${(r.dar * 100).toFixed(2)}%
+                    </td>
+                </tr>
+            `);
+        });
+    });
+});
