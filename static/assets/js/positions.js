@@ -183,9 +183,7 @@ async function loadPositions() {
     rows.forEach(p => {
       const pnl = Number(p.unrealizedPnl || 0);
       const pnlPct = Number(p.unrealizedPnlRatio || 0) * 100;
-      const exposure = grossExposure
-        ? ((Number(p.positions) * Number(p.markPrice)) / grossExposure) * 100
-        : 0;
+      const exposure = Number(p.margin || 0);
 
       const pnlClass = pnl >= 0 ? "text-success" : "text-danger";
 
@@ -197,8 +195,8 @@ async function loadPositions() {
           <td>$${Number(p.averagePrice).toLocaleString()}</td>
           <td>$${Number(p.markPrice).toLocaleString()}</td>
           <td>${p.leverage}×</td>
-          <td>${p.marginMode}</td>          
-          <td class="exposure">${exposure.toFixed(1)}%</td>
+          <td>${p.marginMode}</td>
+          <td>${fmtUSDreg(p.initialMargin)}</td>
           <td class="${pnlClass}">${fmtUSD(pnl)}</td>
           <td class="${pnlClass}">${fmtPct(pnlPct)}</td>
           <td>${p.liquidationPrice

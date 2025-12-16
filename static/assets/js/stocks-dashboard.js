@@ -146,13 +146,13 @@ window.loadMainChart = function(days) {
 
                 stroke: {
                   curve: "smooth",
-                  width: [1,2],
+                  width: [1,1],
                   dashArray: [5, 0]
                 },
 
                 yaxis: {
-                    min: undefined,
-                    max: max => max * 1.3,
+                    min: 15000,
+                    max: max => max * 1.33,
                     labels: {
                         formatter: v => "$" + Math.round(v).toLocaleString(),
                         style: { colors: "#aaa" }
@@ -245,7 +245,7 @@ function loadKPIs() {
             document.getElementById("kpi-dpr").innerHTML =
                 k.dpr_pct !== null
                 ? `<span class="${k.dpr_pct >= 0 ? "text-success" : "text-danger"}" style="font-weight:400">
-                        ${k.dpr_pct.toFixed(2)}%
+                        ${k.dpr_pct.toFixed(1)}%
                    </span>`
                 : "--";
 
@@ -256,12 +256,19 @@ function loadKPIs() {
                    </span>`
                 : "--";
 
-            document.getElementById("kpi-maxdd").innerHTML =
-                k.max_dd_pct !== null
-                ? `<span class="text-danger" style="font-weight:400">
-                        -${Math.abs(k.lowest_daily_return).toFixed(2)}%
+            document.getElementById("kpi-mpr").innerHTML =
+                k.wpr_pct !== null
+                ? `<span class="${k.wpr_pct >= 0 ? "text-success" : "text-danger"}" style="font-weight:400">
+                        ${k.mpr_pct.toFixed(1)}%
                    </span>`
                 : "--";
+
+            // document.getElementById("kpi-maxdd").innerHTML =
+            //     k.max_dd_pct !== null
+            //     ? `<span class="text-danger" style="font-weight:400">
+            //             -${Math.abs(k.lowest_daily_return).toFixed(2)}%
+            //        </span>`
+            //     : "--";
 
             document.getElementById("kpi-week").innerHTML =
                 formatDollarChange(k.rtw_dollars);
@@ -428,7 +435,7 @@ function loadDailyClosesTable() {
 
             tbody.innerHTML += `
                 <tr style="background: rgba(255,255,255,0.03)">
-                    <td><strong>Averages</strong></td>
+                    <td><strong> Daily Average:</strong></td>
                     <td></td>
                     <td></td>
                     <td><strong>${fmtMoney(avgReturn)}</strong></td>

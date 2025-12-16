@@ -285,6 +285,7 @@ def get_kpis():
     ts_7d = now_ts - timedelta(days=7)
     eq_7d = equity_at_or_before(ts_7d)
     wpr = dpr * 7 if dpr is not None else None
+    mpr = dpr * 29.3 if dpr is not None else None
 
     # ======================
     # 4. Annual Percentage Return
@@ -353,6 +354,7 @@ def get_kpis():
         "runtime_days": runtime_days,
         "dpr_pct": dpr,
         "wpr_pct": wpr,
+        "mpr_pct": mpr,
         "apr_pct": apr,
         "rtw_dollars": rtw_dollars,
         "rtm_dollars": rtm_dollars,
