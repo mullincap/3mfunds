@@ -669,7 +669,7 @@ async function loadHomePortfolio() {
   const positions = await res.json();
 
   if (!positions.length) {
-    tbody.innerHTML = `<tr><td colspan="4">No positions</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4"> No open positions</td></tr>`;
     return;
   }
 
