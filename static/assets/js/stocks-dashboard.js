@@ -278,7 +278,7 @@ function loadKPIs() {
 
             if (k.eff_total_return_pct !== null && k.eff_total_return_pct !== undefined) {
                 let tr = k.eff_total_return_pct;
-                let abs = Math.abs(tr).toFixed(2);
+                let abs = Math.abs(tr).toFixed(1);
                 let sign = tr >= 0 ? "+" : "-";
                 let cls = tr >= 0 ? "text-success" : "text-danger";
 

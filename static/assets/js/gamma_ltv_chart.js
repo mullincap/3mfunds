@@ -70,6 +70,7 @@ gammaChart = new ApexCharts(
             labels: { show: false }
         },
         yaxis: {
+            min: 5000,
             labels: {
                 formatter: v => "$" + v.toLocaleString()
             }

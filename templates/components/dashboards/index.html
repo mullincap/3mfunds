@@ -108,25 +108,29 @@
                                         <div class="d-flex flex-wrap align-items-center mt-md-0 mt-3 justify-content-evenly gap-4">
                                             <div class="text-md-end">
                                                 <span class="d-block fw-semibold"> Total</span>
-                                                <span class="text-primary">
+                                                <!-- <span class="text-primary"> -->
+                                                  <span class="text-muted">
                                                       {{ kpi_portfolio_compact }}
                                                 </span>
                                             </div>
                                             <div class="text-md-end">
                                                 <span class="d-block fw-semibold"> Alpha</span>
-                                                <span class="text-warning">
+                                                <!-- <span class="text-warning"> -->
+                                                  <span class="text-muted">
                                                     {{ alpha_cash_compact }}
                                                 </span>
                                             </div>
                                             <div class="text-md-end">
                                                 <span class="d-block fw-semibold">Beta</span>
-                                                <span class="text-danger">
+                                                <!-- <span class="text-danger"> -->
+                                                  <span class="text-muted">
                                                    {{ beta_cash_compact }}
                                                 </span>
                                             </div>
                                             <div class="text-md-end">
                                                 <span class="d-block fw-semibold">Cash</span>
-                                                <span class="text-info">
+                                                <!-- <span class="text-info"> -->
+                                                <span class="text-muted">
                                                   <div id="kpi-returns">
                                                     {{ rem_cash_compact }}
                                                   </div>
@@ -156,7 +160,8 @@
                                                     <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
                                                         <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
                                                             <div class="me-3">
-                                                                <span class="avatar avatar-rounded bg-warning">
+                                                                <!-- <span class="avatar avatar-rounded bg-warning"> -->
+                                                                <span class="avatar avatar-rounded bg-light">
                                                                     <i class="ti ti-wallet fs-16"></i>
                                                                 </span>
                                                             </div>
@@ -180,7 +185,8 @@
                                                     <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
                                                         <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
                                                             <div class="me-3">
-                                                                <span class="avatar avatar-rounded bg-primary">
+                                                                <!-- <span class="avatar avatar-rounded bg-primary"> -->
+                                                                  <span class="avatar avatar-rounded bg-light">
                                                                     <i class="ti ti-wallet fs-16"></i>
                                                                 </span>
                                                             </div>
@@ -205,7 +211,8 @@
                                                     <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
                                                         <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
                                                             <div class="me-3">
-                                                                <span class="avatar avatar-rounded bg-success">
+                                                                <!-- <span class="avatar avatar-rounded bg-success"> -->
+                                                                  <span class="avatar avatar-rounded bg-light">
                                                                     <i class="ti ti-wallet fs-16"></i>
                                                                 </span>
                                                             </div>
@@ -229,7 +236,8 @@
                                                     <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
                                                         <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
                                                             <div class="me-3">
-                                                              <span class="avatar avatar-rounded bg-secondary">
+                                                              <!-- <span class="avatar avatar-rounded bg-secondary"> -->
+                                                              <span class="avatar avatar-rounded bg-light">
                                                                   <i class="ti ti-arrow-big-up-line fs-16"></i>
                                                               </span>
                                                             </div>
@@ -347,8 +355,8 @@
                                                             <small class="text-muted">Timezone: {{ 'Phoenix' if tz_selected=='phx' else 'UTC' }}</small>
                                                         </button>
                                                         <ul class="dropdown-menu">
-                                                            <li><a class="dropdown-item" href="?tz=phx">Local (Phoenix)</a></li>
                                                             <li><a class="dropdown-item" href="?tz=utc">UTC</a></li>
+                                                            <li><a class="dropdown-item" href="?tz=phx">Local (Phoenix)</a></li>
                                                         </ul>
                                                       </div>
                                                     </div>
