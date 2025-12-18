@@ -69,6 +69,38 @@ function updateStacking() {
     }, false, true);
 }
 
+function sma(data, period = 12) {
+  return data.map((v, i, arr) => {
+    if (i < period) return undefined;
+    const slice = arr.slice(i - period, i);
+    return slice.reduce((a, b) => a + b, 0) / period;
+  });
+}
+
+function linearTrend(series) {
+    // series = [[ts, value], ...]
+    const n = series.length;
+    if (n < 2) return [];
+
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+
+    for (let i = 0; i < n; i++) {
+        const x = i;
+        const y = series[i][1];
+        sumX  += x;
+        sumY  += y;
+        sumXY += x * y;
+        sumXX += x * x;
+    }
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    return series.map((p, i) => [
+        p[0],                 // timestamp
+        slope * i + intercept // fitted value
+    ]);
+}
 
 // =====================================================
 //  MAIN CHART LOADER
@@ -152,7 +184,7 @@ window.loadMainChart = function(days) {
 
                 yaxis: {
                     min: 15000,
-                    max: max => max * 1.33,
+                    max: max => max * 1.3,
                     labels: {
                         formatter: v => "$" + Math.round(v).toLocaleString(),
                         style: { colors: "#aaa" }
@@ -211,7 +243,7 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
 });
 
 loadMainChart(30);
-document.getElementById("kpi-return-label").innerText = "3D Return";
+document.getElementById("kpi-return-label").innerText = "1M Return";
 
 
 // =====================================================
@@ -405,6 +437,13 @@ function loadDailyClosesTable() {
                 return `<span class="text-muted">${pct}</span>`;
             };
 
+            const fmtPctMuted = (v) => {
+                const pct = v.toFixed(1) + "%";
+                if (v > 0) return `<span><i class="ti ti-arrow-narrow-up"></i> ${pct}</span>`;
+                if (v < 0) return `<span><i class="ti ti-arrow-narrow-down"></i> ${pct}</span>`;
+                return `<span class="text-muted">${pct}</span>`;
+            };
+
             const last14 = rows.slice(-14);
 
             let sumReturn = 0, sumPnL = 0, sumcumROI = 0, sumcumReturn = 0;
@@ -422,7 +461,7 @@ function loadDailyClosesTable() {
                         <td>${fmtMoney(r.close_balance)}</td>
                         <td>${fmtMoney(r.return_usd)}</td>
                         <td>${fmtMoney(r.cum_pnl_usd)}</td>
-                        <td>${fmtPct(r.roi_pct)}</td>
+                        <td>${fmtPctMuted(r.roi_pct)}</td>
                         <td>${fmtPct(r.cum_pnl_pct)}</td>
                     </tr>
                 `;

@@ -1,8 +1,173 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
+<style>
+
+  /* ===============================
+     WEEKLY SUMMARY ROW (HEADER)
+  ================================ */
+
+  .week-toggle {
+    cursor: pointer;
+    background: linear-gradient(
+      90deg,
+      rgba(34,197,94,0.14),
+      rgba(0,0,0,0)
+    );
+    border-left: 3px solid #22c55e;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #e5e7eb;
+  }
+
+  .week-toggle:hover {
+    background: linear-gradient(
+      90deg,
+      rgba(34,197,94,0.22),
+      rgba(0,0,0,0)
+    );
+  }
+
+  /* spacing between weekly sections */
+  .week-toggle {
+    margin-top: 14px;
+  }
+
+  /* arrow rotation affordance */
+  .week-toggle::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 6px;
+    transition: transform 0.2s ease;
+  }
+
+  .week-toggle.open::before {
+    transform: rotate(90deg);
+  }
+
+  /* positive / negative week emphasis */
+  .week-positive {
+    border-left-color: #22c55e;
+  }
+
+  .week-negative {
+    border-left-color: #ef4444;
+  }
+
+
+  /* ===============================
+     WEEKLY SUMMARY METRIC TEXT
+  ================================ */
+
+  .wk-label {
+    color: #9ca3af;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  .wk-val {
+    font-weight: 600;
+    margin-right: 14px;
+  }
+
+  .wk-val.roi {
+    color: #22c55e;
+  }
+
+  .wk-val.pnl {
+    color: #10b981;
+  }
+
+  .wk-val.equity {
+    color: #e5e7eb;
+  }
+
+
+  /* ===============================
+     WEEK-LOCAL TABLE HEADERS
+  ================================ */
+
+  .week-header {
+    background: rgba(255,255,255,0.04);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9ca3af;
+  }
+
+  .week-header th {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+
+
+  /* ===============================
+     DAILY ROWS (SUBDUED DETAIL)
+  ================================ */
+
+  tr[class^="week-"] td {
+    font-size: 13px;
+    color: #d1d5db;
+  }
+
+  tr[class^="week-"]:hover {
+    background: rgba(255,255,255,0.035);
+  }
+
+
+  /* ===============================
+     NUMERIC ALIGNMENT POLISH
+  ================================ */
+
+  .table {
+    font-variant-numeric: tabular-nums;
+  }
+
+
+  /* ===============================
+     OPTIONAL: TABLE COMFORT
+  ================================ */
+
+  .table td,
+  .table th {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .week-pos   { border-left: 4px solid #22c55e; }
+  .week-neg   { border-left: 4px solid #ef4444; }
+  .week-flat  { border-left: 4px solid rgba(255,255,255,0.25); }
+
+  /* Weekly row background — sign aware */
+  .week-toggle[data-pnl="pos"] {
+    background: linear-gradient(
+      to right,
+      rgba(34,197,94,0.18),
+      rgba(34,197,94,0.05)
+    );
+  }
+
+  .week-toggle[data-pnl="neg"] {
+    background: linear-gradient(
+      to right,
+      rgba(239,68,68,0.18),
+      rgba(239,68,68,0.05)
+    );
+  }
+
+  .week-toggle[data-pnl="flat"] {
+    background: linear-gradient(
+      to right,
+      rgba(148,163,184,0.15),
+      rgba(148,163,184,0.04)
+    );
+  }
+
+</style>
+
 
 <div class="container-fluid">
-  <div class="card custom-card">
+  <div class="card custom-card mt-3">
     <div class="card-header">
       <div class="card-title"> Daily Performance </div>
     </div>
@@ -10,45 +175,165 @@
     <div class="card-body">
 
       <div class="row">
+        <!-- ================= LEFT: CHART ================= -->
         <div class="col-xl-8">
           <div id="gamma-ltv-chart" style="height: 600px;"></div>
         </div>
+
+        <!-- ================= RIGHT: STATS + KPIs ================= -->
         <div class="col-xl-4">
-          Stats
+
+          <!-- ===== Comparative Performance ===== -->
+          <div class="comp-stats mb-4">
+            <h6 class="text-muted mb-3">Comparative Performance</h6>
+
+            <div class="stat-row">
+              <span>Fund Return</span>
+              <strong class="text-success" id="cmp-fund-ret">—%</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>BTC Return</span>
+              <strong id="cmp-btc-ret">—%</strong>
+            </div>
+
+            <div class="stat-row mb-3">
+              <span>ETH Return</span>
+              <strong id="cmp-eth-ret">—%</strong>
+            </div>
+
+            <hr>
+
+            <div class="stat-row">
+              <span>Alpha vs BTC</span>
+              <strong class="text-success" id="cmp-alpha-btc">—%</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Sharpe Ratio</span>
+              <strong id="cmp-sharpe">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Max Drawdown</span>
+              <strong class="text-danger" id="cmp-dd">—%</strong>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- ===== KPI GRID ===== -->
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Channel Position</div>
+                <div class="kpi-value" id="kpi-channel-pos">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Market Regime</div>
+                <div class="kpi-value" id="kpi-regime">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Trend Strength</div>
+                <div class="kpi-value" id="kpi-trend-strength">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Volatility (σ)</div>
+                <div class="kpi-value" id="kpi-volatility">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Upside to Upper</div>
+                <div class="kpi-value" id="kpi-upside">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Downside to Lower</div>
+                <div class="kpi-value" id="kpi-downside">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Deviation vs Trend</div>
+                <div class="kpi-value" id="kpi-deviation">—</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Z-Score</div>
+                <div class="kpi-value" id="kpi-zscore">—</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle text-nowrap">
+      <!-- ================= TABLE ================= -->
+      <div class="table-responsive mt-4 p-3">
+        <table class="table table-hover align-middle text-nowrap">
           <thead>
-            <tr>
+            <!-- <tr>
+              <th style="width:60px;">Day</th>
               <th>Date</th>
-              <th>Equity Before</th>
+              <th>Start</th>
               <th>Invested</th>
+              <th>End</th>
               <th>PnL</th>
               <th>Cum PnL</th>
-              <th>Return</th>
-              <th>Equity After</th>
-              <th>Trade Bal</th>
-              <th>Profit Bal</th>
-            </tr>
+              <th>ROI</th>
+              <th>Cum ROI</th>
+              <th>DAR</th>
+            </tr> -->
           </thead>
+
           <tbody id="gamma-ltv-table-body">
-            <tr><td colspan="8" class="text-center text-muted">Loading…</td></tr>
+            <tr>
+              <td colspan="10" class="text-center text-muted">Loading…</td>
+            </tr>
           </tbody>
         </table>
       </div>
+
     </div>
   </div>
 </div>
 
-<!-- APEX CHARTS JS -->
+<!-- ================= WEEK ROW STYLING ================= -->
+<style>
+  .week-row {
+    cursor: pointer;
+    background: rgba(255,255,255,0.04);
+    font-weight: 600;
+  }
+
+  .week-row:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
+  .day-row td {
+    padding-left: 1.25rem;
+  }
+</style>
+
+<!-- APEX CHARTS -->
 <script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
-<!-- CUSTOM JS -->
-<script src="{{ url_for('static', filename='assets/js/gamma_ltv_chart.js') }}"></script>
-
-
-
+<!-- GAMMA LTV JS -->
+<script src="{{ url_for('static', filename='assets/js/core/dailies.js') }}"></script>
 
 {% endblock %}

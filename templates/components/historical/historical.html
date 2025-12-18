@@ -19,7 +19,6 @@
             </nav>
         </div>
     </div>
-    <!-- Page Header Close -->
 
     <!-- Hidden payload for JS -->
     <div id="hist-series"
@@ -27,23 +26,25 @@
          hidden>
     </div>
 
-    <!-- Start::row-1 (Chart) -->
+    <!-- =========================
+         ROW 1: CHART + KPIs
+         ========================= -->
     <div class="row">
-        <div class="col-xxl-12">
+
+        <!-- Chart -->
+        <div class="col-xl-8">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        Total Cumulative ROI
-                    </div>
+                    <div class="card-title">Total Cumulative ROI</div>
                     <div class="d-flex flex-wrap align-items-center gap-2">
-                        <div class="btn-group" role="group" aria-label="Historical ranges">
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="1D">1D</button>
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="3D">3D</button>
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="1W">1W</button>
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="1M">1M</button>
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="3M">3M</button>
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="6M">6M</button>
-                            <button type="button" class="btn btn-sm btn-primary-light hist-range-btn" data-range="1Y">1Y</button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="1D">1D</button>
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="3D">3D</button>
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="1W">1W</button>
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="1M">1M</button>
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="3M">3M</button>
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="6M">6M</button>
+                            <button class="btn btn-sm btn-primary-light hist-range-btn" data-range="1Y">1Y</button>
                         </div>
                     </div>
                 </div>
@@ -53,32 +54,110 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- End::row-1 -->
 
-    <!-- Start::row-2 (Weekly table) -->
-    <div class="row">
+        <!-- KPI COLUMN -->
+        <div class="col-xl-4">
+            <div class="row g-3">
+
+                <!-- Row 1 -->
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Channel Position</small>
+                            <h5 id="kpi-channel-pos">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Market Regime</small>
+                            <h5 id="kpi-regime">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Trend Strength</small>
+                            <h5 id="kpi-trend">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Volatility (σ)</small>
+                            <h5 id="kpi-vol">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3 -->
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Upside to Upper</small>
+                            <h5 id="kpi-upside">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Downside to Lower</small>
+                            <h5 id="kpi-downside">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4 -->
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Deviation vs Trend</small>
+                            <h5 id="kpi-deviation">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="card custom-card text-center">
+                        <div class="card-body">
+                            <small class="text-muted">Z-Score</small>
+                            <h5 id="kpi-zscore">—</h5>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =========================
+         ROW 2: WEEKLY TABLE
+         ========================= -->
+    <div class="row mt-4">
         <div class="col-xxl-6">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        Weekly Snapshots (Noon)
-                    </div>
-                    <div class="d-flex flex-wrap">
-                        <button class="btn btn-success btn-sm btn-wave waves-effect waves-light">
-                            Refresh <i class="ri-refresh-line ms-1 align-middle"></i>
-                        </button>
-                    </div>
+                    <div class="card-title">Weekly Snapshots (Noon)</div>
                 </div>
 
                 <div class="card-body">
                     <div class="table-responsive">
-                          <table class="table text-nowrap table-striped table-hover">
+                        <table class="table text-nowrap table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th scope="col">Date (UTC)</th>
-                                    <th scope="col">Cumulative ROI</th>
-                                    <th scope="col">Weekly Δ (vs prior)</th>
+                                    <th>Date (UTC)</th>
+                                    <th>Cumulative ROI</th>
+                                    <th>Weekly Δ</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -88,24 +167,12 @@
                                     <td>{{ "%.2f"|format(row.cum_roi) }}%</td>
                                     <td>
                                         {% if row.week_change is not none %}
-                                            {% set change = row.week_change %}
-                                            <span class="
-                                                {% if change > 0 %} text-success
-                                                {% elif change < 0 %} text-danger
-                                                {% else %} text-muted
-                                                {% endif %}
-                                            ">
-                                                {{ "%+0.2f"|format(change) }}%
+                                            <span class="{{ 'text-success' if row.week_change > 0 else 'text-danger' }}">
+                                                {{ "%+0.2f"|format(row.week_change) }}%
                                             </span>
                                         {% else %}
                                             <span class="text-muted">–</span>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">
-                                        No Wednesday snapshots found.
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -117,16 +184,12 @@
             </div>
         </div>
     </div>
-    <!-- End::row-2 -->
 
 </div>
 
 {% endblock %}
 
 {% block scripts %}
-    <!-- APEX CHARTS JS -->
-    <script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-
-    <!-- HISTORICAL JS -->
-    <script src="{{ url_for('static', filename='assets/js/historical.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/historical.js') }}"></script>
 {% endblock %}

@@ -82,6 +82,7 @@ function updatePositionsSummary(positions) {
   let grossExposure = 0;
   let totalMargin = 0;
   let maxPnl = null;
+  let lev = 4;
 
   positions.forEach(p => {
     const pnl = Number(p.unrealizedPnl || 0);
@@ -93,7 +94,7 @@ function updatePositionsSummary(positions) {
     totalPnl += pnl;
     totalPct += pct;
     totalMargin += margin;
-    grossExposure += size * mark;
+    grossExposure += margin * lev;
 
     if (pnl > 0) winners++;
     if (maxPnl === null || pnl > maxPnl) maxPnl = pnl;

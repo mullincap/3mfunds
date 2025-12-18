@@ -5,7 +5,7 @@ let GLOBAL_RETURNS_DATA = [];
 ================================ */
 const SETTINGS = {
     ZERO_RISK_OFF_HOURS: true,   // toggle on/off
-    RISK_OFF_START: 0,           // 12am
+    RISK_OFF_START: 1,           // 12am
     RISK_OFF_END: 6              // up to 6am (exclusive)
 };
 
@@ -37,7 +37,7 @@ function pct(v) {
 function hrsToDays(hrs) {
     if (hrs === null || hrs === undefined) return "—";
     if (hrs < 24) return `${hrs} hrs`;
-    return `${(hrs / 24).toFixed(1)} days`;
+    return `${(hrs / 24).toFixed(2)} days`;
 }
 
 function sharpeColor(value) {
@@ -144,6 +144,8 @@ function computeCumulativeStats(data) {
             };
         });
 
+      //console.log(series);
+
     // If never recovered, drawdown lasts to end
     if (ddEnd === null) ddEnd = series.length - 1;
 
@@ -176,6 +178,8 @@ function renderKPIs(stats) {
     const maxDDEl = document.getElementById("kpi-max-dd");
     const ddDurEl = document.getElementById("kpi-dd-duration");
     const ddRecEl = document.getElementById("kpi-dd-recovery");
+
+    console.log(stats.maxDrawdownDuration);
 
     if (!totalEl) return; // failsafe
 
@@ -568,7 +572,8 @@ function computeWeekdayAverages(data) {
    Weekday Avg Chart (Institutional Lollipop)
 ================================ */
 function renderWeekdayAvgChart(weekdayAvg) {
-    const values = weekdayAvg.map(d => d.value);
+      
+    const values = weekdayAvg.map(d => d.value * 18);
 
     const options = {
         chart: {

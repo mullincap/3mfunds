@@ -1,5 +1,5 @@
 // ===============================
-// HISTORICAL ROI CHART
+// HISTORICAL ROI CHART + KPIs
 // ===============================
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -7,14 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!div) return;
 
     const payload = JSON.parse(div.dataset.json);
-    const fullLabels = payload.labels;   // "YYYY-MM-DD HH:MM"
-    const fullValues = payload.values;   // floats (%)
+    const fullLabels = payload.labels;
+    const fullValues = payload.values;
 
-    // Convert labels → timestamps (ms)
     const fullTS = fullLabels.map(ts => new Date(ts).getTime());
-
-    console.log("Historical labels:", fullLabels.length);
-    console.log("Historical values:", fullValues.length);
 
     let histChart = null;
 
@@ -25,15 +21,16 @@ document.addEventListener("DOMContentLoaded", function () {
         let cutoff = null;
         const now = fullTS[fullTS.length - 1];
 
+        const day = 24 * 3600 * 1000;
+
         switch (range) {
-            case "1D": cutoff = now - 1 * 24 * 3600 * 1000; break;
-            case "3D": cutoff = now - 3 * 24 * 3600 * 1000; break;
-            case "1W": cutoff = now - 7 * 24 * 3600 * 1000; break;
-            case "1M": cutoff = now - 30 * 24 * 3600 * 1000; break;
-            case "3M": cutoff = now - 90 * 24 * 3600 * 1000; break;
-            case "6M": cutoff = now - 180 * 24 * 3600 * 1000; break;
-            case "1Y": cutoff = now - 365 * 24 * 3600 * 1000; break;
-            default: cutoff = null;
+            case "1D": cutoff = now - 1 * day; break;
+            case "3D": cutoff = now - 3 * day; break;
+            case "1W": cutoff = now - 7 * day; break;
+            case "1M": cutoff = now - 30 * day; break;
+            case "3M": cutoff = now - 90 * day; break;
+            case "6M": cutoff = now - 180 * day; break;
+            case "1Y": cutoff = now - 365 * day; break;
         }
 
         if (!cutoff) {
@@ -50,204 +47,163 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ===============================
-    // LINEAR REGRESSION (on window)
+    // REGRESSION + STATS
     // ===============================
-    function calcRegression(values) {
+    function regressionWithResiduals(values) {
         const n = values.length;
-        if (n < 2) {
-            return { a: values[0] || 0, b: 0 };
-        }
+        if (n < 2) return null;
 
-        let sumX = 0;
-        let sumY = 0;
-        let sumXY = 0;
-        let sumX2 = 0;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
 
         for (let i = 0; i < n; i++) {
-            const x = i;
-            const y = values[i];
-            sumX += x;
-            sumY += y;
-            sumXY += x * y;
-            sumX2 += x * x;
+            sumX += i;
+            sumY += values[i];
+            sumXY += i * values[i];
+            sumX2 += i * i;
         }
 
-        const denom = (n * sumX2 - sumX * sumX);
+        const denom = n * sumX2 - sumX * sumX;
         const b = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
         const a = (sumY - b * sumX) / n;
 
-        return { a, b }; // y = a + b * i
+        const regression = values.map((_, i) => a + b * i);
+        const residuals = values.map((v, i) => v - regression[i]);
+
+        return { a, b, regression, residuals };
+    }
+
+    function stdDev(arr) {
+        const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+        return Math.sqrt(
+            arr.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / arr.length
+        );
+    }
+
+    // ===============================
+    // KPI RENDER
+    // ===============================
+    function renderKPIs({ a, b, sigma }, vals, idx) {
+        const current = vals[idx];
+        const regVal = a + b * idx;
+
+        const upper = regVal + 1.8 * sigma;
+        const lower = regVal - 1.8 * sigma;
+
+        const channelPos = ((current - lower) / (upper - lower)) * 100;
+        const deviation = current - regVal;
+        const zScore = deviation / sigma;
+
+        const upside = upper - current;
+        const downside = current - lower;
+
+        const BARS_PER_DAY = 12 * 24;
+        const trendStrength = b * BARS_PER_DAY; // % per month approx
+
+        const regime =
+            b > 0.02 ? "Expansion" :
+            b < -0.02 ? "Contraction" :
+            "Range-Bound";
+
+        // ----- DOM UPDATES -----
+        const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+
+        set("kpi-channel-pos", `${channelPos.toFixed(1)}%`);
+        set("kpi-regime", regime);
+        set("kpi-trend", `${trendStrength.toFixed(2)}%`);
+        set("kpi-vol", sigma.toFixed(2));
+
+        set("kpi-upside", `${upside.toFixed(2)}%`);
+        set("kpi-downside", `${downside.toFixed(2)}%`);
+        set("kpi-deviation", `${deviation >= 0 ? "+" : ""}${deviation.toFixed(2)}%`);
+        set("kpi-zscore", `${zScore >= 0 ? "+" : ""}${zScore.toFixed(2)}σ`);
     }
 
     // ===============================
     // RENDER CHART
     // ===============================
     function renderChart(range = "1Y") {
-
-        // Apply window filter
-        const filtered = filterRange(range);
-        const ts = filtered.ts;
-        const vals = filtered.vals;
+        const { ts, vals } = filterRange(range);
         const n = ts.length;
+        if (!n) return;
 
-        if (n === 0) return;
+        const mainSeries = ts.map((t, i) => ({ x: t, y: vals[i] }));
 
-        // Main series (area)
-        const mainSeries = ts.map((t, i) => ({
-            x: t,
-            y: vals[i]
-        }));
+        const reg = regressionWithResiduals(fullValues);
+        if (!reg) return;
 
-        // ------- LINEAR AVG (window-based) -------
-        const lastVal = vals[n - 1];
-        const step = n > 1 ? lastVal / (n - 1) : 0;
+        const { a, b, residuals } = reg;
+        const sigma = stdDev(residuals);
+        const K = 1.8;
 
-        const linearAvgSeries = ts.map((t, i) => ({
-            x: t,
-            y: step * i
-        }));
+        const regressionSeries = fullTS
+            .map((t, i) => ({ x: t, y: a + b * i }))
+            .filter(p => p.x >= ts[0]);
 
+        const upperSeries = fullTS
+            .map((t, i) => ({ x: t, y: (a + b * i) + K * sigma }))
+            .filter(p => p.x >= ts[0]);
 
-        // ============================================
-        //   LIFETIME REGRESSION  (FIXED HERE)
-        // ============================================
+        const lowerSeries = fullTS
+            .map((t, i) => ({ x: t, y: (a + b * i) - K * sigma }))
+            .filter(p => p.x >= ts[0]);
 
-        // Compute regression using *full dataset*
-        const { a, b } = calcRegression(fullValues);
+        renderKPIs({ a, b, sigma }, vals, vals.length - 1);
 
-        // Build full-regression series for the entire dataset
-        const fullRegression = fullTS.map((t, i) => ({
-            x: t,
-            y: a + b * i
-        }));
-
-        // Slice regression to match current window
-        const regressionSeries = fullRegression.filter(point => point.x >= ts[0]);
-
-
-        // Destroy old chart
         if (histChart) histChart.destroy();
 
-        const options = {
+        histChart = new ApexCharts(document.querySelector("#hist-chart"), {
             chart: {
-                id: "histROI",
-                type: "line",
                 height: 730,
                 toolbar: { show: false },
-                zoom: { autoScaleYaxis: true }
+                zoom: { autoScaleYaxis: true },
+                events: {
+                    mounted: c => {
+                        c.hideSeries("Linear Avg");
+                        c.hideSeries("Linear Regression");
+                    }
+                }
             },
-
             series: [
-                  // MAIN AREA SERIES
-                  {
-                      name: "Cumulative ROI",
-                      type: "line",
-                      data: mainSeries,
-                      stroke: {
-                          width: 2,
-                          curve: "smooth",
-                          colors: ["#00e676"],
-                          opacity: 0.2
-                      },
-                      zIndex: 1
-                  },
-
-                  // LINEAR AVG (FULL OPACITY ON TOP OF AREA)
-                  {
-                      name: "Linear Avg",
-                      type: "line",
-                      data: linearAvgSeries,
-                      color: "#3b82f6",
-                      stroke: {
-                          width: 3,
-                          curve: "straight",
-                          colors: ["#3b82f6"],
-                          opacity: 1
-                      },
-                      fill: { type: "solid", opacity: 1 },
-                      markers: { size: 0 },
-                      zIndex: 9999    // ← FORCES LINE ON TOP
-                  },
-
-                  // LINEAR REGRESSION (FULL OPACITY ON TOP OF AREA)
-                  {
-                      name: "Linear Regression",
-                      type: "line",
-                      data: regressionSeries,
-                      color: "#facc15",
-                      stroke: {
-                          width: 3,
-                          curve: "straight",
-                          colors: ["#facc15"],
-                          opacity: 1
-                      },
-                      fill: { type: "solid", opacity: 1 },
-                      markers: { size: 0 },
-                      zIndex: 9998   // just under Linear Avg
-                  }
-              ],
-
-            colors: [
-                "#22c55e",
-                "#38bdf8",
-                "#facc15"
+                { name: "Cumulative ROI", data: mainSeries },
+                { name: "Linear Regression", data: regressionSeries },
+                { name: "Upper Limit", data: upperSeries },
+                { name: "Lower Limit", data: lowerSeries }
             ],
-
+            colors: ["#22c55e", "#facc15", "#d946ef", "#22d3ee"],
             stroke: {
                 curve: "smooth",
-                width: [3, 2, 1],
-                dashArray: [0, 4, 4],
-                opacity: 1
+                dashArray: [0, 0, 6, 6]
             },
-
-
-
             xaxis: { type: "datetime" },
             yaxis: {
                 labels: {
                     formatter: v => v.toFixed(2) + "%"
                 }
             },
-
             tooltip: {
                 shared: true,
                 y: { formatter: v => v.toFixed(2) + "%" }
             },
-
             legend: { labels: { colors: "#ddd" } }
-        };
+        });
 
-        histChart = new ApexCharts(document.querySelector("#hist-chart"), options);
         histChart.render();
     }
 
-    // ====================================
-    // RANGE BUTTON HANDLER
-    // ====================================
     document.querySelectorAll(".hist-range-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
+        btn.addEventListener("click", () => {
             document.querySelectorAll(".hist-range-btn").forEach(b => {
                 b.classList.remove("btn-primary");
                 b.classList.add("btn-primary-light");
             });
-
-            this.classList.remove("btn-primary-light");
-            this.classList.add("btn-primary");
-
-            renderChart(this.dataset.range);
+            btn.classList.add("btn-primary");
+            btn.classList.remove("btn-primary-light");
+            renderChart(btn.dataset.range);
         });
     });
 
-    // ====================================
-    // DEFAULT RANGE → 1 YEAR
-    // ====================================
     renderChart("1Y");
-
-    // Highlight 1Y button on load
-    document.querySelectorAll(".hist-range-btn").forEach(btn => {
-        if (btn.dataset.range === "1Y") {
-            btn.classList.add("btn-primary");
-            btn.classList.remove("btn-primary-light");
-        }
-    });
 });

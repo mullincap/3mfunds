@@ -309,16 +309,23 @@ def get_kpis():
     # ======================
     # 5. Returns This Week (Dollars)
     # ======================
-    weekday = now_ts.weekday()   # Monday=0 ... Sunday=6
-    sunday_offset = (weekday + 1) % 7
 
-    # Sunday 00:00 UTC
-    sunday_start = datetime(
-        now_ts.year, now_ts.month, now_ts.day,
-        tzinfo=timezone.utc
-    ) - timedelta(days=sunday_offset, hours=now_ts.hour, minutes=now_ts.minute)
+    now_ts = datetime.now(timezone.utc)
+
+    # Monday=0 ... Sunday=6
+    days_since_sunday = (now_ts.weekday() + 1) % 7
+
+    sunday_start = (
+        now_ts
+        - timedelta(days=days_since_sunday)
+    ).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
     eq_sunday = equity_at_or_before(sunday_start)
+    print("Sunday 00:00 UTC:", sunday_start)
+    print("eq_sunday:", eq_sunday)
+
     rtw_dollars = last_eq - eq_sunday if eq_sunday else None
 
     # -------------------------------------------
@@ -346,9 +353,9 @@ def get_kpis():
     # ======================
     month_start = datetime(now_ts.year, now_ts.month, 1, tzinfo=timezone.utc)
     eq_month = equity_at_or_before(month_start)
-    rtm_dollars = last_eq - eq_month if eq_month else None
 
-    print(runtime_days)
+    print("eq_month:", eq_month)
+    rtm_dollars = last_eq - eq_month if eq_month else None
 
     return jsonify({
         "runtime_days": runtime_days,
