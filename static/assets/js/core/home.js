@@ -3,6 +3,8 @@
 // =====================================================
 let chart2 = null;
 
+const WITHDRAWAL_ADJUSTMENT = 2000;
+
 // =====================================================
 //  MINI SPARKLINE CHARTS
 // =====================================================
@@ -129,8 +131,18 @@ window.loadMainChart = function(days) {
         .then(data => {
 
             const dates  = data.dates;    // e.g. ["Nov-19", ..., "Dec-18"]
-            const values = data.values;   // daily portfolio values
-            const trendline = linearRegression(values);
+
+            const rawValues = data.values.slice(); // preserve original
+            const values = data.values.slice();    // chart values
+
+            // Apply +$2000 to the LAST day only
+            if (values.length > 0) {
+                values[values.length - 1] += WITHDRAWAL_ADJUSTMENT;
+            }
+
+            // Trendline (choose ONE option below)
+            const trendline = linearRegression(values);       // OPTION A: include adjustment
+            // const trendline = linearRegression(rawValues); // OPTION B: exclude adjustment
 
             // ---------- KPI Update (30D change) ----------
             if (values.length > 1) {
