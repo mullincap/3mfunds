@@ -323,8 +323,6 @@ def get_kpis():
     )
 
     eq_sunday = equity_at_or_before(sunday_start)
-    print("Sunday 00:00 UTC:", sunday_start)
-    print("eq_sunday:", eq_sunday)
 
     rtw_dollars = last_eq - eq_sunday if eq_sunday else None
 
@@ -354,7 +352,6 @@ def get_kpis():
     month_start = datetime(now_ts.year, now_ts.month, 1, tzinfo=timezone.utc)
     eq_month = equity_at_or_before(month_start)
 
-    print("eq_month:", eq_month)
     rtm_dollars = last_eq - eq_month if eq_month else None
 
     return jsonify({
@@ -373,9 +370,8 @@ def get_kpis():
 
 
 # dashboards
-@app.route('/')
-@app.route("/index")
-def index():
+@app.route("/admin")
+def admin():
 
     conn = connect_db()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
@@ -478,7 +474,7 @@ def index():
     conn.close()
 
     return render_template(
-        "components/dashboards/index.html",
+        "components/dashboards/admin.html",
         kpi_invested=invested,
         kpi_portfolio=portfolio,
         kpi_returns=returns,
@@ -502,6 +498,176 @@ def index():
         earnings_values=earnings_values
     )
 
+@app.route("/")
+@app.route("/index")
+def index():
+
+    conn = connect_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    # ===============================
+    # LATEST PORTFOLIO SNAPSHOT
+    # ===============================
+    cursor.execute("""
+        SELECT invested_value, portfolio_value, total_returns
+        FROM investments_timeseries
+        ORDER BY timestamp_utc DESC
+        LIMIT 1
+    """)
+
+    row = cursor.fetchone()
+
+    invested = 0.0
+    portfolio = 0.0
+    returns = 0.0
+    return_rate = 0.0
+
+    if row:
+        invested = float(row.get("invested_value", 0) or 0)
+        portfolio = float(row.get("portfolio_value", 0) or 0)
+        returns = float(row.get("total_returns", 0) or 0)
+
+        if invested > 0:
+            return_rate = (portfolio - invested) / invested * 100
+
+    # ===============================
+    # TODAY CHANGE (UTC MIDNIGHT)
+    # ===============================
+    now = datetime.now(timezone.utc)
+    midnight_utc = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    cursor.execute("""
+        SELECT portfolio_value
+        FROM investments_timeseries
+        WHERE timestamp_utc >= %s
+        ORDER BY timestamp_utc ASC
+        LIMIT 1
+    """, (midnight_utc,))
+
+    midnight_row = cursor.fetchone()
+
+    if midnight_row:
+        midnight_portfolio = float(midnight_row["portfolio_value"])
+        latest_portfolio = portfolio
+
+        kpi_today_change = latest_portfolio - midnight_portfolio
+        kpi_today_change_pct = (kpi_today_change / midnight_portfolio) * 100
+    else:
+        kpi_today_change = 0.0
+        kpi_today_change_pct = 0.0
+
+    # ===============================
+    # TIMEZONE SELECTION
+    # ===============================
+    tz_arg = request.args.get("tz", "utc")
+
+    if tz_arg == "utc":
+        tz = pytz.UTC
+    else:
+        tz = pytz.timezone("America/Phoenix")
+
+    daily_closes = get_daily_closes(tz=tz)
+    earnings = get_daily_earnings()
+
+    earnings_labels = [
+        datetime.strptime(e["day"], "%Y-%m-%d").strftime("%b %d")
+        for e in earnings
+    ]
+    earnings_values = [float(e["earn"]) for e in earnings]
+
+    # ===============================
+    # FUND CASH
+    # ===============================
+    cursor.execute("""
+        SELECT fund, equity_after, invested_margin
+        FROM fund_portfolio_daily
+        WHERE (fund, snapshot_date) IN (
+            SELECT fund, MAX(snapshot_date)
+            FROM fund_portfolio_daily
+            WHERE fund IN ('ALPHA', 'BETA')
+            GROUP BY fund
+        )
+    """)
+
+    fund_rows = cursor.fetchall()
+
+    alpha_cash = 0.0
+    beta_cash = 0.0
+
+    for r in fund_rows:
+        if r["fund"] == "ALPHA":
+            alpha_cash = float(r["invested_margin"] or 0)
+        elif r["fund"] == "BETA":
+            beta_cash = float(r["invested_margin"] or 0)
+
+    rem_cash = portfolio - alpha_cash - beta_cash
+
+    conn.close()
+
+    return render_template(
+        "components/dashboards/index.html",
+
+        # KPIs
+        kpi_invested=invested,
+        kpi_portfolio=portfolio,
+        kpi_returns=returns,
+        kpi_returnrate=return_rate,
+
+        kpi_returns_compact=format_compact_currency(returns),
+        kpi_portfolio_compact=format_compact_currency(portfolio),
+        kpi_invested_compact=format_compact_currency(invested),
+
+        # Fund cash
+        alpha_cash_compact=format_compact_currency(alpha_cash),
+        beta_cash_compact=format_compact_currency(beta_cash),
+        rem_cash_compact=format_compact_currency(rem_cash),
+
+        # Today change
+        kpi_today_change=kpi_today_change,
+        kpi_today_change_pct=kpi_today_change_pct,
+        fmt_currency=fmt_currency,
+
+        # Charts
+        daily_closes=daily_closes,
+        tz_selected=tz_arg,
+
+        earnings_data=earnings,
+        earnings_labels=earnings_labels,
+        earnings_values=earnings_values
+    )
+
+
+@app.route("/api/home/daily-equity")
+def api_home_daily_equity():
+
+    conn = connect_db()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    cursor.execute("""
+        SELECT
+            DATE(timestamp_utc) AS day,
+            MAX(portfolio_value) AS portfolio_value
+        FROM investments_timeseries
+        WHERE timestamp_utc >= UTC_DATE() - INTERVAL 30 DAY
+        GROUP BY DATE(timestamp_utc)
+        ORDER BY day ASC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    dates = []
+    values = []
+
+    for r in rows:
+        # Format for chart labels: "Dec-18"
+        dates.append(r["day"].strftime("%b-%d"))
+        values.append(float(r["portfolio_value"]))
+
+    return jsonify({
+        "dates": dates,
+        "values": values
+    })
 
 @app.route("/historical")
 def historical():
