@@ -12,7 +12,10 @@
         <meta name="keywords" content="admin dashboard, funds, investment, analytics, robo fund, crypto, crypto fund, wealth management">
 
         <!-- TITLE -->
-        <title>{% block title %} 3M Funds {% endblock %}</title>
+
+        <title>
+          {% block page_title %}Dashboard{% endblock %} | 3M
+        </title>
 
         <!-- FAVICON -->
         <link rel="icon" href="{{ url_for('static', filename='assets/images/brand-logos/favicon.ico') }}" type="image/x-icon">
