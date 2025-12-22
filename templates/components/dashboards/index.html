@@ -42,6 +42,26 @@
     border-bottom: 2px solid color-mix(in srgb, var(--fund-color) 55%, transparent);
 }
 
+.kpi-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: #9aa4ad;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kpi-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e5e7eb;
+  line-height: 1.2;
+}
+
 </style>
 
 {% endblock %}
@@ -674,33 +694,35 @@
 
                                               <!-- KPIs -->
                                               <div class="row g-3 mb-4" id="home-portfolio-kpis">
+
                                                 <div class="col-md-3">
                                                   <div class="kpi-box">
-                                                    <span> Positions: </span>
-                                                    <span id="home-open">—</span>
+                                                    <div class="kpi-label">Positions</div>
+                                                    <div class="kpi-value" id="home-open">—</div>
                                                   </div>
                                                 </div>
 
                                                 <div class="col-md-3">
                                                   <div class="kpi-box">
-                                                    <span> Margin: </span>
-                                                    <span id="home-margin">—</span>
+                                                    <div class="kpi-label">Margin</div>
+                                                    <div class="kpi-value" id="home-margin">—</div>
                                                   </div>
                                                 </div>
 
                                                 <div class="col-md-3">
                                                   <div class="kpi-box">
-                                                    <span> PnL (%): </span>
-                                                    <span id="home-pnl-perc">—</span>
+                                                    <div class="kpi-label">PnL (%)</div>
+                                                    <div class="kpi-value" id="home-pnl-perc">—</div>
                                                   </div>
                                                 </div>
 
                                                 <div class="col-md-3">
                                                   <div class="kpi-box">
-                                                    <span> PnL ($): </span>
-                                                    <span id="home-pnl-usd">—</span>
+                                                    <div class="kpi-label">PnL ($)</div>
+                                                    <div class="kpi-value" id="home-pnl-usd">—</div>
                                                   </div>
                                                 </div>
+
                                               </div>
 
                                               <!-- Top Positions -->
