@@ -1,7 +1,9 @@
 import pymysql
 import os
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv, find_dotenv
+
+ENV_PATH = find_dotenv()
+load_dotenv(ENV_PATH)
 
 print("connecting to db")
 def connect_db():

@@ -1192,5 +1192,14 @@ def api_account_summary():
         "margin_pct": round(margin_pct, 2),
     })
 
+
+from routes.job_health import bp as job_health_bp
+app.register_blueprint(job_health_bp)
+
+
+@app.route("/admin/job-health")
+def job_health_page():
+    return render_template("components/admin/job_health.html")
+
 if __name__ == '__main__':
     app.run(debug=True)

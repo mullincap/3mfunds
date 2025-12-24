@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Job Health</title>
+  <style>
+    body { font-family: system-ui; background:#0f172a; color:#e5e7eb }
+    table { border-collapse: collapse; width:100% }
+    th, td { padding:8px 12px; border-bottom:1px solid #334155 }
+    .ok { color:#22c55e }
+    .fail { color:#ef4444 }
+    .run { color:#facc15 }
+  </style>
+</head>
+<body>
+
+<h2>🩺 Job Health Dashboard</h2>
+
+<table id="tbl">
+  <thead>
+    <tr>
+      <th>Job</th>
+      <th>Status</th>
+      <th>Last Run</th>
+      <th>Duration (s)</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+fetch("/api/jobs/latest")
+  .then(r => r.json())
+  .then(rows => {
+    const tb = document.querySelector("#tbl tbody")
+    rows.forEach(r => {
+      const tr = document.createElement("tr")
+      const cls =
+        r.status === "SUCCESS" ? "ok" :
+        r.status === "FAILED"  ? "fail" : "run"
+
+      tr.innerHTML = `
+        <td>${r.job_name}</td>
+        <td class="${cls}">${r.status}</td>
+        <td>${r.last_run || "-"}</td>
+        <td>${r.duration ?? "-"}</td>
+      `
+      tb.appendChild(tr)
+    })
+  })
+</script>
+
+</body>
+</html>
