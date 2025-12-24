@@ -14,6 +14,16 @@
 
 <div class="container-fluid">
 
+  <div class="card custom-card mb-4">
+    <div class="card-header">
+      <div class="card-title">Composite Cycle Return (11pm → 5pm MST)</div>
+    </div>
+    <div class="card-body">
+      <div id="cycleCurve"></div>
+    </div>
+  </div>
+
+
     <div class="row pt-3">
         <div class="col-xl-12">
             <div class="card custom-card">
@@ -89,5 +99,82 @@
     </div>
 
 </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+
+      <!-- DEPLOYS JS -->
+
+      <script>
+        fetch("/api/deploys/cycle_curve")
+          .then(r => r.json())
+          .then(data => {
+
+            // enforce cycle order (11pm → midnight → onward)
+            const hourOrder = [23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
+            data.sort((a, b) =>
+              hourOrder.indexOf(+a.hour_mst) - hourOrder.indexOf(+b.hour_mst)
+            );
+
+            // format hour labels
+            const formatHour = h => {
+              h = Number(h);
+              if (h === 0) return "12am";
+              if (h === 12) return "12pm";
+              return h < 12 ? `${h}am` : `${h - 12}pm`;
+            };
+
+            const labels = data.map(d => formatHour(d.hour_mst));
+
+            const LEVERAGE = 4;
+
+            const values = data.map(d =>
+              +(d.avg_return * LEVERAGE * 100).toFixed(2)
+            );
+
+            new ApexCharts(
+              document.querySelector("#cycleCurve"),
+              {
+                chart: {
+                  type: "bar",
+                  height: 600,
+                  toolbar: { show: false }
+                },
+                series: [{
+                  name: "Composite Return (%)",
+                  data: values
+                }],
+                colors: ["#02f59d"],
+                plotOptions: {
+                  bar: {
+                    borderRadius: 5,
+                    borderRadiusApplication: "end"
+                  }
+                },
+                xaxis: {
+                  categories: labels,
+                  title: { text: "Hour (MST)" }
+                },
+                yaxis: {
+                  labels: {
+                    formatter: v => v.toFixed(2) + "%"
+                  }
+                
+                },
+                tooltip: {
+                  y: { formatter: v => v.toFixed(2) + "%" }
+                },
+                dataLabels: { enabled: false }
+              }
+            ).render();
+          });
+      </script>
+
+
+        <!-- APEX CHARTS JS -->
+        <script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+
 
 {% endblock %}

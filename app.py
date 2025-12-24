@@ -779,7 +779,7 @@ def deploys():
     conn = connect_db()
     cur = conn.cursor(pymysql.cursors.DictCursor)
 
-    cur.execute("SELECT * FROM deploys ORDER BY timestamp_utc ASC")
+    cur.execute("SELECT * FROM deploys ORDER BY timestamp_utc DESC")
     rows = cur.fetchall()
 
     cur.close()
@@ -1204,6 +1204,59 @@ app.register_blueprint(job_health_bp)
 @app.route("/admin/job-health")
 def job_health_page():
     return render_template("components/admin/job_health.html")
+
+@app.route("/api/deploys/cycle_curve")
+def deploy_cycle_curve():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("""
+    WITH base AS (
+        SELECT
+            deploy_id,
+            CONVERT_TZ(timestamp_utc, 'UTC', 'US/Mountain') AS ts_mst,
+            portfolio_roi
+        FROM portfolio_history
+    ),
+    cycles AS (
+        SELECT
+            deploy_id,
+            CASE
+                WHEN HOUR(ts_mst) >= 23
+                    THEN DATE(ts_mst)
+                ELSE DATE(ts_mst) - INTERVAL 1 DAY
+            END AS cycle_date,
+            HOUR(ts_mst) AS hour_mst,
+            portfolio_roi
+        FROM base
+        WHERE HOUR(ts_mst) IN (23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17)
+    ),
+    baseline AS (
+        SELECT
+            deploy_id,
+            cycle_date,
+            portfolio_roi AS base_roi
+        FROM cycles
+        WHERE hour_mst = 23
+    )
+    SELECT
+        c.hour_mst,
+        AVG(c.portfolio_roi - b.base_roi) AS avg_return
+    FROM cycles c
+    JOIN baseline b
+      ON c.deploy_id = b.deploy_id
+     AND c.cycle_date = b.cycle_date
+    GROUP BY c.hour_mst
+    ORDER BY
+        CASE WHEN c.hour_mst = 23 THEN 0 ELSE c.hour_mst END
+    """)
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(rows)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
