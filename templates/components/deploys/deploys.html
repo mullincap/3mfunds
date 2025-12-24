@@ -14,7 +14,7 @@
 
 <div class="container-fluid">
 
-  <div class="card custom-card mt-3">
+  <div class="card custom-card mt-5">
     <div class="card-header">
       <div class="card-title">Composite Cycle Return (11pm → 5pm MST)</div>
     </div>
@@ -24,7 +24,7 @@
   </div>
 
 
-    <div class="row pt-3">
+    <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header">
@@ -108,69 +108,82 @@
       <!-- DEPLOYS JS -->
 
       <script>
-        fetch("/api/deploys/cycle_curve")
-          .then(r => r.json())
-          .then(data => {
+  fetch("/api/deploys/cycle_curve")
+    .then(r => r.json())
+    .then(data => {
 
-            // enforce cycle order (11pm → midnight → onward)
-            const hourOrder = [23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
-            data.sort((a, b) =>
-              hourOrder.indexOf(+a.hour_mst) - hourOrder.indexOf(+b.hour_mst)
-            );
+      // UTC hour domain
+      //const hourOrder = [...Array(18).keys()]; // 0 → 17
+      // UTC hour domain (06 → 23)
+      const hourOrder = Array.from({ length: 18 }, (_, i) => i + 6); // 6 → 23
 
-            // format hour labels
-            const formatHour = h => {
-              h = Number(h);
-              if (h === 0) return "12am";
-              if (h === 12) return "12pm";
-              return h < 12 ? `${h}am` : `${h - 12}pm`;
-            };
+      // map data by hour
+      const byHour = {};
+      data.forEach(d => {
+        byHour[Number(d.hour_utc)] = d;
+      });
 
-            const labels = data.map(d => formatHour(d.hour_mst));
+      // format UTC labels
+      const formatHourUTC = h => {
+        if (h === 0) return "00:00";
+        return h < 10 ? `0${h}:00` : `${h}:00`;
+      };
 
-            const LEVERAGE = 4;
+      const LEVERAGE = 4;
 
-            const values = data.map(d =>
-              +(d.avg_return * LEVERAGE * 100).toFixed(2)
-            );
+      const labels = hourOrder.map(h => formatHourUTC(h));
+      const values = hourOrder.map(h => {
+        const row = byHour[h];
+        return row
+          ? +(row.avg_return * LEVERAGE * 100).toFixed(2)
+          : 0;
+      });
 
-            new ApexCharts(
-              document.querySelector("#cycleCurve"),
-              {
-                chart: {
-                  type: "bar",
-                  height: 600,
-                  toolbar: { show: false }
-                },
-                series: [{
-                  name: "Composite Return (%)",
-                  data: values
-                }],
-                colors: ["#02f59d"],
-                plotOptions: {
-                  bar: {
-                    borderRadius: 5,
-                    borderRadiusApplication: "end"
-                  }
-                },
-                xaxis: {
-                  categories: labels,
-                  title: { text: "Hour (MST)" }
-                },
-                yaxis: {
-                  labels: {
-                    formatter: v => v.toFixed(2) + "%"
-                  }
+      const vMax = Math.max(...values);
+      const vMin = Math.min(...values);
+      const spread = vMax - vMin;
 
-                },
-                tooltip: {
-                  y: { formatter: v => v.toFixed(2) + "%" }
-                },
-                dataLabels: { enabled: false }
-              }
-            ).render();
-          });
-      </script>
+      const ymax = vMax * 1.2;
+      const ymin = Math.min(0, vMin - spread * 0.2);
+
+      new ApexCharts(
+        document.querySelector("#cycleCurve"),
+        {
+          chart: {
+            type: "bar",
+            height: 500,
+            toolbar: { show: false }
+          },
+          series: [{
+            name: "Composite Return (%)",
+            data: values
+          }],
+          colors: ["#02f59d"],
+          plotOptions: {
+            bar: {
+              borderRadius: 5,
+              borderRadiusApplication: "end"
+            }
+          },
+          xaxis: {
+            categories: labels,
+            title: { text: "Hour (UTC)" }
+          },
+          yaxis: {
+            min: ymin,
+            max: ymax,
+            labels: {
+              formatter: v => v.toFixed(2) + "%"
+            }
+          },
+          tooltip: {
+            y: { formatter: v => v.toFixed(2) + "%" }
+          },
+          dataLabels: { enabled: false }
+        }
+      ).render();
+    });
+</script>
 
 
         <!-- APEX CHARTS JS -->

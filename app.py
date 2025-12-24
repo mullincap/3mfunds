@@ -1211,44 +1211,13 @@ def deploy_cycle_curve():
     cur = conn.cursor(pymysql.cursors.DictCursor)
 
     cur.execute("""
-    WITH base AS (
         SELECT
-            deploy_id,
-            CONVERT_TZ(timestamp_utc, 'UTC', 'US/Mountain') AS ts_mst,
-            portfolio_roi
+            HOUR(timestamp_utc) AS hour_utc,
+            AVG(portfolio_roi) AS avg_return
         FROM portfolio_history
-    ),
-    cycles AS (
-        SELECT
-            deploy_id,
-            CASE
-                WHEN HOUR(ts_mst) >= 23
-                    THEN DATE(ts_mst)
-                ELSE DATE(ts_mst) - INTERVAL 1 DAY
-            END AS cycle_date,
-            HOUR(ts_mst) AS hour_mst,
-            portfolio_roi
-        FROM base
-        WHERE HOUR(ts_mst) IN (23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17)
-    ),
-    baseline AS (
-        SELECT
-            deploy_id,
-            cycle_date,
-            portfolio_roi AS base_roi
-        FROM cycles
-        WHERE hour_mst = 23
-    )
-    SELECT
-        c.hour_mst,
-        AVG(c.portfolio_roi - b.base_roi) AS avg_return
-    FROM cycles c
-    JOIN baseline b
-      ON c.deploy_id = b.deploy_id
-     AND c.cycle_date = b.cycle_date
-    GROUP BY c.hour_mst
-    ORDER BY
-        CASE WHEN c.hour_mst = 23 THEN 0 ELSE c.hour_mst END
+        WHERE HOUR(timestamp_utc) BETWEEN 0 AND 24
+        GROUP BY hour_utc
+        ORDER BY hour_utc
     """)
 
     rows = cur.fetchall()
