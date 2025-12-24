@@ -1226,6 +1226,56 @@ def deploy_cycle_curve():
 
     return jsonify(rows)
 
+@app.route("/interest")
+def interest_page():
+    series_payload = []  # or {} depending on your JS expectations
+
+    return render_template(
+        "components/interest/interest.html",
+        series_payload=series_payload
+    )
+
+@app.route("/api/interest/oi")
+def api_interest_oi():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("""
+        SELECT
+            timestamp_utc,
+            oi_chg_24h
+        FROM oi_log
+        ORDER BY timestamp_utc ASC
+    """)
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(rows)
+
+@app.route("/api/interest/kpis")
+def api_interest_kpis():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("""
+        SELECT
+            chg_24h,
+            oi_chg_24h,
+            fr_avg,
+            pc_oi_1_1d,
+            timestamp_utc
+        FROM oi_log
+        ORDER BY timestamp_utc DESC
+        LIMIT 1
+    """)
+
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    return jsonify(row)
 
 if __name__ == '__main__':
     app.run(debug=True)

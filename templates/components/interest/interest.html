@@ -1,0 +1,289 @@
+{% extends 'layouts/base.html' %}
+
+{% block page_title %} Interest {% endblock %}
+
+{% block styles %}
+
+<style>
+/* Subtle zebra striping */
+#daily-closes-body tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.02);
+}
+
+/* Hover highlight */
+#daily-closes-body tr:hover {
+    background-color: rgba(94,118,255,0.08); /* primary color tint */
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+/* Cells: tighter, sharper visuals */
+#daily-closes-body td {
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+/* Base fund accent — color injected via CSS variable */
+.fund-accent {
+    --fund-color: #5e76ff;
+}
+
+
+.fund-accent tbody tr:not(.text-muted) {
+    border-left-color: var(--fund-color);
+}
+
+/* Hover glow */
+.fund-accent tbody tr:hover {
+    background-color: color-mix(in srgb, var(--fund-color) 12%, transparent);
+    transition: background-color 0.15s ease;
+}
+
+/* Header underline */
+.fund-accent thead th {
+    border-bottom: 2px solid color-mix(in srgb, var(--fund-color) 55%, transparent);
+}
+
+/* Subtle zebra striping */
+#daily-closes-body tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.02);
+}
+
+/* Hover highlight */
+#daily-closes-body tr:hover {
+    background-color: rgba(94,118,255,0.08);
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+
+                <div class="container-fluid">
+
+                    <!-- Page Header -->
+                    <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
+                        <h1 class="page-title fw-semibold fs-18 mb-0"> Overview </h1>
+                        <div class="ms-md-1 ms-0">
+                            <nav>
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page">Funds</li>
+                                </ol>
+                            </nav>
+                        </div>
+                    </div>
+                    <!-- Page Header Close -->
+
+                    <!-- Start::row-2 -->
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <div class="tab-content">
+                                <div class="tab-pane show active p-0 border-0" id="stocks-portfolio" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-xl-3 col-sm-6">
+                                            <div class="card custom-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
+                                                        <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
+                                                            <div class="me-3">
+                                                                <!-- <span class="avatar avatar-rounded bg-warning"> -->
+                                                                <span class="avatar avatar-rounded bg-light">
+                                                                    <i class="ti ti-wallet fs-16"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block text-muted">Roi CHG</span>
+                                                                <span class="fs-18">
+
+                                                                  <span class="fs-18 fw-semibold" id="kpi-chg-24h">—</span>
+
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div id="portfolio-value"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xl-3 col-sm-6">
+                                            <div class="card custom-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
+                                                        <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
+                                                            <div class="me-3">
+                                                                <!-- <span class="avatar avatar-rounded bg-primary"> -->
+                                                                  <span class="avatar avatar-rounded bg-light">
+                                                                    <i class="ti ti-wallet fs-16"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block text-muted">OI Chg</span>
+                                                                <span class="fs-18 fw-semibold">
+
+                                                                  <!-- <div id="kpi-total-return"></div> -->
+                                                                  <span class="fs-18 fw-semibold" id="kpi-oi-chg-24h">—</span>
+
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div id="total-investments"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xl-3 col-sm-6">
+                                            <div class="card custom-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
+                                                        <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
+                                                            <div class="me-3">
+                                                                <!-- <span class="avatar avatar-rounded bg-success"> -->
+                                                                  <span class="avatar avatar-rounded bg-light">
+                                                                    <i class="ti ti-wallet fs-16"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block text-muted">Funding Rate</span>
+                                                                <span class="fs-18 fw-semibold">
+
+                                                                  <span class="fs-18 fw-semibold" id="kpi-fr-avg">—</span>
+
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div id="returns-rate"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xl-3 col-sm-6">
+                                            <div class="card custom-card">
+                                                <div class="card-body">
+                                                    <div class="d-flex gap-3 flex-wrap align-items-top justify-content-between">
+                                                        <div class="flex-fill d-flex align-items-top mb-4 mb-sm-0">
+                                                            <div class="me-3">
+                                                              <!-- <span class="avatar avatar-rounded bg-secondary"> -->
+                                                              <span class="avatar avatar-rounded bg-light">
+                                                                  <i class="ti ti-arrow-big-up-line fs-16"></i>
+                                                              </span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="d-block text-muted">1D OI PC CHG </span>
+                                                                <span class="fs-18">
+
+                                                                  <span class="fs-18 fw-semibold" id="kpi-pc-oi">—</span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div id="total-invested"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xl-12">
+                                            <div class="card custom-card">
+                                                <div class="card-header justify-content-between">
+                                                    <div class="card-title mb-2 mb-sm-0">
+                                                        24hr ROI Chg
+                                                    </div>
+                                                    <div class="btn-group" role="group" aria-label="Basic example">
+
+                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1D</button>
+                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">3D</button>
+                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1W</button>
+                                                        <button type="button" class="btn btn-primary btn-sm btn-wave waves-effect waves-light">1M</button>
+                                                        <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1Y</button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+
+                                                    <div id="totalInvestmentsStats"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-4">
+                                      <div class="col-xl-12">
+                                        <div class="card custom-card">
+                                          <div class="card-header">
+                                            <div class="card-title">Cumulative Open Interest Change</div>
+                                          </div>
+                                          <div class="card-body">
+                                            <div id="oiCumulativeChart"></div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- GLOBAL FUND EQUITY CHART (ONE INSTANCE ONLY) -->
+                                <!-- <div class="row mb-4">
+                                    <div class="col-xl-12">
+                                        <div class="card custom-card">
+                                            <div class="card-header justify-content-between">
+                                                <div class="card-title" id="fund-equity-title">
+                                                    Fund Equity Curve
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="fund-equity-chart" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <div id="fund-equity-wrapper" style="display: none;">
+                                    <div class="card custom-card">
+                                        <div class="card-header">
+                                            <div class="card-title">Fund Equity Curve</div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="fund-equity-chart" style="height: 260px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane p-0 border-0" id="fund-alpha" role="tabpanel">
+                                    {% include "partials/fund_table.html" %}
+                                </div>
+
+                                <div class="tab-pane p-0 border-0" id="fund-beta" role="tabpanel">
+                                    {% include "partials/fund_table.html" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                    <!-- End::row-2 -->
+
+                </div>
+
+{% endblock %}
+
+{% block scripts %}
+
+        <!-- APEX CHARTS JS -->
+        <script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+
+        <!-- STOCKS DASHBOARD JS -->
+        <!-- <script src="{{ url_for('static', filename='assets/js/stocks-dashboard.js') }}"></script> -->
+        <script type="module" src="{{ url_for('static', filename='assets/js/core/interest.js') }}"></script>
+
+
+
+{% endblock %}
