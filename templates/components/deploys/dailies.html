@@ -314,7 +314,66 @@
 
     </div>
   </div>
+
+  <!-- ================= WEEKLY / MONTHLY DAR TABLES ================= -->
+  <div class="row mt-4 g-3">
+
+    <!-- Weekly DAR -->
+    <div class="col-xl-6">
+      <div class="card custom-card">
+        <div class="card-header">
+          <div class="card-title">Weekly Summary</div>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-hover align-middle text-nowrap">
+            <thead>
+              <tr>
+                <th>Week</th>
+                <th>Days</th>
+                <th>Total Return</th>
+                <th>DAR</th>
+              </tr>
+            </thead>
+            <tbody id="gamma-weekly-dar-body">
+              <tr><td colspan="4" class="text-center text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly DAR -->
+    <div class="col-xl-6">
+      <div class="card custom-card">
+        <div class="card-header">
+          <div class="card-title">Monthly Summary</div>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-hover align-middle text-nowrap">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Days</th>
+                <th>Total Return</th>
+                <th>DAR</th>
+              </tr>
+            </thead>
+            <tbody id="gamma-monthly-dar-body">
+              <tr><td colspan="4" class="text-center text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+
 </div>
+
+
+
 
 <!-- ================= WEEK ROW STYLING ================= -->
 <style>

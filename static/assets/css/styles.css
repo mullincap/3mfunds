@@ -665,7 +665,7 @@
   }
 }
 [data-menu-styles=dark][data-theme-mode=light] {
-  --menu-bg: #111c43;
+  --menu-bg: #fff;
   --menu-prime-color: #a3aed1;
 }
 [data-menu-styles=color] {

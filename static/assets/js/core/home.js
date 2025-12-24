@@ -566,7 +566,7 @@ let equityChart = new ApexCharts(
     document.querySelector("#fund-equity-chart"),
     {
         chart: {
-            height: 260,
+            height: 500,
             type: "line",
             toolbar: { show: false },
             animations: { enabled: true }

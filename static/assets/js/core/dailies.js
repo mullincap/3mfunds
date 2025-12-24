@@ -72,6 +72,25 @@ function isoWeek(dateStr) {
     return `${d.getUTCFullYear()}-W${String(week).padStart(2,"0")}`;
 }
 
+function monthKey(dateStr) {
+  const d = new Date(dateStr);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`; // YYYY-MM
+}
+
+function fmtPctUnsigned(v) {
+  if (!Number.isFinite(v)) return "—";
+  return (v * 100).toFixed(2) + "%"; // v is decimal return
+}
+
+function darClass(v) {
+  if (!Number.isFinite(v)) return "text-muted";
+  if (v > 0) return "text-success";
+  if (v < 0) return "text-danger";
+  return "text-muted";
+}
+
 /* ================================
    ApexCharts init
 ================================ */
@@ -255,6 +274,62 @@ gammaChart.render();
         });
     });
 
+    /* =========================================================
+       WEEKLY + MONTHLY DAR TABLES
+       DAR = (sum(total_return)) / (days)
+    ========================================================= */
+
+    // ---------- WEEKLY ----------
+    const weeklyBody = document.querySelector("#gamma-weekly-dar-body");
+    weeklyBody.innerHTML = "";
+
+    const weeklyAgg = {};
+    rows.forEach(r => {
+      const wk = isoWeek(r.snapshot_date);
+      weeklyAgg[wk] ??= { days: 0, total_return_sum: 0 };
+      weeklyAgg[wk].days += 1;
+      weeklyAgg[wk].total_return_sum += Number(r.total_return) || 0;
+    });
+
+    Object.keys(weeklyAgg).sort().reverse().forEach(wk => {
+      const w = weeklyAgg[wk];
+      const dar = w.days ? (w.total_return_sum / w.days) : null;
+
+      weeklyBody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${wk}</td>
+          <td>${w.days}</td>
+          <td>${fmtPctUnsigned(w.total_return_sum)}</td>          
+          <td><strong class="${darClass(dar)}">${fmtPctUnsigned(dar)}</strong></td>
+        </tr>
+      `);
+    });
+
+    // ---------- MONTHLY ----------
+    const monthlyBody = document.querySelector("#gamma-monthly-dar-body");
+    monthlyBody.innerHTML = "";
+
+    const monthlyAgg = {};
+    rows.forEach(r => {
+      const mk = monthKey(r.snapshot_date);
+      monthlyAgg[mk] ??= { days: 0, total_return_sum: 0 };
+      monthlyAgg[mk].days += 1;
+      monthlyAgg[mk].total_return_sum += Number(r.total_return) || 0;
+    });
+
+    Object.keys(monthlyAgg).sort().reverse().forEach(mk => {
+      const m = monthlyAgg[mk];
+      const dar = m.days ? (m.total_return_sum / m.days) : null;
+
+      monthlyBody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${mk}</td>
+          <td>${m.days}</td>
+          <td>${fmtPctUnsigned(m.total_return_sum)}</td>
+          <td><strong class="${darClass(dar)}">${fmtPctUnsigned(dar)}</strong></td>
+        </tr>
+      `);
+    });
 
 
     tbody.addEventListener("click", e => {
