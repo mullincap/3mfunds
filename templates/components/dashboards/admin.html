@@ -281,7 +281,7 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-xl-9">
+                                        <div class="col-xl-12">
                                             <div class="card custom-card">
                                                 <div class="card-header justify-content-between">
                                                     <div class="card-title mb-2 mb-sm-0">
@@ -362,111 +362,6 @@
                                                     <div id="totalInvestmentsStats"></div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="col-xl-3">
-                                          <div class="row">
-                                            <div class="card custom-card" style="margin-bottom: 12px;">
-                                                <div class="card-header justify-content-between">
-                                                    <div class="card-title">
-                                                        This Week
-                                                    </div>
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                      <div class="dropdown">
-                                                        <button class="btn btn-primary-light btn-sm dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false">
-                                                            <small class="text-muted">Timezone: {{ 'Phoenix' if tz_selected=='phx' else 'UTC' }}</small>
-                                                        </button>
-                                                        <ul class="dropdown-menu">
-                                                            <li><a class="dropdown-item" href="?tz=utc">UTC</a></li>
-                                                            <li><a class="dropdown-item" href="?tz=phx">Local (Phoenix)</a></li>
-                                                        </ul>
-                                                      </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="card-body p-0">
-                                                  <ul class="list-unstyled my-stocks-ul mb-0">
-
-                                                      {% for row in daily_closes %}
-                                                      <li>
-                                                          <div class="d-flex align-items-center flex-fill lh-1">
-
-                                                              <!-- Avatar bubble (Mon → "M", Tue → "Tu", etc) -->
-                                                              <div class="me-2">
-                                                                  <span class="avatar avatar-rounded bg-light p-2">
-                                                                      {{ row.day }}
-                                                                  </span>
-                                                              </div>
-
-                                                              <!-- Day name + calendar date -->
-                                                              <div class="lh-1 flex-fill">
-                                                                  <span class="fw-semibold d-block mb-1">
-                                                                      {{ row.datetime_obj.strftime("%A") }}
-                                                                  </span>
-                                                                  <span class="d-block text-muted fs-12">
-                                                                      {{ row.datetime_obj.strftime("%b %d") }}
-                                                                  </span>
-                                                              </div>
-
-                                                              <!-- Value + percent change -->
-                                                              <div class="text-end me-3">
-                                                                  <span class="d-block fw-semibold mb-1">
-                                                                      ${{ "{:,.0f}".format(row.value) }}
-                                                                  </span>
-
-                                                                  {% if row.pct > 0 %}
-                                                                      <span class="d-block text-success">
-                                                                          <i class="ti ti-arrow-narrow-up"></i>{{ "{:.2f}%".format(row.pct) }}
-                                                                      </span>
-                                                                  {% elif row.pct < 0 %}
-                                                                      <span class="d-block text-danger">
-                                                                          <i class="ti ti-arrow-narrow-down"></i>{{ "{:.2f}%".format(row.pct) }}
-                                                                      </span>
-                                                                  {% else %}
-                                                                      <span class="d-block text-muted">
-                                                                          0.00%
-                                                                      </span>
-                                                                  {% endif %}
-                                                              </div>
-
-                                                              <!-- Star icon -->
-                                                              <div>
-                                                                  <span class="fs-14">
-                                                                      <i class="bi bi-star text-muted op-5"></i>
-                                                                  </span>
-                                                              </div>
-
-                                                          </div>
-                                                      </li>
-                                                      {% endfor %}
-
-                                                  </ul>
-                                                </div>
-                                            </div>
-                                          </div>
-
-                                        <!-- Earnings Chart (Right Column) -->
-                                        <!-- Earnings Chart Row -->
-                                        <div class="row">
-                                                <div class="card custom-card">
-                                                    <div class="card-header justify-content-between">
-                                                        <div class="card-title">Daily Earnings</div>
-                                                        <div class="dropdown">
-                                                            <!-- <a href="javascript:void(0);" class="p-2 fs-12 text-muted" data-bs-toggle="dropdown">
-                                                                View All <i class="ri-arrow-down-s-line align-middle ms-1"></i>
-                                                            </a> -->
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="card-body p-0">
-                                                        <div id="earnings-labels" data-json='{{ earnings_labels | tojson }}'></div>
-                                                        <div id="earnings-values" data-json='{{ earnings_values | tojson }}'></div>
-                                                        <div id="earnings"></div>
-                                                    </div>
-                                                </div>
-                                        </div>
                                         </div>
                                     </div>
                                     <div class="row">
