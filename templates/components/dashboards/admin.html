@@ -44,6 +44,27 @@
     border-bottom: 2px solid color-mix(in srgb, var(--fund-color) 55%, transparent);
 }
 
+/* Subtle zebra striping */
+#daily-closes-body tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.02);
+}
+
+/* Hover highlight */
+#daily-closes-body tr:hover {
+    background-color: rgba(94,118,255,0.08);
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+/* Job health table */
+#job-health-body tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.02);
+}
+#job-health-body tr:hover {
+    background-color: rgba(94,118,255,0.08);
+    transition: 0.15s ease;
+}
+
 </style>
 
 {% endblock %}
@@ -451,7 +472,7 @@
                                     <div class="row">
                                         <div class="col-xl-12">
                                             <h6 class="fw-semibold mb-3">
-                                                Job Health:
+
                                             </h6>
                                             <div class="row">
                                                 <div class="col-xl-12">
@@ -461,13 +482,13 @@
                                                         </div>
 
                                                         <div class="card-body p-0">
-                                                            <div class="table-responsive">
+                                                            <div class="table-responsive" style="padding:2rem; padding-top:10px;">
                                                                 <table class="table text-nowrap table-hover mb-0">
                                                                     <thead>
                                                                         <tr>
-                                                                            <th>Job</th>
-                                                                            <th>Last Run (UTC)</th>
-                                                                            <th>Status</th>
+                                                                            <th>JOB</th>
+                                                                            <th>LAST RUN (UTC)</th>
+                                                                            <th>STATUS</th>
                                                                             <th class="text-end">Duration (s)</th>
                                                                         </tr>
                                                                     </thead>
