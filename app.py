@@ -86,7 +86,7 @@ def format_compact_currency(value):
     if abs_val >= 1_000_000:
         return f"${value/1_000_000:.2f}m"
     elif abs_val >= 1_000:
-        return f"${value/1_000:.2f}k"
+        return f"${value/1_000:.1f}k"
     else:
         return f"${value:.2f}"
 
@@ -469,6 +469,8 @@ def admin():
         elif r["fund"] == "BETA":
             beta_cash = float(r["invested_margin"] or 0)
 
+    beta_cash += 1000
+
     rem_cash = portfolio - alpha_cash - beta_cash
 
     conn.close()
@@ -599,6 +601,8 @@ def index():
             alpha_cash = float(r["invested_margin"] or 0)
         elif r["fund"] == "BETA":
             beta_cash = float(r["invested_margin"] or 0)
+
+    beta_cash += 1000
 
     rem_cash = portfolio - alpha_cash - beta_cash
 

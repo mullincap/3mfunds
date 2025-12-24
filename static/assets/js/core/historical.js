@@ -175,10 +175,13 @@ document.addEventListener("DOMContentLoaded", function () {
             colors: ["#22c55e", "#facc15", "#d946ef", "#22d3ee"],
             stroke: {
                 curve: "smooth",
-                dashArray: [0, 0, 6, 6]
+                dashArray: [0, 0, 6, 6],
+                width: [2, 1, 1, 1],
             },
+
             xaxis: { type: "datetime" },
             yaxis: {
+                min: min => min,
                 labels: {
                     formatter: v => v.toFixed(2) + "%"
                 }

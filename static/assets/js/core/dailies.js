@@ -89,7 +89,12 @@ gammaChart = new ApexCharts(
         colors: ["#22c55e","#bbf7d0","#3b82f6","#d946ef","#22d3ee"],
         fill: { opacity: [0.7,1,1,1,1] },
         xaxis: { categories: [], labels: { show: false } },
-        yaxis: { labels: { formatter: v => "$" + v.toLocaleString() } },
+        yaxis: {
+          min: min=> min,
+          labels: {
+            formatter: v => "$" + v.toLocaleString()
+          }
+         },
         grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 },
         tooltip: { shared: true },
         legend: { labels: { colors: "#ccc" } }
