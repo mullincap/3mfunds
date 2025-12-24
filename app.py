@@ -648,7 +648,7 @@ def api_home_daily_equity():
             DATE(timestamp_utc) AS day,
             MAX(portfolio_value) AS portfolio_value
         FROM investments_timeseries
-        WHERE timestamp_utc >= UTC_DATE() - INTERVAL 30 DAY
+        WHERE timestamp_utc >= UTC_DATE() - INTERVAL 90 DAY
         GROUP BY DATE(timestamp_utc)
         ORDER BY day ASC
     """)

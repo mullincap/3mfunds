@@ -242,7 +242,7 @@ document.querySelectorAll(".btn-group button").forEach(btn => {
     });
 });
 
-loadMainChart(30);
+loadMainChart(90);
 document.getElementById("kpi-return-label").innerText = "1M Return";
 
 

@@ -11,19 +11,19 @@ def latest():
 
     cursor.execute("""
         SELECT
-            job_name,
-            MAX(started_at) AS last_run,
-            SUBSTRING_INDEX(
-                GROUP_CONCAT(status ORDER BY started_at DESC),
-                ',', 1
-            ) AS status,
-            SUBSTRING_INDEX(
-                GROUP_CONCAT(duration_sec ORDER BY started_at DESC),
-                ',', 1
-            ) AS duration
+          job_name,
+          MAX(started_at) AS last_run,
+          SUBSTRING_INDEX(
+            GROUP_CONCAT(status ORDER BY id DESC),
+            ',', 1
+          ) AS status,
+          SUBSTRING_INDEX(
+            GROUP_CONCAT(duration_sec ORDER BY id DESC),
+            ',', 1
+          ) AS duration
         FROM job_runs
         GROUP BY job_name
-        ORDER BY job_name
+        ORDER BY last_run ASC
     """)
 
     rows = cursor.fetchall()
