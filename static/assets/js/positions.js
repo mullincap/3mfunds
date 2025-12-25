@@ -145,7 +145,7 @@ function updatePositionsSummary(positions) {
       maximumFractionDigits: 2
     })}`;
   }
-  
+
   // Neutral counts / sizes (NO +/-)
   set("sum-count", count);
   set("sum-exposure", `$${grossExposure.toLocaleString(undefined, {
@@ -441,28 +441,6 @@ async function loadSessionEquity() {
     // Trend @ close vs current balance
     if (elFin && finalTrend != null && latestBalance != null) {
         setCompareColor(elFin, finalTrend, latestBalance);
-    }
-
-
-
-    // ===============================
-    // Y-axis bounds (smart adaptive)
-    // ===============================
-    const values = series.map(p => p[1]).filter(v => Number.isFinite(v));
-
-    const minVal = Math.min(...values);
-    const maxVal = Math.max(...values);
-
-    const startValue = values[0];
-
-    // Base minimum visual range (±20% from start)
-    const baseMin = startValue * 0.95;
-    const baseMax = startValue * 1.2;
-
-    // Include trend-at-close if higher
-    let effectiveMax = maxVal;
-    if (typeof finalTrend === "number" && !isNaN(finalTrend)) {
-        effectiveMax = Math.max(effectiveMax, finalTrend);
     }
 
     // ===============================
@@ -829,6 +807,25 @@ async function loadSessionEquity() {
       }
 
 
+    // ===============================
+    // Y-axis bounds (smart adaptive)
+    // ===============================
+    const values = series.map(p => p[1]).filter(v => Number.isFinite(v));
+
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+
+    const startValue = values[0];
+
+    // Base minimum visual range (±20% from start)
+    const baseMin = startValue * 0.95;
+    const baseMax = startValue * 1.20;
+
+    // Include trend-at-close if higher
+    let effectiveMax = maxVal;
+    if (typeof finalTrend === "number" && !isNaN(finalTrend)) {
+        effectiveMax = Math.max(effectiveMax, finalTrend);
+    }
 
 
     // Expand bounds safely
@@ -837,7 +834,7 @@ async function loadSessionEquity() {
 
     // Add padding
     const range = expandedMax - expandedMin;
-    const padAbove = range * 0.10;
+    const padAbove = range * 0.05;
     const padBelow = range * 0;
 
     const yMin = expandedMin - padBelow;
@@ -860,7 +857,7 @@ async function loadSessionEquity() {
                 height: 800,
                 type: "line",
                 toolbar: { show: false },
-                animations: { enabled: true }
+                animations: { enabled: false }
             },
 
             series: [
@@ -893,7 +890,7 @@ async function loadSessionEquity() {
 
             stroke: {
               curve: "smooth",
-              width: [2, 2, 1, 1],
+              width: [2, 2, 1, 2, 2],
               dashArray: [0, 6, 0, 2, 2]
             },
 
