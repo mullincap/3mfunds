@@ -21,6 +21,66 @@ function cumulativeSum(series) {
 }
 
 // =====================================================
+// INTEREST KPIs
+// =====================================================
+async function loadInterestKPIs() {
+    try {
+        const res = await fetch("/api/interest/kpis");
+        const d = await res.json();
+        if (!d) return;
+
+        const setKPI = (id, val, {
+            divide100 = false,
+            decimals = 2,
+            isPct = true
+        } = {}) => {
+
+            const el = document.getElementById(id);
+            if (!el || val == null) return;
+
+            let num = Number(val);
+            if (divide100) num = num / 100;
+
+            const cls =
+                num > 0 ? "text-success" :
+                num < 0 ? "text-danger" :
+                          "text-muted";
+
+            el.classList.remove("text-success", "text-danger", "text-muted");
+            el.classList.add(cls);
+
+            el.textContent = isPct
+                ? `${num > 0 ? "+" : ""}${(num * 100).toFixed(decimals)}%`
+                : num.toFixed(decimals);
+        };
+
+        // ROI change (÷100)
+        setKPI("kpi-chg-24h", d.chg_24h, {
+            divide100: true
+        });
+
+        // OI change (÷100)
+        setKPI("kpi-oi-chg-24h", d.oi_chg_24h, {
+            divide100: true
+        });
+
+        // Funding rate (RAW, already a rate)
+        setKPI("kpi-fr-avg", d.fr_avg, {
+            divide100: false,
+            decimals: 4
+        });
+
+        // 1D OI % change (÷100)
+        setKPI("kpi-pc-oi", d.pc_oi_1_1d, {
+            divide100: true
+        });
+
+    } catch (err) {
+        console.error("Failed to load interest KPIs:", err);
+    }
+}
+
+// =====================================================
 // PRIMARY CHART LOADER (RAW OI CHANGE)
 // =====================================================
 async function loadOI(days) {
@@ -177,6 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bindRange(".chart-range-cum", loadOICum);
 
     // Initial loads
+    loadInterestKPIs();
     loadOI(30);
     loadOICum(30);
 });
