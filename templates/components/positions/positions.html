@@ -21,6 +21,7 @@
 {% block content %}
 
 <div class="container-fluid">
+  <div class="row">
   <div class="card custom-card mt-3">
     <div class="card-header d-flex justify-content-between align-items-center">
       <div class="card-title">Open Futures Positions</div>
@@ -177,8 +178,65 @@
       </div>
 
       </div>
+  </div>
+  </div>
+
+    <div class="row">
+      <div class="card custom-card mt-4">
+        <div class="card-header">
+          <div class="card-title">
+            Session Equity (06:00 → Now)
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="session-equity-chart"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-3 g-3">
+
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Current Balance</div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-balance">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Trend Value (Now)</div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-trend-now">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Δ vs Trend</div>
+            <div class="fs-5 fw-semibold" id="kpi-delta-pct">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Trend @ Close (23:55)</div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-trend-final">—</div>
+          </div>
+        </div>
+      </div>
 
     </div>
+
+
+
+
 
     <div class="d-flex justify-content-end mt-3 mb-3">
       <small class="text-muted">
@@ -188,6 +246,9 @@
 
 
   </div>
+
+<!-- APEX CHARTS -->
+<script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
 <!-- JS -->
 <script src="{{ url_for('static', filename='assets/js/positions.js') }}"></script>

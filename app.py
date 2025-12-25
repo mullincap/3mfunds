@@ -2,16 +2,16 @@ from flask import Flask, render_template, jsonify, request
 from db import connect_db
 from decimal import Decimal
 import pymysql
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time
 import pytz
 from dotenv import load_dotenv
 from math import floor
 import numpy as np
 from analytics import load_hourly_returns
-load_dotenv()
 from blofin import blofin_get_positions
 from blofin_client import blofin_request
 
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -1288,6 +1288,35 @@ def api_interest_kpis():
     conn.close()
 
     return jsonify(row)
+
+
+@app.route("/api/positions/equity_session")
+def api_equity_session():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    now = datetime.utcnow()
+
+    session_start = datetime.combine(now.date(), time(6, 0))
+
+    # if before 06:00 UTC → use yesterday
+    if now < session_start:
+        session_start -= timedelta(days=1)
+
+    cur.execute("""
+        SELECT
+            timestamp_utc,
+            portfolio_value
+        FROM investments_timeseries
+        WHERE timestamp_utc >= %s
+        ORDER BY timestamp_utc ASC
+    """, (session_start,))
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(rows)
 
 if __name__ == '__main__':
     app.run(debug=True)
