@@ -51,14 +51,6 @@
         <div class="col-xl-2 col-md-4 col-sm-6">
           <div class="card">
             <div class="card-body">
-              <p class="mb-1 text-muted">Total Margin</p>
-              <h4 id="kpi-total-margin">$0</h4>
-            </div>
-          </div>
-        </div>
-        <div class="col-xl-2 col-md-4 col-sm-6">
-          <div class="card">
-            <div class="card-body">
               <p class="mb-1 text-muted">Total Available</p>
               <h4 id="kpi-total-available">$0</h4>
             </div>
@@ -67,8 +59,16 @@
         <div class="col-xl-2 col-md-4 col-sm-6">
           <div class="card">
             <div class="card-body">
-              <p class="mb-1 text-muted">Gross Exposure</p>
-              <h4 id="sum-exposure">$0</h4>
+              <p class="mb-1 text-muted">Total Margin</p>
+              <h4 id="kpi-total-margin">$0</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1 text-muted">Effective Margin</p>
+              <h4 id="kpi-effective-margin">$0</h4>
             </div>
           </div>
         </div>
@@ -103,7 +103,7 @@
         <div class="col-xl-2 col-md-4 col-sm-6">
           <div class="card">
             <div class="card-body">
-              <p class="mb-1 text-muted">% In Use (Margin)</p>
+              <p class="mb-1 text-muted">% In Use </p>
               <h4 id="kpi-margin-pct">0%</h4>
             </div>
           </div>
@@ -119,12 +119,11 @@
         <div class="col-xl-2 col-md-4 col-sm-6">
           <div class="card">
             <div class="card-body">
-              <p class="mb-1 text-muted">PnL Efficiency</p>
-              <h4 id="sum-efficiency">0%</h4>
+              <p class="mb-1 text-muted">Gross Exposure</p>
+              <h4 id="sum-exposure">$0</h4>
             </div>
           </div>
         </div>
-
         <div class="col-xl-2 col-md-4 col-sm-6">
           <div class="card">
             <div class="card-body">
@@ -204,16 +203,51 @@
           </div>
         </div>
       </div>
-
       <div class="col-md-3">
         <div class="card">
           <div class="card-body">
-            <div class="text-muted">Trend Value (Now)</div>
+            <div class="text-muted"> VWAP Equity </div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-vwap-equity">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Trend Equity</div>
             <div class="fs-5 fw-semibold text-muted" id="kpi-trend-now">—</div>
           </div>
         </div>
       </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Projected Close (23:55)</div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-trend-final">—</div>
+          </div>
+        </div>
+      </div>
 
+    </div>
+
+    <div class="row g-3">
+
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Trend Velocity</div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-trend-velocity">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted">Trend Confidence </div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-trend-confidence">—</div>
+          </div>
+        </div>
+      </div>
       <div class="col-md-3">
         <div class="card">
           <div class="card-body">
@@ -222,19 +256,54 @@
           </div>
         </div>
       </div>
-
       <div class="col-md-3">
         <div class="card">
           <div class="card-body">
-            <div class="text-muted">Trend @ Close (23:55)</div>
-            <div class="fs-5 fw-semibold text-muted" id="kpi-trend-final">—</div>
+            <div class="text-muted"> Margin Roi </div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-margin-roi"> — </div>
           </div>
         </div>
       </div>
 
     </div>
 
+    <div class="row g-3">
 
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted"> Current Session </div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-session-phase"> — </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted"> Session Max DD </div>
+            <div class="fs-5 fw-semibold text-danger" id="kpi-max-dd"> — </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted"> Session Profit </div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-session-profit"> — </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted"> Session ROI </div>
+            <div class="fs-5 fw-semibold text-muted" id="kpi-session-roi"> — </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
 
 
 
