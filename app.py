@@ -1237,16 +1237,28 @@ def interest_page():
 
 @app.route("/api/interest/oi")
 def api_interest_oi():
+    days = request.args.get("days", type=int)
+
     conn = connect_db()
     cur = conn.cursor(pymysql.cursors.DictCursor)
 
-    cur.execute("""
-        SELECT
-            timestamp_utc,
-            oi_chg_24h
-        FROM oi_log
-        ORDER BY timestamp_utc ASC
-    """)
+    if days:
+        cur.execute("""
+            SELECT
+                timestamp_utc,
+                oi_chg_24h
+            FROM oi_log
+            WHERE timestamp_utc >= UTC_TIMESTAMP() - INTERVAL %s DAY
+            ORDER BY timestamp_utc ASC
+        """, (days,))
+    else:
+        cur.execute("""
+            SELECT
+                timestamp_utc,
+                oi_chg_24h
+            FROM oi_log
+            ORDER BY timestamp_utc ASC
+        """)
 
     rows = cur.fetchall()
     cur.close()
