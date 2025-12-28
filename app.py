@@ -4,13 +4,13 @@ from decimal import Decimal
 import pymysql
 from datetime import datetime, timezone, timedelta, time
 import pytz
-from dotenv import load_dotenv
 from math import floor
 import numpy as np
 from analytics import load_hourly_returns
 from blofin import blofin_get_positions
 from blofin_client import blofin_request
 
+from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
@@ -523,6 +523,7 @@ def index():
     portfolio = 0.0
     returns = 0.0
     return_rate = 0.0
+    withdrawals = 3000
 
     if row:
         invested = float(row.get("invested_value", 0) or 0)
@@ -618,7 +619,7 @@ def index():
         kpi_returnrate=return_rate,
 
         kpi_returns_compact=format_compact_currency(returns),
-        kpi_portfolio_compact=format_compact_currency(portfolio),
+        kpi_portfolio_compact=format_compact_currency(portfolio + withdrawals),
         kpi_invested_compact=format_compact_currency(invested),
 
         # Fund cash
@@ -1188,6 +1189,11 @@ def api_account_summary():
 
     margin_used = max(balance - available, 0)
     margin_pct = (margin_used / total_equity * 100) if total_equity else 0
+
+    print("total_balance:",total_equity)
+    print("total_available:",available)
+    print("total_margin:",margin_used)
+    print("margin_pct:",margin_pct)
 
     return jsonify({
         "total_balance": round(total_equity, 2),

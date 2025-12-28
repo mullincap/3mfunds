@@ -9,11 +9,14 @@ import requests
 from uuid import uuid4
 from urllib.parse import urlencode
 
+from dotenv import load_dotenv
+load_dotenv()
+
 BLOFIN_BASE_URL = "https://openapi.blofin.com"
 
-BLOFIN_API_KEY = os.environ.get("BLOFIN_API_KEY")
-BLOFIN_API_SECRET = os.environ.get("BLOFIN_API_SECRET")
-BLOFIN_API_PASSPHRASE = os.environ.get("BLOFIN_API_PASSPHRASE")
+BLOFIN_API_KEY = os.getenv('BLOFIN_API_KEY')
+BLOFIN_API_SECRET = os.getenv('BLOFIN_API_SECRET')
+BLOFIN_API_PASSPHRASE = os.getenv('BLOFIN_API_PASSPHRASE')
 
 if not all([BLOFIN_API_KEY, BLOFIN_API_SECRET, BLOFIN_API_PASSPHRASE]):
     raise RuntimeError("Missing BloFin API env vars")

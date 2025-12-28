@@ -3,7 +3,7 @@
 // =====================================================
 let chart2 = null;
 
-const WITHDRAWAL_ADJUSTMENT = 2000;
+const WITHDRAWAL_ADJUSTMENT = 3000;
 
 // =====================================================
 //  MINI SPARKLINE CHARTS
