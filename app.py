@@ -599,7 +599,7 @@ def index():
 
     for r in fund_rows:
         if r["fund"] == "ALPHA":
-            alpha_cash = float(r["invested_margin"] or 0)
+            alpha_cash = float(r["equity_after"] or 0)
         elif r["fund"] == "BETA":
             beta_cash = float(r["invested_margin"] or 0)
 
