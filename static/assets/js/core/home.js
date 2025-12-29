@@ -755,7 +755,6 @@ async function loadHomePortfolio() {
   }
 
   const stats = computePositionStats(positions);
-  console.log("computePositionStats output:", stats);
 
   if (stats.count > 15) {stats.count = 15;}
 
