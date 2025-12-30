@@ -1161,7 +1161,7 @@ def api_fund_daily(fund):
             FROM fund_portfolio_daily
             WHERE fund = %s
             ORDER BY snapshot_date DESC
-            LIMIT 30;
+            LIMIT 100;
         """, (fund,))
         rows = cur.fetchall()
 
