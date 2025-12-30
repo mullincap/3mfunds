@@ -572,7 +572,7 @@ function computeWeekdayAverages(data) {
    Weekday Avg Chart (Institutional Lollipop)
 ================================ */
 function renderWeekdayAvgChart(weekdayAvg) {
-      
+
     const values = weekdayAvg.map(d => d.value * 18);
 
     const options = {
@@ -583,7 +583,7 @@ function renderWeekdayAvgChart(weekdayAvg) {
         },
 
         series: [{
-            name: "Avg Hourly ROI",
+            name: "Avg ROI",
             data: values
         }],
 
