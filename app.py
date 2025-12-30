@@ -9,6 +9,10 @@ import numpy as np
 from analytics import load_hourly_returns
 from blofin import blofin_get_positions
 from blofin_client import blofin_request
+import subprocess
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -1323,6 +1327,62 @@ def api_equity_session():
     conn.close()
 
     return jsonify(rows)
+
+
+@app.route("/api/trade/open", methods=["POST"])
+def open_trade():
+    # if "userid" not in session:
+    #     return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    amount = data.get("amount")
+
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            raise ValueError
+    except Exception:
+        return jsonify({"error": "Invalid amount"}), 400
+
+    cmd = [
+        "python3",
+        "mtrader2.py",
+        "--mode", "open",
+        "--amount", str(amount)
+    ]
+
+    try:
+        # Run asynchronously so UI doesn't hang
+        subprocess.Popen(
+            ["python3", os.path.join(BASE_DIR, "mtrader2.py"), "--mode", "open", "--amount", str(amount)],
+            cwd=BASE_DIR,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        return jsonify({"status": "ok"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/trade/close", methods=["POST"])
+def close_all_trades():
+    if "userid" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        subprocess.Popen(
+            [sys.executable, os.path.join(BASE_DIR, "mtrader2.py"), "--mode", "close"],
+            cwd=BASE_DIR,
+            env=os.environ.copy(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        return jsonify({"status": "closing"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

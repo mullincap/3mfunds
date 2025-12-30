@@ -13,6 +13,58 @@
     padding-top: 0.9rem;
     padding-bottom: 0.9rem;
   }
+
+  /* ===============================
+     Clickable row affordance
+  ================================ */
+
+  #positions-table-body tr {
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+  }
+
+  /* hover highlight */
+  #positions-table-body tr:hover {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 3px 0 0 rgba(0, 160, 255, 0.8);
+  }
+
+  /* subtle link hint on symbol */
+  #positions-table-body tr td:first-child {
+    font-weight: 600;
+    color: #9ad5ff;
+  }
+
+  /* arrow indicator */
+  #positions-table-body tr td:first-child::after {
+    content: " ↗";
+    font-size: 0.75em;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  /* show arrow on hover */
+  #positions-table-body tr:hover td:first-child::after {
+    opacity: 0.8;
+  }
+
+  /* optional: hover lift */
+  #positions-table-body tr:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Make symbol text use primary theme color */
+  #positions-table-body tr td:first-child {
+    font-weight: 600;
+    color: "#02f59d";
+  }
+  .btn-text-black {
+    color: #000 !important;
+    filter: brightness(1.05);
+  }
+
+
 </style>
 
 
@@ -150,31 +202,31 @@
            POSITIONS TABLE
       ======================== -->
       <div class="table-responsive" style="margin-bottom:50px;">
-        <table class="table table-striped table-hover align-middle text-nowrap pd-1">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Side</th>
-              <th>Size</th>
-              <th>Avg Price</th>
-              <th>Mark Price</th>
-              <th>Leverage</th>
-              <th>Margin Mode</th>
-              <th>Exposure </th>
-              <th>Unrealized PnL</th>
-              <th>Unrealized %</th>
-              <th>Liquidation</th>
-            </tr>
-          </thead>
-          <tbody id="positions-table-body">
-            <tr>
-              <td colspan="11" class="text-center text-muted">
-                Loading open positions…
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              <table class="table table-striped table-hover align-middle text-nowrap pd-1">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Size</th>
+                    <th>Avg Price</th>
+                    <th>Mark Price</th>
+                    <th>Leverage</th>
+                    <th>Margin Mode</th>
+                    <th>Exposure</th>
+                    <th>Unrealized PnL</th>
+                    <th>Unrealized %</th>
+                    <th>Liquidation</th>
+                  </tr>
+                </thead>
+                <tbody id="positions-table-body">
+                  <tr>
+                    <td colspan="11" class="text-center text-muted">
+                      Loading open positions…
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
       </div>
   </div>
@@ -185,6 +237,7 @@
   ======================== -->
 
     <div class="row">
+      <div class="col-10">
       <div class="card custom-card mt-4">
         <div class="card-header">
           <div class="card-title">
@@ -194,6 +247,58 @@
         <div class="card-body">
           <div id="session-equity-chart"></div>
         </div>
+      </div>
+      </div>
+      <div class = "col-2">
+        <div class="card custom-card mt-4">
+          <div class="card-header">
+            <div class="card-title">
+              Control Panel
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <input
+                type="number"
+                id="buy-amount"
+                class="form-control form-control-sm"
+                placeholder="Amount"
+                style="max-width: 140px;"
+              />
+
+
+              <button id="buy-btn" class="btn btn-sm btn-success btn-text-black">
+                BUY
+              </button>
+
+              <span id="buy-status" class="text-muted ms-2"></span>
+
+            </div>
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <input
+                type="number"
+                id="buy-amount"
+                class="form-control form-control-sm"
+                placeholder="Amount"
+                style="max-width: 140px;"
+              />
+
+              <button id="sell-btn" class="btn btn-sm btn-danger btn-text-black">
+                SELL
+              </button>
+
+              <span id="sell-status" class="text-muted small"></span>
+            </div>
+
+            <button id="close-all-btn" class="btn btn-sm btn-danger btn-text-black">
+              CLOSE ALL
+            </button>
+
+            <span id="close-status" class="text-muted ms-2"></span>
+
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -327,6 +432,6 @@
 <script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
 <!-- JS -->
-<script src="{{ url_for('static', filename='assets/js/positions.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/core/positions.js') }}"></script>
 
 {% endblock %}
