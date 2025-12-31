@@ -527,7 +527,7 @@ def index():
     portfolio = 0.0
     returns = 0.0
     return_rate = 0.0
-    withdrawals = 3000
+    withdrawals = 3200
 
     if row:
         invested = float(row.get("invested_value", 0) or 0)
