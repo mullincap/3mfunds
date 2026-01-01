@@ -133,7 +133,7 @@ gammaChart = new ApexCharts(
             formatter: v => "$" + v.toLocaleString()
           }
          },
-        grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 }, dataLabels: {enabled: false},
+        grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 },
         tooltip: { shared: true },
         legend: { labels: { colors: "#ccc" } }
     }
@@ -387,7 +387,7 @@ async function loadMarketChart() {
 
   const options = {
     chart: {
-      type: "area",
+      type: "line",
       height: 400,
       toolbar: { show: false },
       zoom: { enabled: false }
@@ -414,7 +414,6 @@ async function loadMarketChart() {
     legend: {
       position: "bottom"
     },
-    dataLabels: {enabled: false},
     grid: {
       borderColor: "rgba(255,255,255,0.08)"
     }
