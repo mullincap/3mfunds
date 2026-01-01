@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         histChart = new ApexCharts(document.querySelector("#hist-chart"), {
             chart: {
-                height: 730,
+                height: 1000,
                 toolbar: { show: false },
                 zoom: { autoScaleYaxis: true },
                 events: {

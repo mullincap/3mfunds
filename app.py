@@ -253,7 +253,6 @@ def get_kpis():
     eq = [float(r["portfolio_value"]) for r in rows]
 
     first_eq = eq[0]
-    print("first_eq:",first_eq)
     last_eq = eq[-1] + withdrawals
     now_ts = ts[-1]
 
@@ -274,7 +273,7 @@ def get_kpis():
     # 2. Daily Return %
     # ======================
     ts_24h = now_ts - timedelta(hours=24)
-    eq_24h = equity_at_or_before(ts_24h)
+    eq_24h = equity_at_or_before(ts_24h) + withdrawals
 
     total_return_pct = (last_eq / first_eq - 1) * 100
     eff_total_return_pct = (last_eq / first_eq - 1) * 100
@@ -288,9 +287,9 @@ def get_kpis():
     # 3. Weekly Return %
     # ======================
     ts_7d = now_ts - timedelta(days=7)
-    eq_7d = equity_at_or_before(ts_7d)
+    eq_7d = equity_at_or_before(ts_7d) + withdrawals
     wpr = dpr * 7 if dpr is not None else None
-    mpr = dpr * 29.3 if dpr is not None else None
+    mpr = dpr * 30 if dpr is not None else None
 
     # ======================
     # 4. Annual Percentage Return
@@ -327,7 +326,7 @@ def get_kpis():
         hour=0, minute=0, second=0, microsecond=0
     )
 
-    eq_sunday = equity_at_or_before(sunday_start)
+    eq_sunday = equity_at_or_before(sunday_start) + withdrawals
 
     rtw_dollars = last_eq - eq_sunday if eq_sunday else None
 
@@ -355,7 +354,7 @@ def get_kpis():
     # 6. Returns This Month (Dollars)
     # ======================
     month_start = datetime(now_ts.year, now_ts.month, 1, tzinfo=timezone.utc)
-    eq_month = equity_at_or_before(month_start)
+    eq_month = equity_at_or_before(month_start) + withdrawals
 
     rtm_dollars = last_eq - eq_month if eq_month else None
 
@@ -419,15 +418,17 @@ def admin():
     midnight_row = cursor.fetchone()
 
     if midnight_row:
-        midnight_portfolio = float(midnight_row["portfolio_value"])
-        latest_portfolio = float(row["portfolio_value"])
+        midnight_portfolio = float(midnight_row["portfolio_value"]) + withdrawals
 
-        kpi_today_change = latest_portfolio - midnight_portfolio
+        kpi_today_change = portfolio - midnight_portfolio
         kpi_today_change_pct = (kpi_today_change / midnight_portfolio) * 100
     else:
         # If no row exists after midnight, fall back safely
         kpi_today_change = 0
         kpi_today_change_pct = 0
+
+    print("kpi_today_change",kpi_today_change)
+    print("kpi_today_change_pct",kpi_today_change_pct)
 
     tz_arg = request.args.get("tz", "phx")   # default Phoenix
 
@@ -567,7 +568,7 @@ def index():
     midnight_row = cursor.fetchone()
 
     if midnight_row:
-        midnight_portfolio = float(midnight_row["portfolio_value"])
+        midnight_portfolio = float(midnight_row["portfolio_value"]) + withdrawals
         latest_portfolio = portfolio
 
         kpi_today_change = latest_portfolio - midnight_portfolio
