@@ -33,6 +33,14 @@ function fmtUSDreg(v) {
   })}`;
 }
 
+function fmtUSDshort(v) {
+  const sign = v >= 0 ? "+" : "-";
+  return `$${Math.abs(v).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })}`;
+}
+
 function fmtPct(v) {
   return `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
 }
@@ -59,10 +67,10 @@ async function loadAccountSummary() {
   accountState.marginUsed = s.total_margin;
 
   document.getElementById("kpi-total-balance").textContent =
-    fmtUSDreg(s.total_balance);
+    fmtUSDshort(s.total_balance);
 
   document.getElementById("kpi-total-available").textContent =
-    fmtUSDreg(s.total_available);
+    fmtUSDshort(s.total_available);
 
   document.getElementById("kpi-margin-pct").textContent =
     s.margin_pct.toFixed(1) + "%";
@@ -141,30 +149,30 @@ function updatePositionsSummary(positions) {
 
   if (elEff) {
     elEff.textContent = `$${effectiveMargin.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     })}`;
   }
 
   // Neutral counts / sizes (NO +/-)
   set("sum-count", count);
   set("sum-exposure", `$${grossExposure.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   })}`);
   set("sum-margin", `$${totalMargin.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   })}`);
 
-  document.getElementById("kpi-total-margin").textContent = fmtUSDreg(totalMargin);
+  document.getElementById("kpi-total-margin").textContent = fmtUSDshort(totalMargin);
 
   set("sum-winrate", winRate.toFixed(0) + "%");
   set("sum-concentration", pnlConcentration.toFixed(0) + "%");
 
   // Directional performance (KEEP +/-)
   set("sum-pnl", fmtUSD(totalPnl), totalPnl);
-  set("avg-margin", fmtUSD(avgPositionMargin));
+  set("avg-margin", fmtUSDshort(avgPositionMargin));
   set("sum-efficiency", fmtPct(pnlEfficiency));
   set("sum-pnl-margin-pct", fmtPct(pnlMarginPct), pnlMarginPct);
 

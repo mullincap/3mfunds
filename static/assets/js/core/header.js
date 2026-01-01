@@ -23,4 +23,4 @@ document.addEventListener("DOMContentLoaded", () => {
   loadHeaderAUM();
 });
 
-setInterval(loadHeaderAUM, 180_000); // every 60s
+setInterval(loadHeaderAUM, 180_000); // every 180s
