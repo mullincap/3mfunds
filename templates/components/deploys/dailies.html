@@ -217,7 +217,7 @@
 
   .alpha-neg {
     color: #ef4444;
-    background: rgba(239,68,68,0.15);
+    <!-- background: rgba(239,68,68,0.15); -->
   }
 
   /* ===============================
@@ -288,6 +288,36 @@
           <!-- ===== Comparative Performance ===== -->
           <div class="comp-stats mb-4 mt-3">
             <h6 class="text-muted mb-3">Comparative Performance</h6>
+
+            <!-- <div class="leverage-toggle">
+              <button class="lev-btn active" data-lev="4">4× Levered</button>
+              <button class="lev-btn" data-lev="1">Unlevered</button>
+            </div> -->
+
+            <style>
+              .leverage-toggle {
+                display: flex;
+                gap: 6px;
+                margin-bottom: 8px;
+              }
+
+              .lev-btn {
+                padding: 4px 10px;
+                border-radius: 6px;
+                border: 1px solid rgba(255,255,255,0.15);
+                background: transparent;
+                color: #aaa;
+                cursor: pointer;
+                font-size: 12px;
+              }
+
+              .lev-btn.active {
+                background: #26bf94;
+                color: #081f18;
+                border-color: transparent;
+                font-weight: 600;
+              }
+              </style>
 
             <!-- FUND -->
             <div class="stat-row">

@@ -42,6 +42,8 @@ function rollingSMA(values, window = 5) {
     });
 }
 
+
+
 /* ================================
    Formatting helpers
 ================================ */
