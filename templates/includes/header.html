@@ -1,4 +1,29 @@
+<style>
+  .aum-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    <!-- background: rgba(255,255,255,0.06); -->
+    font-weight: 600;
+    font-size: 13px;
+    color: #e5e7eb;
+  }
 
+  .aum-label {
+    opacity: 0.7;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .aum-value {
+    <!-- color: #02f59d; /* green */ -->
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+
+</style>
             <header class="app-header">
 
                 <!-- Start::main-header-container -->
@@ -36,6 +61,14 @@
                     <!-- Start::header-content-right -->
                     <div class="header-content-right">
                       <!-- Start::header-element -->
+
+                      <div class="header-element">
+                        <div class="aum-pill">
+                          <span class="aum-label">AuM</span>
+                          <span class="aum-value" id="header-aum">—</span>
+                        </div>
+                      </div>
+
                       <div class="header-element header-fullscreen">
                           <!-- Start::header-link -->
                           <a onclick="openFullscreen();" href="javascript:void(0);" class="header-link">
@@ -554,3 +587,5 @@
                 <!-- End::main-header-container -->
 
             </header>
+
+<script type="module" src="{{ url_for('static', filename='assets/js/core/header.js') }}"></script>
