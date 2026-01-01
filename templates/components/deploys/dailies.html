@@ -158,12 +158,43 @@
     );
   }
 
+
+  /* ===============================
+     MARKET COMPS
+  ================================ */
+
   .week-toggle[data-pnl="flat"] {
     background: linear-gradient(
       to right,
       rgba(148,163,184,0.15),
       rgba(148,163,184,0.04)
     );
+  }
+
+  /* Legend section headers */
+  .apexcharts-legend-series[seriesname^="—"] {
+    pointer-events: none;
+    font-weight: 600;
+    color: #9ca3af !important;
+    opacity: 0.9;
+  }
+
+  .apexcharts-legend-series[seriesname^="—"] .apexcharts-legend-marker {
+    display: none;
+  }
+
+  /* Slight spacing between legend groups */
+  .apexcharts-legend-series {
+    margin-bottom: 4px;
+  }
+
+  .apexcharts-legend-series[seriesname^="—"] {
+    margin-top: 12px;
+  }
+
+  .apexcharts-legend-series[data\\:series-name^="—"] {
+    pointer-events: none;
+    opacity: 0.4;
   }
 
 </style>
@@ -196,7 +227,7 @@
 
           <div class="card mt-4">
             <div class="card-header">
-              <div class="card-title"> Algo </div>
+              <div class="card-title"> 3M Fund </div>
             </div>
             <div class="card-body">
               <div id="gamma-ltv-chart" style="height: 600px;"></div>
@@ -205,10 +236,16 @@
 
           <div class="card mt-4">
             <div class="card-header">
-              <div class="card-title"> Market </div>
+              <div class="card-title"> Market Comps </div>
             </div>
             <div class="card-body">
-              <div id="market-chart" style="height:400px;"></div>
+              <!-- <div class="market-toggle">
+                <button data-group="crypto">Crypto</button>
+                <button data-group="equities">Equities</button>
+                <button data-group="macro">Macro</button>
+                <button data-group="all">All</button>
+              </div> -->
+              <div id="market-chart" style="height:500px;"></div>
             </div>
           </div>
 
@@ -221,42 +258,109 @@
           <div class="comp-stats mb-4">
             <h6 class="text-muted mb-3">Comparative Performance</h6>
 
+            <!-- FUND -->
             <div class="stat-row mb-3">
               <span>Fund Return</span>
               <strong class="text-success" id="cmp-fund-ret">—%</strong>
             </div>
 
+            <!-- CRYPTO -->
             <div class="stat-row">
-              <span> BTC Return</span>
+              <span>BTC Return</span>
               <span id="cmp-btc-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span> ETH Return</span>
+              <span>ETH Return</span>
               <span id="cmp-eth-ret">—%</span>
             </div>
+
             <div class="stat-row">
-              <span> XRP Return</span>
+              <span>XRP Return</span>
               <span id="cmp-xrp-ret">—%</span>
             </div>
+
             <div class="stat-row">
-              <span> SOL Return</span>
+              <span>SOL Return</span>
               <span id="cmp-sol-ret">—%</span>
             </div>
+
             <div class="stat-row mb-3">
-              <span> BNB Return</span>
+              <span>BNB Return</span>
               <span id="cmp-bnb-ret">—%</span>
             </div>
+
             <hr>
 
+            <!-- EQUITIES -->
+            <div class="stat-row">
+              <span>AAPL Return</span>
+              <span id="cmp-aapl-ret">—%</span>
+            </div>
+
+            <div class="stat-row">
+              <span>NVDA Return</span>
+              <span id="cmp-nvda-ret">—%</span>
+            </div>
+
+            <div class="stat-row">
+              <span>TSLA Return</span>
+              <span id="cmp-tsla-ret">—%</span>
+            </div>
+
+            <div class="stat-row">
+              <span>AMZN Return</span>
+              <span id="cmp-amzn-ret">—%</span>
+            </div>
+
+            <div class="stat-row mb-3">
+              <span>PLTR Return</span>
+              <span id="cmp-pltr-ret">—%</span>
+            </div>
+
+            <hr>
+
+            <!-- MACRO / INDEX -->
+            <div class="stat-row">
+              <span>SPY Return</span>
+              <span id="cmp-spy-ret">—%</span>
+            </div>
+
+            <div class="stat-row">
+              <span>QQQ Return</span>
+              <span id="cmp-qqq-ret">—%</span>
+            </div>
+
+            <div class="stat-row mb-3">
+              <span>DXY Return</span>
+              <span id="cmp-dxy-ret">—%</span>
+            </div>
+
+            <hr>
+
+            <div class="stat-row">
+              <span>GOLD Return</span>
+              <span id="cmp-gold-ret">—%</span>
+            </div>
+
+            <div class="stat-row">
+              <span>SILVER Return</span>
+              <span id="cmp-xag-ret">—%</span>
+            </div>
+
+            <hr>
+
+            <!-- METRICS -->
             <div class="stat-row">
               <span>Sharpe Ratio</span>
               <strong id="cmp-sharpe">—</strong>
             </div>
+
             <div class="stat-row mb-3">
               <span>Max 24h Drawdown</span>
               <strong class="text-danger" id="cmp-dd">—%</strong>
             </div>
+
             <div class="stat-row">
               <span>Alpha vs BTC</span>
               <strong class="text-success" id="cmp-alpha-btc">—%</strong>

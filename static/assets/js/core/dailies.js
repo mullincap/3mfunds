@@ -202,6 +202,17 @@ gammaChart.render();
     const solRet = Number(ret_data.SOL);
     const xrpRet = Number(ret_data.XRP);
     const bnbRet = Number(ret_data.BNB);
+    const xagRet = Number(ret_data.XAG);
+
+    const dxyRet  = Number(ret_data.DXY);
+    const spyRet  = Number(ret_data.SPY);
+    const qqqRet  = Number(ret_data.QQQ);
+    const goldRet = Number(ret_data.GOLD);
+    const nvdaRet = Number(ret_data.NVDA);
+    const aaplRet = Number(ret_data.AAPL);
+    const tslaRet = Number(ret_data.TSLA);
+    const amznRet = Number(ret_data.AMZN);
+    const pltrRet = Number(ret_data.PLTR);
 
     setText("cmp-fund-ret", fmtPct(fundReturn));
 
@@ -210,6 +221,19 @@ gammaChart.render();
     setTextSafe("cmp-sol-ret", fmtPct(solRet));
     setTextSafe("cmp-xrp-ret", fmtPct(xrpRet));
     setTextSafe("cmp-bnb-ret", fmtPct(bnbRet));
+
+    setTextSafe("cmp-dxy-ret", fmtPct(dxyRet));
+    setTextSafe("cmp-spy-ret", fmtPct(spyRet));
+    setTextSafe("cmp-qqq-ret", fmtPct(qqqRet));
+
+    setTextSafe("cmp-gold-ret", fmtPct(goldRet));
+    setTextSafe("cmp-xag-ret", fmtPct(xagRet));
+
+    setTextSafe("cmp-nvda-ret", fmtPct(nvdaRet));
+    setTextSafe("cmp-aapl-ret", fmtPct(aaplRet));
+    setTextSafe("cmp-tsla-ret", fmtPct(tslaRet));
+    setTextSafe("cmp-amzn-ret", fmtPct(amznRet));
+    setTextSafe("cmp-pltr-ret", fmtPct(pltrRet));
 
     setText("cmp-alpha-btc", fmtPct(fundReturn - btcRet));
     setText("cmp-sharpe", sharpe?.toFixed(2) ?? "—");
@@ -299,7 +323,8 @@ gammaChart.render();
                 </td>
                 <td>$${Number(d.cum_pnl).toLocaleString()}</td>
                 <td>${(Number(d.total_return)*100).toFixed(2)}%</td>
-                <td>${fmtPct(((d.equity_0pct_reinv/startEquity)-1)*100)}</td>
+                <td class="${d.equity_0pct_reinv>=startEquity?"text-success":"text-danger"}">
+                ${fmtPct(((d.equity_0pct_reinv/startEquity)-1)*100)}</td>
                 <td>${fmtPct((((d.equity_0pct_reinv/startEquity)-1)*100)/d.idx,false)}</td>
               </tr>
             `);
@@ -380,49 +405,96 @@ async function loadMarketChart() {
   const res = await fetch("/api/market/cumulative?start=2025-09-22");
   const data = await res.json();
 
-  const series = Object.entries(data).map(([symbol, points]) => ({
-    name: symbol,
-    data: points
-  }));
+
+
+  const COLORS = {
+    BTC: "#f7931a",
+    ETH: "#627eea",
+    SOL: "#14f1a3",
+    XRP: "#00aae4",
+    BNB: "#f3ba2f",
+    AAPL: "#60a5fa",
+    NVDA: "#22c55e",
+    TSLA: "#ef4444",
+    AMZN: "#f97316",
+    PLTR: "#8b5cf6",
+    SPY: "#9ca3af",
+    QQQ: "#6b7280",
+    DXY: "#a78bfa",
+    GOLD: "#facc15",
+    XAG: "#facc15",
+
+  };
+
+  function legendHeader(label) {
+    return { name: `— ${label} —`, data: [], color: "transparent" };
+  }
+
+  const series = [
+    legendHeader("Crypto"),
+    ...["BTC","ETH","SOL","XRP","BNB"].filter(s => data[s]).map(sym => ({
+      name: sym,
+      data: data[sym],
+      color: COLORS[sym]
+    })),
+
+    legendHeader("Equities"),
+    ...["AAPL","NVDA","TSLA","AMZN","PLTR"].filter(s => data[s]).map(sym => ({
+      name: sym,
+      data: data[sym],
+      color: COLORS[sym]
+    })),
+
+    legendHeader("Macros"),
+    ...["SPY","QQQ","DXY","GOLD", "XAG"].filter(s => data[s]).map(sym => ({
+      name: sym,
+      data: data[sym],
+      color: COLORS[sym]
+    }))
+  ];
 
   const options = {
     chart: {
-      type: "line",
-      height: 400,
+      type: "area",
+      height: 500,
       toolbar: { show: false },
       zoom: { enabled: false }
     },
-    stroke: {
-      width: 2,
-      curve: "smooth"
-    },
-    xaxis: {
-      type: "datetime"
-    },
+    stroke: { width: 2, curve: "smooth" },
+    fill: { opacity: 0.25 },
+    xaxis: { type: "datetime" },
     yaxis: {
-      title: { text: "Cumulative Return (%)" },
-      labels: {
-        formatter: v => `${v.toFixed(1)}%`
-      }
+      title: { text: "Cumulative Return (%)", style: { color: "#aaa" } },
+      labels: { formatter: v => `${v.toFixed(1)}%` }
     },
     tooltip: {
       shared: true,
-      y: {
-        formatter: v => `${v.toFixed(2)}%`
-      }
+      intersect: false,
+      y: { formatter: v => `${v.toFixed(2)}%` }
     },
     legend: {
-      position: "bottom"
+      position: "bottom",
+      horizontalAlign: "center",
+      fontSize: "12px",
+      labels: { colors: "#bbb" },
+      markers: { width: 10, height: 10, radius: 6 },
+      itemMargin: { horizontal: 10, vertical: 6 }
     },
-    grid: {
-      borderColor: "rgba(255,255,255,0.08)"
-    }
+    grid: { borderColor: "rgba(255,255,255,0.08)" },
+    dataLabels: { enabled: false }
   };
 
-  new ApexCharts(
+  const chart = new ApexCharts(
     document.querySelector("#market-chart"),
     { ...options, series }
-  ).render();
+  );
+
+  await chart.render();
+
+  // 👇 ONLY BTC visible at load
+  Object.keys(data).forEach(sym => {
+    if (sym !== "BTC") chart.hideSeries(sym);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", loadMarketChart);

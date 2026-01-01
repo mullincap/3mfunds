@@ -1418,46 +1418,75 @@ def daily_returns():
 
     return jsonify(data)
 
-@app.route("/api/market/cumulative")
+# @app.route("/api/market/cumulative")
+# def market_cumulative():
+#     start = request.args.get("start", "2025-09-22")
+#
+#     conn = connect_db()
+#     cur = conn.cursor()
+#
+#     cur.execute("""
+#         SELECT symbol, day, close_price
+#         FROM crypto_price_daily
+#         WHERE day >= %s
+#         ORDER BY symbol, day
+#     """, (start,))
+#
+#     rows = cur.fetchall()
+#     conn.close()
+#
+#     from collections import defaultdict
+#
+#     series = defaultdict(list)
+#
+#     for r in rows:
+#         series[r["symbol"]].append((r["day"], float(r["close_price"])))
+#
+#     out = {}
+#
+#     for symbol, points in series.items():
+#         base = points[0][1]
+#
+#         cum = []
+#         for d, price in points:
+#             ret = (price / base - 1.0) * 100
+#             cum.append({
+#                 "x": d.isoformat(),
+#                 "y": round(ret, 4)
+#             })
+#
+#         out[symbol] = cum
+#
+#     return jsonify(out)
+
+@app.get("/api/market/cumulative")
 def market_cumulative():
-    start = request.args.get("start", "2025-09-22")
+    start = request.args.get("start")
 
     conn = connect_db()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT symbol, day, close_price
-        FROM crypto_price_daily
-        WHERE day >= %s
-        ORDER BY symbol, day
+        SELECT symbol, date, return_pct
+        FROM market_price_returns
+        WHERE date >= %s
+        ORDER BY symbol, date
     """, (start,))
 
     rows = cur.fetchall()
+    cur.close()
     conn.close()
 
-    from collections import defaultdict
-
-    series = defaultdict(list)
+    series = {}
 
     for r in rows:
-        series[r["symbol"]].append((r["day"], float(r["close_price"])))
+        sym = r["symbol"]
+        series.setdefault(sym, []).append([
+            r["date"].isoformat(),
+            round(float(r["return_pct"]), 4)
+        ])
 
-    out = {}
-
-    for symbol, points in series.items():
-        base = points[0][1]
-
-        cum = []
-        for d, price in points:
-            ret = (price / base - 1.0) * 100
-            cum.append({
-                "x": d.isoformat(),
-                "y": round(ret, 4)
-            })
-
-        out[symbol] = cum
-
-    return jsonify(out)
+    return jsonify(series)
 
 
 @app.route("/api/market/returns")
@@ -1467,41 +1496,31 @@ def market_returns():
     conn = connect_db()
     cur = conn.cursor()
 
-    # Get first + last price per symbol
     cur.execute("""
-        WITH ordered AS (
-            SELECT
-                symbol,
-                DATE(timestamp_utc) AS day,
-                close_price,
-                ROW_NUMBER() OVER (
-                    PARTITION BY symbol
-                    ORDER BY timestamp_utc ASC
-                ) AS rn_start,
-                ROW_NUMBER() OVER (
-                    PARTITION BY symbol
-                    ORDER BY timestamp_utc DESC
-                ) AS rn_end
-            FROM crypto_price_5m
-            WHERE timestamp_utc >= %s
-        )
-        SELECT
-            symbol,
-            MAX(CASE WHEN rn_start = 1 THEN close_price END) AS start_price,
-            MAX(CASE WHEN rn_end = 1 THEN close_price END) AS end_price
-        FROM ordered
-        GROUP BY symbol;
+        SELECT symbol, date, return_pct
+        FROM market_price_returns
+        WHERE date >= %s
+        ORDER BY symbol, date
     """, (start,))
 
     rows = cur.fetchall()
     conn.close()
 
+    series = {}
+
+    # group by symbol
+    for r in rows:
+        series.setdefault(r["symbol"], []).append(r["return_pct"])
+
     out = {}
 
-    for r in rows:
-        if r["start_price"] and r["end_price"]:
-            ret = (r["end_price"] / r["start_price"] - 1) * 100
-            out[r["symbol"]] = round(ret, 4)
+    for sym, values in series.items():
+        if not values:
+            continue
+
+        # since return_pct is already cumulative,
+        # the last value is the total return
+        out[sym] = round(values[-1], 4)
 
     return jsonify(out)
 
