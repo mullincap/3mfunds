@@ -164,7 +164,7 @@ function updatePositionsSummary(positions) {
 
   // Directional performance (KEEP +/-)
   set("sum-pnl", fmtUSD(totalPnl), totalPnl);
-  set("sum-pnl-pct", fmtPct(avgPct));
+  set("avg-margin", fmtUSD(avgPositionMargin));
   set("sum-efficiency", fmtPct(pnlEfficiency));
   set("sum-pnl-margin-pct", fmtPct(pnlMarginPct), pnlMarginPct);
 
