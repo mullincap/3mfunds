@@ -1,4 +1,4 @@
-// Mullin Technologies
+// gamma_ltv_chart.js
 // ----------------------------------------------------
 // Gamma LTV Equity chart + linear regression trend
 // + Upper / Lower statistical limits
@@ -6,6 +6,8 @@
 // + Comparative KPIs
 // + Channel / Regime KPI block
 // ----------------------------------------------------
+
+console.log("Gamma LTV JS loaded");
 
 let gammaChart = null;
 
@@ -126,14 +128,11 @@ gammaChart = new ApexCharts(
         fill: { opacity: [0.7,1,1,1,1] },
         xaxis: { categories: [], labels: { show: false } },
         yaxis: {
-          title: {
-            text: "Cumulative Return (%)",
-            style: { color: "#aaa" }
-          },
+          min: min=> min,
           labels: {
-            formatter: v => `${v.toFixed(1)}%`
+            formatter: v => "$" + v.toLocaleString()
           }
-        },
+         },
         grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 },
         tooltip: { shared: true },
         legend: { labels: { colors: "#ccc" } }
@@ -150,12 +149,7 @@ gammaChart.render();
 
     /* ---------- CORE SERIES ---------- */
     const labels = rows.map(r => r.snapshot_date);
-    const equityRaw = rows.map(r => Number(r.equity_0pct_reinv));
-    const baseEquity = equityRaw.find(v => Number.isFinite(v));
-
-    const equity = equityRaw.map(v =>
-      baseEquity > 0 ? ((v / baseEquity) - 1) * 100 : 0
-    );
+    const equity = rows.map(r => Number(r.equity_0pct_reinv));
 
     const trend = linearRegression(equity);
     const sma5 = rollingSMA(equity, 5);
@@ -167,29 +161,7 @@ gammaChart.render();
     const upper = trend.map(v => v + K * sigma);
     const lower = trend.map(v => v - K * sigma);
 
-    const latestUpper = upper[upper.length - 1];
-    const yMax = latestUpper * 1.03; // 5% padding
-
     gammaChart.updateOptions({ xaxis: { categories: labels } });
-    gammaChart.updateOptions({
-  xaxis: { categories: labels },
-
-  yaxis: {
-    min: 0,
-    max: yMax,
-    title: { text: "Cumulative Return (%)", style: { color: "#aaa" } },
-    labels: {
-      formatter: v => `${v.toFixed(1)}%`
-    }
-  },
-
-  tooltip: {
-    shared: true,
-    y: {
-      formatter: v => `${v.toFixed(2)}%`
-    }
-  }
-});
     gammaChart.updateSeries([
         { name: "Equity", type: "bar", data: equity },
         { name: "Trendline (LR)", type: "line", data: trend },
@@ -198,189 +170,51 @@ gammaChart.render();
         { name: "Lower Limit", type: "line", data: lower }
     ]);
 
-    /* ================= KPI LOGIC (FIXED) ================= */
-
-    // ---- RAW equity (levels)
-    const equityLevel = equityRaw.filter(v => Number.isFinite(v));
-    const startEquity = equityLevel[0];
-    const endEquity = equityLevel[equityLevel.length - 1];
-
-    // --- Total days in sample
-    const totalDays = equityLevel.length;
-
-    // --- Fund return (%)
+    /* ================= KPI LOGIC (UNCHANGED) ================= */
+    const startEquity = equity.find(v => Number.isFinite(v));
+    const endEquity = [...equity].reverse().find(v => Number.isFinite(v));
     const fundReturn = ((endEquity / startEquity) - 1) * 100;
 
-    // --- Daily returns (log-safe)
     const dailyReturns = [];
-    for (let i = 1; i < equityLevel.length; i++) {
-      const prev = equityLevel[i - 1];
-      const cur = equityLevel[i];
-      if (prev > 0 && cur > 0) {
-        dailyReturns.push((cur / prev) - 1);
-      }
+    for (let i = 1; i < equity.length; i++) {
+        dailyReturns.push(((equity[i] / equity[i-1]) - 1) * 100);
     }
 
-    // --- Sharpe (annualized)
-    const mean = dailyReturns.reduce((a,b)=>a+b,0) / dailyReturns.length;
-    const std = stdDev(dailyReturns);
-    const sharpe = std ? (mean / std) * Math.sqrt(252) : null;
+    const sharpe = (() => {
+        const mean = dailyReturns.reduce((a,b)=>a+b,0) / dailyReturns.length;
+        const std = stdDev(dailyReturns);
+        return std ? (mean / std) * Math.sqrt(365) : null;
+    })();
 
-
-    // --- CAGR
-    const days = equity.length;
-    const years = days / 365;
-
-    const cagr = (startEquity > 0 && endEquity > 0 && years > 0)
-      ? (Math.pow(endEquity / startEquity, 1 / years) - 1)
-      : null;
-
-    // --- SORTINO
-    const downsideReturns = dailyReturns.filter(r => r < 0);
-
-    let sortino = null;
-    if (downsideReturns.length > 1) {
-        const downsideStd = stdDev(downsideReturns);
-        const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
-
-        if (downsideStd > 0) {
-            sortino = (meanReturn / downsideStd) * Math.sqrt(365);
-        }
-    }
-
-    // --- Max drawdown (correct)
-    let peak = equityLevel[0];
-    let maxDD = 0;
-
-    for (const v of equityLevel) {
-      peak = Math.max(peak, v);
-      const dd = (v / peak - 1) * 100;
-      maxDD = Math.min(maxDD, dd);
-    }
-
-    // ==============================
-    // ADVANCED RISK / QUALITY METRICS
-    // ==============================
-
-    // --- Win / Loss breakdown
-    let wins = 0, losses = 0;
-    let gainSum = 0, lossSum = 0;
-
-    dailyReturns.forEach(r => {
-      if (r > 0) {
-        wins++;
-        gainSum += r;
-      } else if (r < 0) {
-        losses++;
-        lossSum += Math.abs(r);
-      }
+    let peak = equity[0], maxDD = 0;
+    equity.forEach(v => {
+        peak = Math.max(peak, v);
+        maxDD = Math.min(maxDD, (v/peak - 1) * 100);
     });
 
-    const totalTrades = wins + losses;
-
-    // Win rate
-    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : null;
-
-    // Avg win / loss
-    const avgWin  = wins > 0 ? gainSum / wins : null;
-    const avgLoss = losses > 0 ? lossSum / losses : null;
-
-    // --- Average daily return
-    const avgDay =
-      dailyReturns.length > 0
-        ? dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length
-        : null;
-
-    // Profit factor
-    const profitFactor = lossSum > 0 ? gainSum / lossSum : null;
 
 
-    // ------------------------------
-    // CALMAR RATIO
-    // ------------------------------
-    const calmar = maxDD !== 0
-      ? Math.abs((fundReturn / maxDD))
-      : null;
-
-
-    // ------------------------------
-    // ULCER INDEX
-    // ------------------------------
-    let peakEq = equityLevel[0];
-    let sumSqDD = 0;
-
-    for (const v of equityLevel) {
-      peakEq = Math.max(peakEq, v);
-      const ddPct = ((v - peakEq) / peakEq) * 100;
-      sumSqDD += ddPct * ddPct;
-    }
-
-    const ulcerIndex = Math.sqrt(sumSqDD / equityLevel.length);
-
-
-    // ------------------------------
-    // OPTIONAL: Omega Ratio (bonus)
-    // ------------------------------
-    const threshold = 0; // break-even
-    let gainsAbove = 0;
-    let lossesBelow = 0;
-
-    dailyReturns.forEach(r => {
-      if (r > threshold) gainsAbove += (r - threshold);
-      else lossesBelow += (threshold - r);
-    });
-
-    const omega = lossesBelow > 0 ? gainsAbove / lossesBelow : null;
-
-
-
-
-
-
-    // =====================
-    // MARKET COMPARISONS
-    // =====================
     const returns_resp = await fetch("/api/market/returns?start=2025-09-22");
     const ret_data = await returns_resp.json();
 
-    const btcRet  = Number(ret_data.BTC);
-    const ethRet  = Number(ret_data.ETH);
-    const solRet  = Number(ret_data.SOL);
-    const xrpRet  = Number(ret_data.XRP);
-    const bnbRet  = Number(ret_data.BNB);
+    const btcRet = Number(ret_data.BTC);
+    const ethRet = Number(ret_data.ETH);
+    const solRet = Number(ret_data.SOL);
+    const xrpRet = Number(ret_data.XRP);
+    const bnbRet = Number(ret_data.BNB);
+    const xagRet = Number(ret_data.XAG);
 
     const dxyRet  = Number(ret_data.DXY);
     const spyRet  = Number(ret_data.SPY);
     const qqqRet  = Number(ret_data.QQQ);
     const goldRet = Number(ret_data.GOLD);
-    const xagRet  = Number(ret_data.XAG);
-
     const nvdaRet = Number(ret_data.NVDA);
     const aaplRet = Number(ret_data.AAPL);
     const tslaRet = Number(ret_data.TSLA);
     const amznRet = Number(ret_data.AMZN);
     const pltrRet = Number(ret_data.PLTR);
 
-    // Core performance
-    setText("cmp-total-days", totalDays.toLocaleString());
-    setText("cmp-calmar", calmar ? calmar.toFixed(2) : "—");
-    setText("cmp-profit-factor", profitFactor ? profitFactor.toFixed(2) : "—");
-    setText("cmp-winrate", winRate !== null ? winRate.toFixed(1) + "%" : "—");
-
-    setText("cmp-avg-day", avgDay !== null ? fmtPct(avgDay * 100) : "—");
-    setText("cmp-avg-win", avgWin !== null ? fmtPct(avgWin * 100) : "—");
-    setText("cmp-avg-loss", avgLoss !== null ? fmtPct(-avgLoss * 100) : "—");
-    setText("cmp-ulcer", ulcerIndex.toFixed(2));
-
-    // Optional advanced metric
-    if (omega !== null) {
-      setText("cmp-omega", omega.toFixed(2));
-    }
-
-    // ---- UI updates
     setText("cmp-fund-ret", fmtPct(fundReturn));
-    setText("cmp-cagr", cagr !== null ? fmtPct(cagr * 100) : "—");
-    setText("cmp-sortino", sortino !== null ? sortino.toFixed(2) : "—");
 
     setTextSafe("cmp-btc-ret", fmtPct(btcRet));
     setTextSafe("cmp-eth-ret", fmtPct(ethRet));
@@ -401,10 +235,7 @@ gammaChart.render();
     setTextSafe("cmp-amzn-ret", fmtPct(amznRet));
     setTextSafe("cmp-pltr-ret", fmtPct(pltrRet));
 
-    // --- Alpha vs BTC
     setText("cmp-alpha-btc", fmtPct(fundReturn - btcRet));
-
-    // --- Risk metrics
     setText("cmp-sharpe", sharpe?.toFixed(2) ?? "—");
     setText("cmp-dd", fmtPct(maxDD));
 
@@ -414,7 +245,7 @@ gammaChart.render();
 
     const channelPos = ((last - lower[n-1]) / (upper[n-1] - lower[n-1])) * 100;
     const slope = (trend[n-1] - trend[0]) / trend[0] / n;
-    const monthlyTrend = slope * 100;
+    const monthlyTrend = slope * 30 * 100;
 
     const upside = ((upper[n-1] - last) / last) * 100;
     const downside = ((last - lower[n-1]) / last) * 100;
@@ -558,24 +389,6 @@ gammaChart.render();
     });
 
 
-    // Weekly
-    const weekly = extractTotalReturnFromTable("#gamma-weekly-dar-body");
-    renderBarChart(
-      "#weekly-bar-chart",
-      weekly.labels,
-      weekly.values,
-      "Weekly Total Return"
-    );
-
-    // Monthly
-    const monthly = extractTotalReturnFromTable("#gamma-monthly-dar-body");
-    renderBarChart(
-      "#monthly-bar-chart",
-      monthly.labels,
-      monthly.values,
-      "Monthly Total Return"
-    );
-
     tbody.addEventListener("click", e => {
         const row = e.target.closest(".week-toggle");
         if (!row) return;
@@ -685,138 +498,3 @@ async function loadMarketChart() {
 }
 
 document.addEventListener("DOMContentLoaded", loadMarketChart);
-
-function extractTotalReturnFromTable(tbodySelector) {
-  const rows = document.querySelectorAll(`${tbodySelector} tr`);
-  const labels = [];
-  const values = [];
-
-  rows.forEach(row => {
-    const cells = row.querySelectorAll("td");
-    if (cells.length < 3) return;
-
-    const label = cells[0].innerText.trim();
-
-    // column index 2 = "Total Return"
-    const totalReturnText = cells[2].innerText.replace("%", "");
-
-    const val = parseFloat(totalReturnText);
-    if (!isNaN(val)) {
-      labels.push(label);
-      values.push(val);
-    }
-  });
-
-  return {
-  labels: labels.reverse(),
-  values: values.reverse()
-  };
-}
-
-function renderBarChart(el, labels, values, title) {
-  const colors = values.map(v => v >= 0 ? "#22c55e" : "#ef4444");
-
-  const avg =
-  values.length > 0
-    ? values.reduce((a, b) => a + b, 0) / values.length
-    : 0;
-
-  const avgLine = values.map(() => avg);
-
-  const chart = new ApexCharts(document.querySelector(el), {
-    chart: {
-      type: "bar",
-      height: 300,
-      toolbar: { show: false }
-    },
-    series: [
-      {
-        name: "Total Return",
-        type: "bar",
-        data: values
-      },
-      {
-        name: "Average",
-        type: "line",
-        data: avgLine
-      }
-    ],
-    xaxis: {
-      categories: labels,
-      labels: {
-        rotate: -45,
-        style: { colors: "#aaa" }
-      }
-    },
-    yaxis: {
-      labels: {
-        formatter: v => `${v.toFixed(2)}%`
-      },
-      title: {
-        text: "Total Return (%)",
-        style: { color: "#aaa" }
-      }
-    },
-    colors: [
-      undefined,        // bars use per-bar colors
-      "#ffffff"         // average line
-    ],
-    stroke: {
-      width: [0, 2],
-      curve: "straight",
-      dashArray: [0, 6]   // 👈 dashed line
-    },
-    plotOptions: {
-      bar: {
-        columnWidth: "60%",
-        borderRadius: 4,
-        colors: {
-          ranges: [
-            { from: -1000, to: 0, color: "#ef4444" },
-            { from: 0, to: 1000, color: "#22c55e" }
-          ]
-        }
-      }
-    },
-    annotations: {
-      yaxis: [{
-        y: 0,
-        borderColor: "#666",
-        strokeDashArray: 4
-      }]
-    },
-    dataLabels: { enabled: false },
-    grid: {
-      borderColor: "rgba(255,255,255,0.08)"
-    },
-    tooltip: {
-      y: {
-        formatter: v => `${v.toFixed(2)}%`
-      }
-    },
-    legend: {
-      show: true,
-      labels: {
-        colors: "#bbb"
-      }
-    },
-    tooltip: {
-      y: {
-        formatter: v => {
-          const diff = v - avg;
-          return `${v.toFixed(1)}% (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} vs avg)`;
-        }
-      }
-    },
-    title: {
-      text: title,
-      align: "left",
-      style: {
-        color: "#bbb",
-        fontSize: "13px"
-      }
-    }
-  });
-
-  chart.render();
-}

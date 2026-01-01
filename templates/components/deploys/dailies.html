@@ -259,10 +259,17 @@
             <h6 class="text-muted mb-3">Comparative Performance</h6>
 
             <!-- FUND -->
-            <div class="stat-row mb-3">
+            <div class="stat-row">
               <span>Fund Return</span>
               <strong class="text-success" id="cmp-fund-ret">—%</strong>
             </div>
+
+            <div class="stat-row  mb-3">
+              <span>Total Days</span>
+              <strong id="cmp-total-days">—</strong>
+            </div>
+
+            <hr>
 
             <!-- CRYPTO -->
             <div class="stat-row">
@@ -355,6 +362,57 @@
               <span>Sharpe Ratio</span>
               <strong id="cmp-sharpe">—</strong>
             </div>
+
+            <div class="stat-row">
+              <span>Sortino Ratio</span>
+              <strong id="cmp-sortino">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Calmar Ratio</span>
+              <strong id="cmp-calmar">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Profit Factor</span>
+              <strong id="cmp-profit-factor">—</strong>
+            </div>
+
+            <hr>
+
+            <div class="stat-row">
+              <span>Win Rate</span>
+              <strong id="cmp-winrate">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Avg Day</span>
+              <strong id="cmp-avg-day">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Avg Win</span>
+              <strong id="cmp-avg-win">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Avg Loss</span>
+              <strong id="cmp-avg-loss">—</strong>
+            </div>
+
+            <hr>
+
+            <div class="stat-row">
+              <span>Ulcer Index</span>
+              <strong id="cmp-ulcer">—</strong>
+            </div>
+
+            <div class="stat-row">
+              <span>Omega Ratio</span>
+              <strong id="cmp-omega">—</strong>
+            </div>
+
+            <hr>
 
             <div class="stat-row mb-3">
               <span>Max 24h Drawdown</span>
@@ -464,11 +522,13 @@
 
     <!-- Weekly DAR -->
     <div class="col-xl-6">
+
       <div class="card custom-card">
         <div class="card-header">
           <div class="card-title">Weekly Summary</div>
         </div>
         <div class="card-body table-responsive">
+          <div id="weekly-bar-chart" style="height:260px;margin-top:16px;"></div>
           <table class="table table-hover align-middle text-nowrap">
             <thead>
               <tr>
@@ -488,11 +548,13 @@
 
     <!-- Monthly DAR -->
     <div class="col-xl-6">
+
       <div class="card custom-card">
         <div class="card-header">
           <div class="card-title">Monthly Summary</div>
         </div>
         <div class="card-body table-responsive">
+          <div id="monthly-bar-chart" style="height:260px;margin-top:16px;"></div>
           <table class="table table-hover align-middle text-nowrap">
             <thead>
               <tr>
