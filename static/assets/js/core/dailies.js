@@ -47,9 +47,28 @@ function rollingSMA(values, window = 5) {
 /* ================================
    Formatting helpers
 ================================ */
-function setText(id, text) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    el.textContent = "—";
+    return;
+  }
+
+  el.textContent = value;
+}
+
+function setTextSafe(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    el.textContent = "—";
+    return;
+  }
+
+  el.textContent = value;
 }
 
 function fmtPct(v, signed = true) {
@@ -114,7 +133,7 @@ gammaChart = new ApexCharts(
             formatter: v => "$" + v.toLocaleString()
           }
          },
-        grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 },
+        grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 }, dataLabels: {enabled: false},
         tooltip: { shared: true },
         legend: { labels: { colors: "#ccc" } }
     }
@@ -173,12 +192,25 @@ gammaChart.render();
         maxDD = Math.min(maxDD, (v/peak - 1) * 100);
     });
 
-    const btcRet = ((86867 / 115306.09) - 1) * 100;
-    const ethRet = ((2930.62 / 4451.33) - 1) * 100;
+
+
+    const returns_resp = await fetch("/api/market/returns?start=2025-09-22");
+    const ret_data = await returns_resp.json();
+
+    const btcRet = Number(ret_data.BTC);
+    const ethRet = Number(ret_data.ETH);
+    const solRet = Number(ret_data.SOL);
+    const xrpRet = Number(ret_data.XRP);
+    const bnbRet = Number(ret_data.BNB);
 
     setText("cmp-fund-ret", fmtPct(fundReturn));
-    setText("cmp-btc-ret", fmtPct(btcRet));
-    setText("cmp-eth-ret", fmtPct(ethRet));
+
+    setTextSafe("cmp-btc-ret", fmtPct(btcRet));
+    setTextSafe("cmp-eth-ret", fmtPct(ethRet));
+    setTextSafe("cmp-sol-ret", fmtPct(solRet));
+    setTextSafe("cmp-xrp-ret", fmtPct(xrpRet));
+    setTextSafe("cmp-bnb-ret", fmtPct(bnbRet));
+
     setText("cmp-alpha-btc", fmtPct(fundReturn - btcRet));
     setText("cmp-sharpe", sharpe?.toFixed(2) ?? "—");
     setText("cmp-dd", fmtPct(maxDD));
@@ -299,7 +331,7 @@ gammaChart.render();
         <tr>
           <td>${wk}</td>
           <td>${w.days}</td>
-          <td>${fmtPctUnsigned(w.total_return_sum)}</td>          
+          <td>${fmtPctUnsigned(w.total_return_sum)}</td>
           <td><strong class="${darClass(dar)}">${fmtPctUnsigned(dar)}</strong></td>
         </tr>
       `);
@@ -342,3 +374,56 @@ gammaChart.render();
     });
 
 })();
+
+
+async function loadMarketChart() {
+  const res = await fetch("/api/market/cumulative?start=2025-09-22");
+  const data = await res.json();
+
+  const series = Object.entries(data).map(([symbol, points]) => ({
+    name: symbol,
+    data: points
+  }));
+
+  const options = {
+    chart: {
+      type: "area",
+      height: 400,
+      toolbar: { show: false },
+      zoom: { enabled: false }
+    },
+    stroke: {
+      width: 2,
+      curve: "smooth"
+    },
+    xaxis: {
+      type: "datetime"
+    },
+    yaxis: {
+      title: { text: "Cumulative Return (%)" },
+      labels: {
+        formatter: v => `${v.toFixed(1)}%`
+      }
+    },
+    tooltip: {
+      shared: true,
+      y: {
+        formatter: v => `${v.toFixed(2)}%`
+      }
+    },
+    legend: {
+      position: "bottom"
+    },
+    dataLabels: {enabled: false},
+    grid: {
+      borderColor: "rgba(255,255,255,0.08)"
+    }
+  };
+
+  new ApexCharts(
+    document.querySelector("#market-chart"),
+    { ...options, series }
+  ).render();
+}
+
+document.addEventListener("DOMContentLoaded", loadMarketChart);

@@ -192,47 +192,74 @@
 
       <div class="row">
         <!-- ================= LEFT: CHART ================= -->
-        <div class="col-xl-8">
-          <div id="gamma-ltv-chart" style="height: 600px;"></div>
+        <div class="col-xl-9">
+
+          <div class="card mt-4">
+            <div class="card-header">
+              <div class="card-title"> Algo </div>
+            </div>
+            <div class="card-body">
+              <div id="gamma-ltv-chart" style="height: 600px;"></div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-header">
+              <div class="card-title"> Market </div>
+            </div>
+            <div class="card-body">
+              <div id="market-chart" style="height:400px;"></div>
+            </div>
+          </div>
+
         </div>
 
         <!-- ================= RIGHT: STATS + KPIs ================= -->
-        <div class="col-xl-4">
+        <div class="col-xl-3">
 
           <!-- ===== Comparative Performance ===== -->
           <div class="comp-stats mb-4">
             <h6 class="text-muted mb-3">Comparative Performance</h6>
 
-            <div class="stat-row">
+            <div class="stat-row mb-3">
               <span>Fund Return</span>
               <strong class="text-success" id="cmp-fund-ret">—%</strong>
             </div>
 
             <div class="stat-row">
-              <span>BTC Return</span>
-              <strong id="cmp-btc-ret">—%</strong>
+              <span> BTC Return</span>
+              <span id="cmp-btc-ret">—%</span>
             </div>
-
-            <div class="stat-row mb-3">
-              <span>ETH Return</span>
-              <strong id="cmp-eth-ret">—%</strong>
-            </div>
-
-            <hr>
 
             <div class="stat-row">
-              <span>Alpha vs BTC</span>
-              <strong class="text-success" id="cmp-alpha-btc">—%</strong>
+              <span> ETH Return</span>
+              <span id="cmp-eth-ret">—%</span>
             </div>
+            <div class="stat-row">
+              <span> XRP Return</span>
+              <span id="cmp-xrp-ret">—%</span>
+            </div>
+            <div class="stat-row">
+              <span> SOL Return</span>
+              <span id="cmp-sol-ret">—%</span>
+            </div>
+            <div class="stat-row mb-3">
+              <span> BNB Return</span>
+              <span id="cmp-bnb-ret">—%</span>
+            </div>
+            <hr>
 
             <div class="stat-row">
               <span>Sharpe Ratio</span>
               <strong id="cmp-sharpe">—</strong>
             </div>
-
-            <div class="stat-row">
-              <span>Max Drawdown</span>
+            <div class="stat-row mb-3">
+              <span>Max 24h Drawdown</span>
               <strong class="text-danger" id="cmp-dd">—%</strong>
+            </div>
+            <div class="stat-row">
+              <span>Alpha vs BTC</span>
+              <strong class="text-success" id="cmp-alpha-btc">—%</strong>
             </div>
           </div>
 

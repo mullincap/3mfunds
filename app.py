@@ -611,7 +611,7 @@ def index():
 
     beta_cash += 1000
 
-    rem_cash = portfolio - alpha_cash - beta_cash    
+    rem_cash = portfolio - alpha_cash - beta_cash
     print("rem cash:", rem_cash)
     if rem_cash < 0: rem_cash = 0
 
@@ -1387,6 +1387,124 @@ def close_all_trades():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/prices/daily-returns")
+def daily_returns():
+    start = request.args.get("start", "2025-09-22")
+
+    conn = connect_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT symbol, date, close_price, daily_return
+        FROM crypto_price_daily_returns
+        WHERE date >= %s
+        ORDER BY date ASC
+    """, (start,))
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    data = {}
+
+    for r in rows:
+        sym = r["symbol"]
+        data.setdefault(sym, []).append({
+            "date": r["date"].isoformat(),
+            "close": float(r["close_price"]),
+            "ret": float(r["daily_return"]) if r["daily_return"] is not None else None
+        })
+
+    return jsonify(data)
+
+@app.route("/api/market/cumulative")
+def market_cumulative():
+    start = request.args.get("start", "2025-09-22")
+
+    conn = connect_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT symbol, day, close_price
+        FROM crypto_price_daily
+        WHERE day >= %s
+        ORDER BY symbol, day
+    """, (start,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    from collections import defaultdict
+
+    series = defaultdict(list)
+
+    for r in rows:
+        series[r["symbol"]].append((r["day"], float(r["close_price"])))
+
+    out = {}
+
+    for symbol, points in series.items():
+        base = points[0][1]
+
+        cum = []
+        for d, price in points:
+            ret = (price / base - 1.0) * 100
+            cum.append({
+                "x": d.isoformat(),
+                "y": round(ret, 4)
+            })
+
+        out[symbol] = cum
+
+    return jsonify(out)
+
+
+@app.route("/api/market/returns")
+def market_returns():
+    start = request.args.get("start", "2025-09-22")
+
+    conn = connect_db()
+    cur = conn.cursor()
+
+    # Get first + last price per symbol
+    cur.execute("""
+        WITH ordered AS (
+            SELECT
+                symbol,
+                DATE(timestamp_utc) AS day,
+                close_price,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY timestamp_utc ASC
+                ) AS rn_start,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY timestamp_utc DESC
+                ) AS rn_end
+            FROM crypto_price_5m
+            WHERE timestamp_utc >= %s
+        )
+        SELECT
+            symbol,
+            MAX(CASE WHEN rn_start = 1 THEN close_price END) AS start_price,
+            MAX(CASE WHEN rn_end = 1 THEN close_price END) AS end_price
+        FROM ordered
+        GROUP BY symbol;
+    """, (start,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    out = {}
+
+    for r in rows:
+        if r["start_price"] and r["end_price"]:
+            ret = (r["end_price"] / r["start_price"] - 1) * 100
+            out[r["symbol"]] = round(ret, 4)
+
+    return jsonify(out)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
