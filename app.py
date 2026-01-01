@@ -476,13 +476,15 @@ def admin():
     beta_cash += 1000
 
     rem_cash = portfolio - alpha_cash - beta_cash
+    print("rem cash:", rem_cash)
+    if rem_cash < 0: rem_cash = 0
 
     conn.close()
 
     return render_template(
         "components/dashboards/admin.html",
         kpi_invested=invested,
-        kpi_portfolio=portfolio,
+        kpi_portfolio=portfolio + withdrawals,
         kpi_returns=returns,
         kpi_returnrate=return_rate,
         kpi_returns_compact=format_compact_currency(returns),
@@ -527,12 +529,12 @@ def index():
     portfolio = 0.0
     returns = 0.0
     return_rate = 0.0
-    withdrawals = 3200
+    withdrawals = 3300
 
     if row:
         invested = float(row.get("invested_value", 0) or 0)
         portfolio = float(row.get("portfolio_value", 0) or 0)
-        returns = float(row.get("total_returns", 0) or 0)
+        returns = float(row.get("total_returns", 0) or 0) + withdrawals
 
         if invested > 0:
             return_rate = (portfolio - invested) / invested * 100
@@ -609,7 +611,9 @@ def index():
 
     beta_cash += 1000
 
-    rem_cash = portfolio - alpha_cash - beta_cash
+    rem_cash = portfolio - alpha_cash - beta_cash    
+    print("rem cash:", rem_cash)
+    if rem_cash < 0: rem_cash = 0
 
     conn.close()
 
