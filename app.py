@@ -19,7 +19,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-
+withdrawals = 3300
 # ============ HELPERS ==========================================
 
 
@@ -253,7 +253,8 @@ def get_kpis():
     eq = [float(r["portfolio_value"]) for r in rows]
 
     first_eq = eq[0]
-    last_eq = eq[-1]
+    print("first_eq:",first_eq)
+    last_eq = eq[-1] + withdrawals
     now_ts = ts[-1]
 
     # -------------------------------
@@ -276,10 +277,10 @@ def get_kpis():
     eq_24h = equity_at_or_before(ts_24h)
 
     total_return_pct = (last_eq / first_eq - 1) * 100
-    eff_total_return_pct = (last_eq / 20000 - 1) * 100
+    eff_total_return_pct = (last_eq / first_eq - 1) * 100
 
     total_return = last_eq - first_eq
-    eff_total_return = last_eq - 20000
+    eff_total_return = last_eq - first_eq
 
     dpr = total_return_pct / runtime_days if runtime_days > 0 else None
 
@@ -397,8 +398,8 @@ def admin():
 
     if row:
         invested = float(row.get("invested_value", 0) or 0)
-        portfolio = float(row.get("portfolio_value", 0) or 0)
-        returns = float(row.get("total_returns", 0) or 0)
+        portfolio = float(row.get("portfolio_value", 0) or 0) + withdrawals
+        returns = float(row.get("total_returns", 0) or 0) + withdrawals
 
         if invested > 0:
             return_rate = (portfolio - invested) / invested * 100
@@ -475,7 +476,7 @@ def admin():
 
     beta_cash += 1000
 
-    rem_cash = portfolio - alpha_cash - beta_cash
+    rem_cash = portfolio - alpha_cash - beta_cash - withdrawals
     print("rem cash:", rem_cash)
     if rem_cash < 0: rem_cash = 0
 
@@ -484,7 +485,7 @@ def admin():
     return render_template(
         "components/dashboards/admin.html",
         kpi_invested=invested,
-        kpi_portfolio=portfolio + withdrawals,
+        kpi_portfolio=portfolio,
         kpi_returns=returns,
         kpi_returnrate=return_rate,
         kpi_returns_compact=format_compact_currency(returns),
@@ -493,6 +494,7 @@ def admin():
         alpha_cash_compact=format_compact_currency(alpha_cash),
         beta_cash_compact=format_compact_currency(beta_cash),
         rem_cash_compact=format_compact_currency(rem_cash),
+        withdrawals_compact=format_compact_currency(withdrawals),
 
         kpi_today_change=kpi_today_change,
         kpi_today_change_pct=kpi_today_change_pct,
@@ -525,19 +527,28 @@ def index():
 
     row = cursor.fetchone()
 
+    print("row:", row)
+
     invested = 0.0
     portfolio = 0.0
     returns = 0.0
     return_rate = 0.0
-    withdrawals = 3300
 
     if row:
         invested = float(row.get("invested_value", 0) or 0)
         portfolio = float(row.get("portfolio_value", 0) or 0)
-        returns = float(row.get("total_returns", 0) or 0) + withdrawals
+        returns = float(row.get("total_returns", 0) or 0)
+
+        portfolio += withdrawals
+        returns += withdrawals
 
         if invested > 0:
             return_rate = (portfolio - invested) / invested * 100
+
+    print("invested:", invested)
+    print("portfolio:", portfolio)
+    print("returns:", returns)
+    print("return_rate:", return_rate)
 
     # ===============================
     # TODAY CHANGE (UTC MIDNIGHT)
@@ -611,7 +622,7 @@ def index():
 
     beta_cash += 1000
 
-    rem_cash = portfolio - alpha_cash - beta_cash
+    rem_cash = portfolio - alpha_cash - beta_cash - withdrawals
     print("rem cash:", rem_cash)
     if rem_cash < 0: rem_cash = 0
 
@@ -623,17 +634,18 @@ def index():
         # KPIs
         kpi_invested=invested,
         kpi_portfolio=portfolio,
-        kpi_returns=returns,
+        kpi_returns=returns + withdrawals,
         kpi_returnrate=return_rate,
 
         kpi_returns_compact=format_compact_currency(returns),
-        kpi_portfolio_compact=format_compact_currency(portfolio + withdrawals),
+        kpi_portfolio_compact=format_compact_currency(portfolio),
         kpi_invested_compact=format_compact_currency(invested),
 
         # Fund cash
         alpha_cash_compact=format_compact_currency(alpha_cash),
         beta_cash_compact=format_compact_currency(beta_cash),
         rem_cash_compact=format_compact_currency(rem_cash),
+        withdrawals_compact = format_compact_currency(withdrawals),
 
         # Today change
         kpi_today_change=kpi_today_change,
