@@ -108,6 +108,26 @@ function darClass(v) {
   return "text-muted";
 }
 
+function alphaFmt(assetRet, fundRet) {
+  const a = fundRet - assetRet;
+  const cls = a >= 0 ? "text-success" : "text-danger";
+  return `<span class="${cls}">Δ ${a.toFixed(2)}%</span>`;
+}
+
+function alphaBadge(assetRet, fundRet) {
+  if (!Number.isFinite(assetRet) || !Number.isFinite(fundRet)) return "";
+
+  const alpha = fundRet - assetRet;
+  const cls = alpha >= 0 ? "alpha-pos" : "alpha-neg";
+  const sign = alpha >= 0 ? "+" : "";
+
+  return `
+    <span class="alpha-badge ${cls}">
+      ${sign}${alpha.toFixed(2)}%
+    </span>
+  `;
+}
+
 /* ================================
    ApexCharts init
 ================================ */
@@ -382,24 +402,50 @@ gammaChart.render();
     setText("cmp-cagr", cagr !== null ? fmtPct(cagr * 100) : "—");
     setText("cmp-sortino", sortino !== null ? sortino.toFixed(2) : "—");
 
-    setTextSafe("cmp-btc-ret", fmtPct(btcRet));
-    setTextSafe("cmp-eth-ret", fmtPct(ethRet));
-    setTextSafe("cmp-sol-ret", fmtPct(solRet));
-    setTextSafe("cmp-xrp-ret", fmtPct(xrpRet));
-    setTextSafe("cmp-bnb-ret", fmtPct(bnbRet));
+    document.getElementById("cmp-btc-ret").innerHTML =
+      `${fmtPct(btcRet)} ${alphaBadge(btcRet, fundReturn)}`;
 
-    setTextSafe("cmp-dxy-ret", fmtPct(dxyRet));
-    setTextSafe("cmp-spy-ret", fmtPct(spyRet));
-    setTextSafe("cmp-qqq-ret", fmtPct(qqqRet));
+    document.getElementById("cmp-eth-ret").innerHTML =
+      `${fmtPct(ethRet)} ${alphaBadge(ethRet, fundReturn)}`;
 
-    setTextSafe("cmp-gold-ret", fmtPct(goldRet));
-    setTextSafe("cmp-xag-ret", fmtPct(xagRet));
+    document.getElementById("cmp-sol-ret").innerHTML =
+      `${fmtPct(solRet)} ${alphaBadge(solRet, fundReturn)}`;
 
-    setTextSafe("cmp-nvda-ret", fmtPct(nvdaRet));
-    setTextSafe("cmp-aapl-ret", fmtPct(aaplRet));
-    setTextSafe("cmp-tsla-ret", fmtPct(tslaRet));
-    setTextSafe("cmp-amzn-ret", fmtPct(amznRet));
-    setTextSafe("cmp-pltr-ret", fmtPct(pltrRet));
+    document.getElementById("cmp-xrp-ret").innerHTML =
+      `${fmtPct(xrpRet)} ${alphaBadge(xrpRet, fundReturn)}`;
+
+    document.getElementById("cmp-bnb-ret").innerHTML =
+      `${fmtPct(bnbRet)} ${alphaBadge(bnbRet, fundReturn)}`;
+
+    document.getElementById("cmp-dxy-ret").innerHTML =
+      `${fmtPct(dxyRet)} ${alphaBadge(dxyRet, fundReturn)}`;
+
+    document.getElementById("cmp-spy-ret").innerHTML =
+      `${fmtPct(spyRet)} ${alphaBadge(spyRet, fundReturn)}`;
+
+    document.getElementById("cmp-qqq-ret").innerHTML =
+      `${fmtPct(qqqRet)} ${alphaBadge(qqqRet, fundReturn)}`;
+
+    document.getElementById("cmp-gold-ret").innerHTML =
+      `${fmtPct(goldRet)} ${alphaBadge(goldRet, fundReturn)}`;
+
+    document.getElementById("cmp-xag-ret").innerHTML =
+      `${fmtPct(xagRet)} ${alphaBadge(xagRet, fundReturn)}`;
+
+    document.getElementById("cmp-nvda-ret").innerHTML =
+      `${fmtPct(nvdaRet)} ${alphaBadge(nvdaRet, fundReturn)}`;
+
+    document.getElementById("cmp-aapl-ret").innerHTML =
+      `${fmtPct(aaplRet)} ${alphaBadge(aaplRet, fundReturn)}`;
+
+    document.getElementById("cmp-tsla-ret").innerHTML =
+      `${fmtPct(tslaRet)} ${alphaBadge(tslaRet, fundReturn)}`;
+
+    document.getElementById("cmp-amzn-ret").innerHTML =
+      `${fmtPct(amznRet)} ${alphaBadge(amznRet, fundReturn)}`;
+
+    document.getElementById("cmp-pltr-ret").innerHTML =
+      `${fmtPct(pltrRet)} ${alphaBadge(pltrRet, fundReturn)}`;
 
     // --- Alpha vs BTC
     setText("cmp-alpha-btc", fmtPct(fundReturn - btcRet));
@@ -456,7 +502,7 @@ gammaChart.render();
         const pnl = days.reduce((a,d)=>a+Number(d.pnl),0);
         const finalEquity = Number(days[days.length - 1].equity_0pct_reinv);
 
-        const open = wi < 3;
+        const open = wi < 1;
 
         const pnlClass =
             pnl > 0 ? "week-pos" :
@@ -521,12 +567,23 @@ gammaChart.render();
       const w = weeklyAgg[wk];
       const dar = w.days ? (w.total_return_sum / w.days) : null;
 
+      const totalClass =
+        w.total_return_sum > 0 ? "text-success" :
+        w.total_return_sum < 0 ? "text-danger" :
+        "";
+
       weeklyBody.insertAdjacentHTML("beforeend", `
         <tr>
           <td>${wk}</td>
           <td>${w.days}</td>
-          <td>${fmtPctUnsigned(w.total_return_sum)}</td>
-          <td><strong class="${darClass(dar)}">${fmtPctUnsigned(dar)}</strong></td>
+
+          <!-- DAR (neutral) -->
+          <td>${fmtPctUnsigned(dar)}</td>
+
+          <!-- Total Return (colored) -->
+          <td class="${totalClass}">
+            ${fmtPctUnsigned(w.total_return_sum)}
+          </td>
         </tr>
       `);
     });
@@ -547,12 +604,23 @@ gammaChart.render();
       const m = monthlyAgg[mk];
       const dar = m.days ? (m.total_return_sum / m.days) : null;
 
+      const totalClass =
+        m.total_return_sum > 0 ? "text-success" :
+        m.total_return_sum < 0 ? "text-danger" :
+        "";
+
       monthlyBody.insertAdjacentHTML("beforeend", `
         <tr>
           <td>${mk}</td>
           <td>${m.days}</td>
-          <td>${fmtPctUnsigned(m.total_return_sum)}</td>
-          <td><strong class="${darClass(dar)}">${fmtPctUnsigned(dar)}</strong></td>
+
+          <!-- DAR (neutral) -->
+          <td>${fmtPctUnsigned(dar)}</td>
+
+          <!-- Total Return (colored) -->
+          <td class="${totalClass}">
+            ${fmtPctUnsigned(m.total_return_sum)}
+          </td>
         </tr>
       `);
     });
@@ -714,7 +782,6 @@ function extractTotalReturnFromTable(tbodySelector) {
 }
 
 function renderBarChart(el, labels, values, title) {
-  const colors = values.map(v => v >= 0 ? "#22c55e" : "#ef4444");
 
   const avg =
   values.length > 0
@@ -734,11 +801,6 @@ function renderBarChart(el, labels, values, title) {
         name: "Total Return",
         type: "bar",
         data: values
-      },
-      {
-        name: "Average",
-        type: "line",
-        data: avgLine
       }
     ],
     xaxis: {
@@ -757,10 +819,6 @@ function renderBarChart(el, labels, values, title) {
         style: { color: "#aaa" }
       }
     },
-    colors: [
-      undefined,        // bars use per-bar colors
-      "#ffffff"         // average line
-    ],
     stroke: {
       width: [0, 2],
       curve: "straight",
@@ -772,18 +830,29 @@ function renderBarChart(el, labels, values, title) {
         borderRadius: 4,
         colors: {
           ranges: [
-            { from: -1000, to: 0, color: "#ef4444" },
-            { from: 0, to: 1000, color: "#22c55e" }
+            { from: -1000, to: 0, color: "#ef4444" },   // red
+            { from: 0, to: 1000, color: "#26BF94" }    // ✅ new green
           ]
         }
       }
     },
     annotations: {
-      yaxis: [{
-        y: 0,
-        borderColor: "#666",
-        strokeDashArray: 4
-      }]
+      yaxis: [
+        {
+          y: avg,
+          borderColor: "#ffffff",
+          strokeDashArray: 6,
+          label: {
+            borderColor: "transparent",
+            style: {
+              color: "#fff",
+              background: "rgba(0,0,0,0.6)",
+              fontSize: "11px"
+            },
+            text: `Avg ${avg.toFixed(2)}%`
+          }
+        }
+      ]
     },
     dataLabels: { enabled: false },
     grid: {

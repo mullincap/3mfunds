@@ -145,16 +145,16 @@
   .week-toggle[data-pnl="pos"] {
     background: linear-gradient(
       to right,
-      rgba(34,197,94,0.18),
-      rgba(34,197,94,0.05)
+      rgba(38, 191, 148, 0.18),
+      rgba(38, 191, 148, 0.05)
     );
   }
 
   .week-toggle[data-pnl="neg"] {
     background: linear-gradient(
       to right,
-      rgba(239,68,68,0.18),
-      rgba(239,68,68,0.05)
+      rgba(239, 68, 68, 0.18),
+      rgba(239, 68, 68, 0.05)
     );
   }
 
@@ -197,6 +197,37 @@
     opacity: 0.4;
   }
 
+  /* ===============================
+     ALPHAs
+  ================================ */
+
+  .alpha-badge {
+    margin-left: 6px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .alpha-pos {
+    color: #26BF94;
+    <!-- background: rgba(34,197,94,0.15); -->
+  }
+
+  .alpha-neg {
+    color: #ef4444;
+    background: rgba(239,68,68,0.15);
+  }
+
+  /* ===============================
+     STATs
+  ================================ */
+
+  .stat-row {
+    padding: 2px 0;
+  }
+
 </style>
 
 
@@ -225,7 +256,7 @@
         <!-- ================= LEFT: CHART ================= -->
         <div class="col-xl-9">
 
-          <div class="card mt-4">
+          <div class="card">
             <div class="card-header">
               <div class="card-title"> 3M Fund </div>
             </div>
@@ -255,7 +286,7 @@
         <div class="col-xl-3">
 
           <!-- ===== Comparative Performance ===== -->
-          <div class="comp-stats mb-4">
+          <div class="comp-stats mb-4 mt-3">
             <h6 class="text-muted mb-3">Comparative Performance</h6>
 
             <!-- FUND -->
@@ -266,34 +297,34 @@
 
             <div class="stat-row  mb-3">
               <span>Total Days</span>
-              <strong id="cmp-total-days">—</strong>
+              <span id="cmp-total-days">—</span>
             </div>
 
             <hr>
 
             <!-- CRYPTO -->
             <div class="stat-row">
-              <span>BTC Return</span>
+              <span>BTC: </span>
               <span id="cmp-btc-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>ETH Return</span>
+              <span>ETH: </span>
               <span id="cmp-eth-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>XRP Return</span>
+              <span>XRP: </span>
               <span id="cmp-xrp-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>SOL Return</span>
+              <span>SOL: </span>
               <span id="cmp-sol-ret">—%</span>
             </div>
 
             <div class="stat-row mb-3">
-              <span>BNB Return</span>
+              <span>BNB:</span>
               <span id="cmp-bnb-ret">—%</span>
             </div>
 
@@ -301,27 +332,27 @@
 
             <!-- EQUITIES -->
             <div class="stat-row">
-              <span>AAPL Return</span>
+              <span>AAPL: </span>
               <span id="cmp-aapl-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>NVDA Return</span>
+              <span>NVDA: </span>
               <span id="cmp-nvda-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>TSLA Return</span>
+              <span>TSLA: </span>
               <span id="cmp-tsla-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>AMZN Return</span>
+              <span>AMZN: </span>
               <span id="cmp-amzn-ret">—%</span>
             </div>
 
             <div class="stat-row mb-3">
-              <span>PLTR Return</span>
+              <span>PLTR: </span>
               <span id="cmp-pltr-ret">—%</span>
             </div>
 
@@ -329,29 +360,29 @@
 
             <!-- MACRO / INDEX -->
             <div class="stat-row">
-              <span>SPY Return</span>
+              <span>SPY: </span>
               <span id="cmp-spy-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>QQQ Return</span>
+              <span>QQQ: </span>
               <span id="cmp-qqq-ret">—%</span>
             </div>
 
             <div class="stat-row mb-3">
-              <span>DXY Return</span>
+              <span>DXY: </span>
               <span id="cmp-dxy-ret">—%</span>
             </div>
 
             <hr>
 
             <div class="stat-row">
-              <span>GOLD Return</span>
+              <span>GOLD: </span>
               <span id="cmp-gold-ret">—%</span>
             </div>
 
             <div class="stat-row">
-              <span>SILVER Return</span>
+              <span>SILVER: </span>
               <span id="cmp-xag-ret">—%</span>
             </div>
 
@@ -360,68 +391,68 @@
             <!-- METRICS -->
             <div class="stat-row">
               <span>Sharpe Ratio</span>
-              <strong id="cmp-sharpe">—</strong>
+              <span id="cmp-sharpe">—</span>
             </div>
 
             <div class="stat-row">
               <span>Sortino Ratio</span>
-              <strong id="cmp-sortino">—</strong>
+              <span id="cmp-sortino">—</span>
             </div>
 
             <div class="stat-row">
               <span>Calmar Ratio</span>
-              <strong id="cmp-calmar">—</strong>
+              <span id="cmp-calmar">—</span>
             </div>
 
             <div class="stat-row">
               <span>Profit Factor</span>
-              <strong id="cmp-profit-factor">—</strong>
+              <span id="cmp-profit-factor">—</span>
             </div>
 
             <hr>
 
             <div class="stat-row">
               <span>Win Rate</span>
-              <strong id="cmp-winrate">—</strong>
+              <span id="cmp-winrate">—</span>
             </div>
 
             <div class="stat-row">
               <span>Avg Day</span>
-              <strong id="cmp-avg-day">—</strong>
+              <span id="cmp-avg-day">—</span>
             </div>
 
             <div class="stat-row">
               <span>Avg Win</span>
-              <strong id="cmp-avg-win">—</strong>
+              <span id="cmp-avg-win">—</span>
             </div>
 
             <div class="stat-row">
               <span>Avg Loss</span>
-              <strong id="cmp-avg-loss">—</strong>
+              <span id="cmp-avg-loss">—</span>
             </div>
 
             <hr>
 
             <div class="stat-row">
               <span>Ulcer Index</span>
-              <strong id="cmp-ulcer">—</strong>
+              <span id="cmp-ulcer">—</span>
             </div>
 
             <div class="stat-row">
               <span>Omega Ratio</span>
-              <strong id="cmp-omega">—</strong>
+              <span id="cmp-omega">—</span>
             </div>
 
             <hr>
 
             <div class="stat-row mb-3">
               <span>Max 24h Drawdown</span>
-              <strong class="text-danger" id="cmp-dd">—%</strong>
+              <span class="text-danger" id="cmp-dd">—%</span>
             </div>
 
             <div class="stat-row">
               <span>Alpha vs BTC</span>
-              <strong class="text-success" id="cmp-alpha-btc">—%</strong>
+              <span class="text-success" id="cmp-alpha-btc">—%</span>
             </div>
           </div>
 
@@ -534,8 +565,8 @@
               <tr>
                 <th>Week</th>
                 <th>Days</th>
-                <th>Total Return</th>
                 <th>DAR</th>
+                <th>Weekly Return</th>
               </tr>
             </thead>
             <tbody id="gamma-weekly-dar-body">
@@ -560,8 +591,8 @@
               <tr>
                 <th>Month</th>
                 <th>Days</th>
-                <th>Total Return</th>
                 <th>DAR</th>
+                <th>Monthly Return</th>
               </tr>
             </thead>
             <tbody id="gamma-monthly-dar-body">
