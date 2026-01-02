@@ -772,33 +772,82 @@ async function loadHomePortfolio() {
 // loadDailyClosesTable();
 // loadHomePortfolio();
 
+function timeAgoFromUTCWithClass(utcString) {
+  if (!utcString) return { text: "—", cls: "text-muted" };
+
+  const ts = new Date(utcString.replace(" ", "T") + "Z");
+  if (isNaN(ts)) return { text: "—", cls: "text-muted" };
+
+  const now = new Date();
+  let diff = Math.floor((now - ts) / 1000); // seconds
+
+  if (diff < 0) return { text: "just now", cls: "text-success" };
+
+  const days = Math.floor(diff / 86400);
+  diff %= 86400;
+
+  const hours = Math.floor(diff / 3600);
+  diff %= 3600;
+
+  const minutes = Math.floor(diff / 60);
+
+  // ---- display string ----
+  let text;
+  if (days > 0) text = `${days}d ${hours}h ago`;
+  else if (hours > 0) text = `${hours}h ${minutes}m ago`;
+  else if (minutes > 0) text = `${minutes}m ago`;
+  else text = "just now";
+
+  // ---- severity thresholds ----
+  const totalSeconds =
+    days * 86400 +
+    hours * 3600 +
+    minutes * 60;
+
+  let cls;
+
+  if (totalSeconds >= 24 * 3600) {
+    cls = "text-danger";
+  } else if (totalSeconds >= 18 * 3600) {
+    cls = "text-warning";
+  } else {
+    cls = "text-success";
+  }
+
+  return { text, cls };
+}
+
 
 async function loadJobHealth() {
-    try {
-        const res = await fetch("/api/jobs/latest");
-        const rows = await res.json();
+  try {
+    const res = await fetch("/api/jobs/latest");
+    const rows = await res.json();
 
-        const tbody = document.getElementById("job-health-body");
-        tbody.innerHTML = "";
+    const tbody = document.getElementById("job-health-body");
+    tbody.innerHTML = "";
 
-        rows.forEach(r => {
-            let statusClass = "text-muted";
-            if (r.status === "SUCCESS") statusClass = "text-success";
-            if (r.status === "FAILED") statusClass = "text-danger";
-            if (r.status === "STARTED") statusClass = "text-warning";
+    rows.forEach(r => {
+      let statusClass = "text-muted";
+      if (r.status === "SUCCESS") statusClass = "text-success";
+      if (r.status === "FAILED") statusClass = "text-danger";
+      if (r.status === "STARTED") statusClass = "text-warning";
 
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td class="fw-semibold">${r.job_name}</td>
-                <td>${r.last_run || "—"}</td>
-                <td class="${statusClass} fw-semibold">${r.status}</td>
-                <td class="text-end">${r.duration ?? "—"}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (err) {
-        console.error(err);
-    }
+      const { text: agoText, cls: agoClass } = timeAgoFromUTCWithClass(r.last_run);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="fw-semibold">${r.job_name}</td>
+        <td>${r.last_run || "—"}</td>
+        <td class="${agoClass}">${agoText}</td>
+        <td class="${statusClass} fw-semibold">${r.status}</td>
+        <td class="text-end">${r.duration ?? "—"}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", loadJobHealth);

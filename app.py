@@ -488,7 +488,7 @@ def admin():
         kpi_invested=invested,
         kpi_portfolio=portfolio,
         kpi_returns=returns,
-        kpi_returnrate=return_rate,
+        kpi_returnrate=round(return_rate,2),
         kpi_returns_compact=format_compact_currency(returns),
         kpi_portfolio_compact=format_compact_currency(portfolio),
         kpi_invested_compact=format_compact_currency(invested),

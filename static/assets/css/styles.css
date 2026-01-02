@@ -21205,3 +21205,14 @@ a:hover {
 .transform-none {
   transform: none !important;
 }
+
+.apexcharts-text,
+.apexcharts-title-text,
+.apexcharts-xaxis-label,
+.apexcharts-yaxis-label,
+.apexcharts-legend-text,
+.apexcharts-tooltip-text,
+.apexcharts-datalabel,
+.apexcharts-annotation-label {
+  font-family: "Space Mono", monospace !important;
+}

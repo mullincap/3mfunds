@@ -217,7 +217,7 @@
                                                             <div>
                                                                 <span class="d-block text-muted">Total Returns</span>
                                                                 <span class="fs-18 fw-semibold">
-                                                                  <!-- <div id="kpi-returns">{{ fmt_currency(kpi_returns) }}</div> -->
+                                                                  <div id="kpi-returns">{{ fmt_currency(kpi_returns) }}</div>
                                                                   <div id="kpi-total-return"></div>
                                                                 </span>
                                                             </div>
@@ -243,6 +243,7 @@
                                                             <div>
                                                                 <span class="d-block text-muted">Total ROI</span>
                                                                 <span class="fs-18 fw-semibold">
+                                                                  <div id="kpi-returns">{{ kpi_returnrate }}%</div>
                                                                   <div id="kpi-total-return-rate"></div>
                                                                 </span>
                                                             </div>
@@ -288,7 +289,6 @@
                                                         Total Investments
                                                     </div>
                                                     <div class="btn-group" role="group" aria-label="Basic example">
-
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1D</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">3D</button>
                                                         <button type="button" class="btn btn-primary-light btn-sm btn-wave waves-effect waves-light">1W</button>
@@ -382,7 +382,8 @@
                                                                     <thead>
                                                                         <tr>
                                                                             <th>JOB</th>
-                                                                            <th>LAST RUN (UTC)</th>
+                                                                            <th>LAST (UTC)</th>
+                                                                            <th>ELAPSED</th>
                                                                             <th>STATUS</th>
                                                                             <th class="text-end">Duration (s)</th>
                                                                         </tr>
@@ -440,7 +441,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>                    
+                    </div>
                   </div>
                     <!-- End::row-2 -->
 

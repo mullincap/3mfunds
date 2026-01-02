@@ -158,6 +158,19 @@
     );
   }
 
+  .week-row {
+    cursor: pointer;
+    background: rgba(255,255,255,0.04);
+    font-weight: 600;
+  }
+
+  .week-row:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
+  .day-row td {
+    padding-left: 1.25rem;
+  }
 
   /* ===============================
      MARKET COMPS
@@ -228,6 +241,29 @@
     padding: 2px 0;
   }
 
+  .leverage-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .lev-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .lev-btn.active {
+    background: #26bf94;
+    color: #081f18;
+    border-color: transparent;
+    font-weight: 600;
+  }
+
 </style>
 
 
@@ -258,14 +294,15 @@
 
           <div class="card">
             <div class="card-header">
-              <div class="card-title"> 3M Fund </div>
+              <!-- <div class="card-title"> 3M Fund </div> -->
             </div>
             <div class="card-body">
               <div id="gamma-ltv-chart" style="height: 600px;"></div>
+              <div id="market-chart" style="height:500px;"></div>
             </div>
           </div>
 
-          <div class="card mt-4">
+          <!-- <div class="card mt-3">
             <div class="card-header">
               <div class="card-title"> Market Comps </div>
             </div>
@@ -275,10 +312,10 @@
                 <button data-group="equities">Equities</button>
                 <button data-group="macro">Macro</button>
                 <button data-group="all">All</button>
-              </div> -->
+              </div>
               <div id="market-chart" style="height:500px;"></div>
             </div>
-          </div>
+          </div> -->
 
         </div>
 
@@ -294,40 +331,25 @@
               <button class="lev-btn" data-lev="1">Unlevered</button>
             </div> -->
 
-            <style>
-              .leverage-toggle {
-                display: flex;
-                gap: 6px;
-                margin-bottom: 8px;
-              }
-
-              .lev-btn {
-                padding: 4px 10px;
-                border-radius: 6px;
-                border: 1px solid rgba(255,255,255,0.15);
-                background: transparent;
-                color: #aaa;
-                cursor: pointer;
-                font-size: 12px;
-              }
-
-              .lev-btn.active {
-                background: #26bf94;
-                color: #081f18;
-                border-color: transparent;
-                font-weight: 600;
-              }
-              </style>
-
             <!-- FUND -->
             <div class="stat-row">
-              <span>Fund Return</span>
+              <span>Fund Return: </span>
               <strong class="text-success" id="cmp-fund-ret">—%</strong>
             </div>
 
-            <div class="stat-row  mb-3">
-              <span>Total Days</span>
+            <div class="stat-row">
+              <span>Total Days: </span>
               <span id="cmp-total-days">—</span>
+            </div>
+
+            <div class="stat-row">
+              <span>Sharpe Ratio:</span>
+              <span id="cmp-sharpe">—</span>
+            </div>
+
+            <div class="stat-row mb-3">
+              <span>Max 24h Drawdown:</span>
+              <span id="cmp-dd">—%</span>
             </div>
 
             <hr>
@@ -418,71 +440,51 @@
 
             <hr>
 
-            <!-- METRICS -->
             <div class="stat-row">
-              <span>Sharpe Ratio</span>
-              <span id="cmp-sharpe">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Sortino Ratio</span>
-              <span id="cmp-sortino">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Calmar Ratio</span>
-              <span id="cmp-calmar">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Profit Factor</span>
-              <span id="cmp-profit-factor">—</span>
-            </div>
-
-            <hr>
-
-            <div class="stat-row">
-              <span>Win Rate</span>
+              <span>Win Rate:</span>
               <span id="cmp-winrate">—</span>
             </div>
 
             <div class="stat-row">
-              <span>Avg Day</span>
+              <span>Avg Day:</span>
               <span id="cmp-avg-day">—</span>
             </div>
 
             <div class="stat-row">
-              <span>Avg Win</span>
+              <span>Avg Win:</span>
               <span id="cmp-avg-win">—</span>
             </div>
 
             <div class="stat-row">
-              <span>Avg Loss</span>
+              <span>Avg Loss:</span>
               <span id="cmp-avg-loss">—</span>
             </div>
 
             <hr>
+            <!-- METRICS -->
+            <div class="stat-row">
+              <span>Sortino Ratio:</span>
+              <span id="cmp-sortino">—</span>
+            </div>
 
             <div class="stat-row">
-              <span>Ulcer Index</span>
+              <span>Calmar Ratio:</span>
+              <span id="cmp-calmar">—</span>
+            </div>
+
+            <div class="stat-row">
+              <span>Profit Factor:</span>
+              <span id="cmp-profit-factor">—</span>
+            </div>
+
+            <div class="stat-row">
+              <span>Ulcer Index:</span>
               <span id="cmp-ulcer">—</span>
             </div>
 
             <div class="stat-row">
-              <span>Omega Ratio</span>
+              <span>Omega Ratio:</span>
               <span id="cmp-omega">—</span>
-            </div>
-
-            <hr>
-
-            <div class="stat-row mb-3">
-              <span>Max 24h Drawdown</span>
-              <span class="text-danger" id="cmp-dd">—%</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Alpha vs BTC</span>
-              <span class="text-success" id="cmp-alpha-btc">—%</span>
             </div>
           </div>
 
@@ -549,37 +551,11 @@
         </div>
       </div>
 
-      <!-- ================= TABLE ================= -->
-      <div class="table-responsive mt-4 p-3">
-        <table class="table table-hover align-middle text-nowrap">
-          <thead>
-            <!-- <tr>
-              <th style="width:60px;">Day</th>
-              <th>Date</th>
-              <th>Start</th>
-              <th>Invested</th>
-              <th>End</th>
-              <th>PnL</th>
-              <th>Cum PnL</th>
-              <th>ROI</th>
-              <th>Cum ROI</th>
-              <th>DAR</th>
-            </tr> -->
-          </thead>
-
-          <tbody id="gamma-ltv-table-body">
-            <tr>
-              <td colspan="10" class="text-center text-muted">Loading…</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
     </div>
   </div>
 
   <!-- ================= WEEKLY / MONTHLY DAR TABLES ================= -->
-  <div class="row mt-4 g-3">
+  <div class="row g-3">
 
     <!-- Weekly DAR -->
     <div class="col-xl-6">
@@ -635,6 +611,32 @@
 
   </div>
 
+  <div class="row g-3">
+    <div class="col-xl-12">
+    <div class="card custom-card">
+      <div class="card-header">
+        <div class="card-title">Daily Summary</div>
+      </div>
+      <div class="card-body table-responsive">
+
+        <div class="table-responsive p-3">
+          <table class="table table-hover align-middle text-nowrap">
+            <thead>
+            </thead>
+
+            <tbody id="gamma-ltv-table-body">
+              <tr>
+                <td colspan="10" class="text-center text-muted">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+
 
 
 </div>
@@ -643,21 +645,6 @@
 
 
 <!-- ================= WEEK ROW STYLING ================= -->
-<style>
-  .week-row {
-    cursor: pointer;
-    background: rgba(255,255,255,0.04);
-    font-weight: 600;
-  }
-
-  .week-row:hover {
-    background: rgba(255,255,255,0.08);
-  }
-
-  .day-row td {
-    padding-left: 1.25rem;
-  }
-</style>
 
 <!-- APEX CHARTS -->
 <script src="{{ url_for('static', filename='assets/libs/apexcharts/apexcharts.min.js') }}"></script>

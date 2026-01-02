@@ -13,6 +13,14 @@ let accountState = {
 };
 
 let effectiveMargin = null;
+let totalMargin = null;
+let avgPositionMargin = null;
+
+// "pnl" | "time"
+let pnlRadarOrderMode = "pnl";
+
+let latestPositions = [];
+
 
 /* ================================
    Helpers
@@ -26,10 +34,17 @@ function fmtUSD(v) {
 }
 
 function fmtUSDreg(v) {
-  const sign = v >= 0 ? "+" : "-";
   return `$${Math.abs(v).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
+  })}`;
+}
+
+function fmtUSDsigned(v) {
+  const sign = v >= 0 ? "+" : "-";
+  return `${sign}$${Math.abs(v).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   })}`;
 }
 
@@ -45,6 +60,10 @@ function fmtPct(v) {
   return `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
 }
 
+function fmtPctReg(v) {
+  return `${v.toFixed(2)}%`;
+}
+
 function set(id, value, signedVal = null) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -52,6 +71,10 @@ function set(id, value, signedVal = null) {
   if (signedVal !== null) {
     el.className = signedVal >= 0 ? "text-success" : "text-danger";
   }
+}
+
+function destroyChart(ref) {
+  if (ref && typeof ref.destroy === "function") ref.destroy();
 }
 
 /* ================================
@@ -86,11 +109,13 @@ function updatePositionsSummary(positions) {
   let totalPct = 0;
   let winners = 0;
   let grossExposure = 0;
-  let totalMargin = 0;
+  totalMargin = 0;
   let maxPnl = null;
   let lev = 4;
 
   positions.forEach(p => {
+
+    console.log(p);
 
     const pnl = Number(p.unrealizedPnl || 0);
     const pct = Number(p.unrealizedPnlRatio || 0) * 100;
@@ -119,7 +144,7 @@ function updatePositionsSummary(positions) {
   const MAX_POSITIONS = 15;
 
   // Average margin per active position
-  let avgPositionMargin = 0;
+  avgPositionMargin = 0;
   if (positions.length > 0 && totalMargin > 0) {
     avgPositionMargin = totalMargin / positions.length;
   }
@@ -171,18 +196,547 @@ function updatePositionsSummary(positions) {
   set("sum-concentration", pnlConcentration.toFixed(0) + "%");
 
   // Directional performance (KEEP +/-)
-  set("sum-pnl", fmtUSD(totalPnl), totalPnl);
+  set("sum-pnl", fmtUSDsigned(totalPnl), totalPnl);
   set("avg-margin", fmtUSDshort(avgPositionMargin));
   set("sum-efficiency", fmtPct(pnlEfficiency));
   set("sum-pnl-margin-pct", fmtPct(pnlMarginPct), pnlMarginPct);
 
 }
 
+
+
+
+/* ================================
+   Charts
+================================ */
+function cleanSymbol(sym) {
+  return sym.replace(/-?USDT$/i, "");
+}
+
+// Chart 1
+let allocChart;
+
+function renderAllocChart(rows) {
+  destroyChart(allocChart);
+
+  const total = rows.reduce((s, r) => s + Number(r.initialMargin || 0), 0);
+
+  const labels = rows.map(r => cleanSymbol(r.instId));
+  const values = rows.map(r =>
+    total > 0 ? (Number(r.initialMargin) / total) * 100 : 0
+  );
+
+  allocChart = new ApexCharts(
+    document.querySelector("#chart-alloc"),
+    {
+      chart: {
+        type: "bar",
+        animations: {enabled: false},
+        height: 300,
+        toolbar: { show: false }
+      },
+
+      title: { text: "Margin Allocation (%)", style: { color: "#ccc" } },
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          barHeight: "70%",
+          borderRadius: 2
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: v => v.toFixed(1) + "%",
+        style: {
+          colors: ["#ccc"],
+          fontSize: "11px",
+          fontWeight: 200
+        },
+        background: {
+          enabled: false
+        }
+      },
+
+      series: [{ data: values }],
+      xaxis: {
+        categories: labels,
+        labels: {
+          formatter: (val) => `${Math.round(val)}%`,
+          style: { colors: "#aaa" }
+        }
+      },
+      colors: ["rgba(255,255,255,0.1)"],
+      grid: { borderColor: "rgba(255,255,255,0.08)" }
+    }
+  );
+
+  allocChart.render();
+}
+
+// Chart 2 — PnL Contribution
+let pnlChart;
+
+function renderPnlChart(rows) {
+  destroyChart(pnlChart);
+
+  const labels = rows.map(r => cleanSymbol(r.instId));
+  const values = rows.map(r => Number(r.unrealizedPnl || 0));
+
+  // Fixed Window (auto-adjusted)
+
+  // ---- CONFIG ----
+  const BASE_PCT = 0.05;   // 5% of account
+  const ROUND_TO = 500;
+
+  // accountBalance should already exist in your page
+  // example: pulled from API / header KPI
+  const baseFromBalance = accountState.totalBalance * BASE_PCT;
+
+  // round UP to nearest 500
+  const baseLimit = Math.ceil(baseFromBalance / ROUND_TO) * ROUND_TO;
+
+  // find largest absolute pnl
+  const maxAbsPnl = Math.max(...values.map(v => Math.abs(v)));
+
+  // grow range if needed
+  let axisLimit = baseLimit;
+  if (maxAbsPnl > baseLimit) {
+    axisLimit =
+      Math.ceil(maxAbsPnl / ROUND_TO) * ROUND_TO;
+  }
+
+  // ---- average PnL ----
+  const avgPnl =
+    values.length > 0
+      ? values.reduce((a, b) => a + b, 0) / values.length
+      : 0;
+
+  const avgColor = avgPnl >= 0 ? "#02f59d" : "#ef4444";
+
+  pnlChart = new ApexCharts(
+    document.querySelector("#chart-pnl"),
+    {
+      chart: {
+        type: "bar",
+        height: 400,
+        animations: { enabled: false },
+        toolbar: { show: false }
+      },
+      title: { text: "PnL Contribution ($)", style: { color: "#ccc" } },
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          barHeight: "70%",
+          borderRadius: 0,
+        }
+      },
+
+      series: [{
+        name: "PnL",
+        data: values
+      }],
+
+      // ✅ dynamic per-bar coloring
+      colors: [
+        function ({ value }) {
+          return value >= 0 ? "rgba(34, 197, 94, 0.5)" : "rgba(239, 68, 68,0.5)";
+        }
+      ],
+
+      dataLabels: {
+        enabled: true,
+        formatter: v => `${v >= 0 ? "+" : ""}$${Math.round(v)}`,
+        style: {
+          colors: ["#000000"],
+          fontSize: "12px",
+          fontWeight: 600
+        },
+        background: {
+          enabled: false
+        }
+      },
+
+      xaxis: {
+        categories: labels,
+        labels: {
+         formatter: (val) => {
+           const sign = val < 0 ? "-" : "";
+           return `${sign}$${Math.abs(Math.round(val)).toLocaleString()}`;
+         },
+         style: { colors: "#aaa" }
+       },
+        axisBorder: { show: true },
+        axisTicks: { show: true },
+        min: -axisLimit,
+        max: axisLimit,
+      },
+
+      yaxis: {
+        labels: {
+          style: { colors: "#aaa" }
+        }
+      },
+
+      grid: {
+        show: true,
+        borderColor: "rgb(26,28,30)", // page background
+        strokeDashArray: 0,
+        xaxis: {
+          lines: {
+            show: true
+          }
+        },
+        yaxis: {
+          lines: {
+            show: false
+          }
+        },
+        padding: {
+          left: 0,
+          right: 0
+        }
+      },
+
+      annotations: {
+        xaxis: [
+          {
+            x: avgPnl,
+            strokeDashArray: 4,
+            borderColor: avgColor,
+            label: {
+              text: `$${Math.round(avgPnl)}`,
+              position: "bottom",
+              borderColor: "transparent",
+              borderWidth: 0,
+              offsetX: 10,
+              offsetY:0,
+              style: {
+                color: "#ccc",
+                background: "rgb(26,28,30)",
+                fontSize: "11px",
+                borderColor: "transparent",
+                fontWeight: 200
+              },
+              offsetY: -5
+            }
+          },
+          {
+            x: 0,
+            borderColor: "#fff"
+          }
+        ]
+      },
+
+      tooltip: {
+        y: {
+          formatter: v => `$${Math.round(v).toLocaleString()}`
+        }
+      }
+    }
+  );
+
+  pnlChart.render();
+}
+
+// Chart 3
+// Chart 3 — PnL Concentration
+let roiChart;
+
+function renderRoiChart(rows) {
+  destroyChart(roiChart);
+
+  const values = rows
+    .map(r => Number(r.unrealizedPnlRatio) * 100)
+    .filter(v => Number.isFinite(v));
+
+  // bucket into 5% bins
+  const bins = {};
+  values.forEach(v => {
+    const bucket = Math.floor(v / 5) * 5;
+    bins[bucket] = (bins[bucket] || 0) + 1;
+  });
+
+  const sortedBins = Object.keys(bins)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  const labels = sortedBins.map(b => `${b}%`);
+  const data = sortedBins.map(b => bins[b]);
+
+  roiChart = new ApexCharts(
+    document.querySelector("#chart-roi"),
+    {
+      chart: {
+        type: "bar",
+        height: 400,
+        animations: { enabled: false },
+        toolbar: { show: false }
+      },
+
+      title: {
+        text: "PnL Concentration",
+        style: { color: "#ccc" }
+      },
+
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          borderRadius: 3,
+          columnWidth: "55%"
+        }
+      },
+
+      series: [
+        {
+          name: "Count",
+          data
+        }
+      ],
+
+      // ✅ COLOR PER BAR BASED ON SIGN
+      colors: [
+        ({ dataPointIndex }) => {
+          const binValue = sortedBins[dataPointIndex];
+          return binValue >= 0
+            ? "rgba(34, 197, 94, 0.5)"   // green
+            : "rgba(239, 68, 68, 0.5)"; // red
+        }
+      ],
+
+      dataLabels: {
+        enabled: true,
+        formatter: v => `${v}`,
+        style: {
+          colors: ["#ccc"],
+          fontSize: "11px",
+          fontWeight: 200
+        },
+        background: {
+          enabled: false
+        }
+      },
+
+      xaxis: {
+        categories: labels,
+        labels: {
+          style: { colors: "#aaa" }
+        },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
+
+      yaxis: {
+        min: 0,
+        forceNiceScale: true,
+        labels: {
+          formatter: v => `${Math.round(v)}`,
+          style: { colors: "#aaa" }
+        },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
+
+      grid: {
+        borderColor: "rgba(255,255,255,0.08)"
+      }
+    }
+  );
+
+  roiChart.render();
+}
+
+function cleanSymbol(sym) {
+  return sym.replace(/-?USDT$/i, "");
+}
+
+function pnlColor(v) {
+  return v >= 0 ? "#22c55e" : "#ef4444";
+}
+
+let pnlPolarChart;
+
+function renderPnlPolar(rows) {
+  if (pnlPolarChart) pnlPolarChart.destroy();
+
+  const labels = rows.map(r => cleanSymbol(r.instId));
+  const values = rows.map(r => Math.abs(Number(r.unrealizedPnl || 0)));
+
+  pnlPolarChart = new ApexCharts(
+    document.querySelector("#pnl-polar"),
+    {
+      chart: {
+        type: "polarArea",
+        height: 400,
+        animations: { enabled: false }
+      },
+      series: values,
+      labels,
+      theme: { mode: "dark" },
+      stroke: { colors: ["#111"] },
+      fill: { opacity: 0.9 },
+      colors: labels.map(() => "#8b5cf6"), // monochrome purple
+      legend: {
+        labels: { colors: "#aaa" }
+      },
+      yaxis: {
+        labels: { show: false }
+      }
+    }
+  );
+
+  pnlPolarChart.render();
+}
+
+let pnlRadarChart;
+
+function renderPnlRadar(rows) {
+  if (pnlRadarChart) pnlRadarChart.destroy();
+
+  // -----------------------------
+  // ORDERING LOGIC (CONFIGURED)
+  // -----------------------------
+  let ordered = [...rows];
+
+  if (pnlRadarOrderMode === "time") {
+    // oldest → newest
+    ordered.sort((a, b) => Number(a.createTime || 0) - Number(b.createTime || 0));
+  } else {
+    // default: by absolute pnl DESC
+    ordered.sort(
+      (a, b) =>
+        Math.abs(Number(b.unrealizedPnl || 0)) -
+        Math.abs(Number(a.unrealizedPnl || 0))
+    );
+  }
+
+  const labels = ordered.map(r => cleanSymbol(r.instId));
+  const values = ordered.map(r => Math.abs(Number(r.unrealizedPnl || 0)));
+
+  pnlRadarChart = new ApexCharts(
+    document.querySelector("#pnl-radar"),
+    {
+      chart: {
+        type: "radar",
+        height: 300,
+        background: "transparent",
+        toolbar: { show: false },
+        animations: { enabled: false }
+      },
+
+      series: [
+        {
+          name: "PnL",
+          data: values
+        }
+      ],
+
+      labels,
+
+      title: {
+        text:
+          pnlRadarOrderMode === "time"
+            ? "ROI Distribution (by Rank)"
+            : "ROI Distribution (by $)",
+        style: { color: "#ccc" }
+      },
+
+      theme: { mode: "dark" },
+
+      stroke: {
+        width: 2,
+        colors: ["#8b5cf6"]
+      },
+
+      fill: {
+        opacity: 0.25
+      },
+
+      markers: {
+        size: 4,
+        colors: ["#8b5cf6"]
+      },
+
+      xaxis: {
+        labels: {
+          style: { colors: "#aaa" }
+        },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
+      },
+
+      yaxis: {
+        show: false
+      }
+    }
+  );
+
+  pnlRadarChart.render();
+}
+
+let pnlRadialChart;
+
+function renderPnlRadial(rows) {
+  if (pnlRadialChart) pnlRadialChart.destroy();
+
+  const labels = rows.map(r => cleanSymbol(r.instId));
+  const values = rows.map(r => Math.abs(Number(r.unrealizedPnl || 0)));
+
+  pnlRadialChart = new ApexCharts(
+    document.querySelector("#pnl-radial"),
+    {
+      chart: {
+        type: "radialBar",
+        height: 400,
+        animations: { enabled: false }
+      },
+      series: values,
+      labels,
+      plotOptions: {
+        radialBar: {
+          hollow: { size: "30%" },
+          track: {
+            background: "#1f2933"
+          },
+          dataLabels: {
+            name: { show: false },
+            value: {
+              show: false
+            },
+            total: {
+              show: true,
+              label: "Total",
+              formatter: () =>
+                values.reduce((a, b) => a + b, 0).toFixed(0)
+            }
+          }
+        }
+      },
+      colors: [
+        "#8b5cf6",
+        "#60a5fa",
+        "#22c55e",
+        "#eab308",
+        "#f97316",
+        "#ef4444",
+        "#14b8a6",
+        "#a78bfa"
+      ],
+      stroke: { lineCap: "round" },
+      legend: {
+        show: false
+      }
+    }
+  );
+
+  pnlRadialChart.render();
+}
+
+
+
+
 /* ================================
    Load + Render Positions
 ================================ */
-
-
 async function loadPositions() {
   const tbody = document.getElementById("positions-table-body");
 
@@ -201,6 +755,8 @@ async function loadPositions() {
       return;
     }
 
+    latestPositions = rows;
+
     // ---------- SORT ----------
     rows.sort((a, b) => {
       if (sortMode === "pct") {
@@ -213,6 +769,13 @@ async function loadPositions() {
     });
 
     updatePositionsSummary(rows);
+    window.latestPositions = rows;
+
+    renderAllocChart(rows);
+    renderPnlChart(rows);
+    renderRoiChart(rows);
+    renderPnlRadar(rows);
+
 
     // ---------- TABLE ----------
     tbody.innerHTML = "";
@@ -229,22 +792,39 @@ async function loadPositions() {
 
       const pnlClass = pnl >= 0 ? "text-success" : "text-danger";
 
+      // --- derived values ---
+      const allocPct = totalMargin > 0 ? (p.initialMargin / totalMargin) * 100 : 0;
+
+      // normalize bars
+      const allocWidth = Math.min(allocPct, 100);
+
+      // ROI intensity (caps at 40%)
+      const roiIntensity = Math.min(Math.abs(pnlPct) / 40, 1);
+
+      // PnL bar width relative to largest absolute PnL
+      const maxAbsPnl = Math.max(...rows.map(r => Math.abs(Number(r.unrealizedPnl || 0))), 1);
+      const pnlWidth = Math.min(Math.abs(pnl) / maxAbsPnl * 100, 100);
+
       tbody.insertAdjacentHTML("beforeend", `
-        <tr>
-          <td><strong>${p.instId}</strong></td>
-          <td>${p.positionSide.toUpperCase()}</td>
-          <td>${Number(p.positions).toLocaleString()}</td>
-          <td>$${Number(p.averagePrice).toLocaleString()}</td>
-          <td>$${Number(p.markPrice).toLocaleString()}</td>
-          <td>${p.leverage}×</td>
-          <td>${p.marginMode}</td>
-          <td>${fmtUSDreg(p.initialMargin)}</td>
-          <td class="${pnlClass}">${fmtUSD(pnl)}</td>
-          <td class="${pnlClass}">${fmtPct(pnlPct)}</td>
-          <td>${p.liquidationPrice
-            ? "$" + Number(p.liquidationPrice).toLocaleString()
-            : "—"}</td>
-        </tr>
+      <tr>
+        <td><strong>${p.instId}</strong></td>
+
+        <td>${p.leverage}×</td>
+
+        <td>$${Number(p.averagePrice).toFixed(5)}</td>
+
+        <td>${fmtUSDreg(p.initialMargin)}</td>
+
+        <td class="${pnlClass}">${fmtPct(pnlPct)}</td>
+
+        <td class="pnl-cell">
+          <div class="pnl-bar ${pnl >= 0 ? "pos" : "neg"}" style="width:${pnlWidth}%"></div>
+          <span class="pnl-text ${pnlClass}">
+            ${fmtUSDsigned(pnl)}
+          </span>
+        </td>
+
+      </tr>
       `);
     });
 
@@ -668,7 +1248,8 @@ async function loadSessionEquity() {
                       text: p.name,
                       style: {
                           fontSize: "11px",
-                          color: "#aaa"
+                          color: "#aaa",
+                          background: "rgb(26,28,30)"
                       }
                   }
               };
@@ -971,16 +1552,22 @@ async function loadSessionEquity() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const el = document.getElementById("session-equity-chart");
-    if (!el) return;
+  const el = document.getElementById("session-equity-chart");
+  if (!el) return;
 
-    loadSessionEquity();
+  function refreshSafely() {
+    const scrollY = window.scrollY;
 
-    setInterval(() => {
-        if (document.getElementById("session-equity-chart")) {
-            loadSessionEquity();
-        }
-    }, 60_000);
+    loadSessionEquity().finally(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY, behavior: "auto" });
+      });
+    });
+  }
+
+  refreshSafely();
+
+  setInterval(refreshSafely, 60_000);
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1006,66 +1593,89 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-document.getElementById("buy-btn").addEventListener("click", async () => {
-  const amountInput = document.getElementById("buy-amount");
-  const status = document.getElementById("buy-status");
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener("click", () => {
+    const mode = btn.dataset.mode;
 
-  const amount = amountInput.value;
+    // Update global mode
+    pnlRadarOrderMode = mode;
 
-  if (!amount || Number(amount) <= 0) {
-    status.textContent = "Enter a valid amount";
-    return;
-  }
-
-  status.textContent = "Submitting…";
-
-  try {
-    const res = await fetch("/api/trade/open", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ amount })
+    // Toggle button styles
+    document.querySelectorAll('[data-mode]').forEach(b => {
+      b.classList.remove("btn-primary");
+      b.classList.add("btn-primary-light");
     });
 
-    const data = await res.json();
+    btn.classList.remove("btn-primary-light");
+    btn.classList.add("btn-primary");
 
-    if (!res.ok) {
-      status.textContent = data.error || "Error";
-      return;
+    // Re-render using latest data
+    if (window.latestPositions) {
+      renderPnlRadar(window.latestPositions);
     }
-
-    status.textContent = "Order submitted ✔";
-  } catch (err) {
-    status.textContent = "Request failed";
-  }
+  });
 });
 
-
-document.getElementById("close-all-btn").addEventListener("click", async () => {
-  const status = document.getElementById("close-status");
-
-  if (!confirm("Close ALL open positions? This cannot be undone.")) {
-    return;
-  }
-
-  status.textContent = "Submitting close request…";
-
-  try {
-    const res = await fetch("/api/trade/close", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      status.textContent = data.error || "Close failed";
-      return;
-    }
-
-    status.textContent = "Close command sent ✔";
-  } catch (err) {
-    status.textContent = "Request failed";
-  }
-});
+// document.getElementById("buy-btn").addEventListener("click", async () => {
+//   const amountInput = document.getElementById("buy-amount");
+//   const status = document.getElementById("buy-status");
+//
+//   const amount = amountInput.value;
+//
+//   if (!amount || Number(amount) <= 0) {
+//     status.textContent = "Enter a valid amount";
+//     return;
+//   }
+//
+//   status.textContent = "Submitting…";
+//
+//   try {
+//     const res = await fetch("/api/trade/open", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({ amount })
+//     });
+//
+//     const data = await res.json();
+//
+//     if (!res.ok) {
+//       status.textContent = data.error || "Error";
+//       return;
+//     }
+//
+//     status.textContent = "Order submitted ✔";
+//   } catch (err) {
+//     status.textContent = "Request failed";
+//   }
+// });
+//
+//
+// document.getElementById("close-all-btn").addEventListener("click", async () => {
+//   const status = document.getElementById("close-status");
+//
+//   if (!confirm("Close ALL open positions? This cannot be undone.")) {
+//     return;
+//   }
+//
+//   status.textContent = "Submitting close request…";
+//
+//   try {
+//     const res = await fetch("/api/trade/close", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" }
+//     });
+//
+//     const data = await res.json();
+//
+//     if (!res.ok) {
+//       status.textContent = data.error || "Close failed";
+//       return;
+//     }
+//
+//     status.textContent = "Close command sent ✔";
+//   } catch (err) {
+//     status.textContent = "Request failed";
+//   }
+// });

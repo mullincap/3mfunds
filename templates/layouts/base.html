@@ -82,7 +82,6 @@
         <!-- SCRIPTS -->
         {% include 'includes/scripts.html' %}
         {% block scripts %}
-        {% endblock %}
 
         <!-- Sticky JS -->
         <script src="{{ url_for('static', filename='assets/js/sticky.js') }}"></script>
@@ -92,6 +91,14 @@
 
         <!-- Custom-Switcher JS -->
         <script src="{{ url_for('static', filename='assets/js/custom-switcher.js') }}"></script>
+
+        <script>
+          window.Apex = {
+            fontFamily: "Space Mono, monospace"
+          };
+        </script>
+
+        {% endblock %}
 
     </body>
 

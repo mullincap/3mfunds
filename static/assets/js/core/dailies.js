@@ -149,7 +149,7 @@ gammaChart = new ApexCharts(
         xaxis: { categories: [], labels: { show: false } },
         yaxis: {
           title: {
-            text: "Cumulative Return (%)",
+            text: "Cumulative Fund Return (%)",
             style: { color: "#aaa" }
           },
           labels: {
@@ -175,6 +175,7 @@ gammaChart.render();
     const equityRaw = rows.map(r => Number(r.equity_0pct_reinv));
     const baseEquity = equityRaw.find(v => Number.isFinite(v));
 
+
     const equity = equityRaw.map(v =>
       baseEquity > 0 ? ((v / baseEquity) - 1) * 100 : 0
     );
@@ -199,7 +200,7 @@ gammaChart.render();
   yaxis: {
     min: 0,
     max: yMax,
-    title: { text: "Cumulative Return (%)", style: { color: "#aaa" } },
+    title: { text: "Cumulative Market Return (%)", style: { color: "#aaa" } },
     labels: {
       formatter: v => `${v.toFixed(1)}%`
     }
@@ -243,10 +244,20 @@ gammaChart.render();
       }
     }
 
+    // --- Daily returns (raw)
+    const equity_gamma = rows.map(r => (r.equity_0pct_reinv));
+    const dailyReturnsRaw = [];
+    for (let i = 1; i < equity_gamma.length; i++) {
+      const prev = equity_gamma[i - 1];
+      const cur = equity_gamma[i];
+      if (prev > 0 && cur > 0) {
+        dailyReturnsRaw.push((cur / prev) - 1);
+      }
+    }
     // --- Sharpe (annualized)
-    const mean = dailyReturns.reduce((a,b)=>a+b,0) / dailyReturns.length;
-    const std = stdDev(dailyReturns);
-    const sharpe = std ? (mean / std) * Math.sqrt(252) : null;
+    const mean = dailyReturnsRaw.reduce((a,b)=>a+b,0) / dailyReturnsRaw.length;
+    const std = stdDev(dailyReturnsRaw);
+    const sharpe = std ? (mean / std) * Math.sqrt(365) : null;
 
 
     // --- CAGR
@@ -768,7 +779,7 @@ function extractTotalReturnFromTable(tbodySelector) {
     const label = cells[0].innerText.trim();
 
     // column index 2 = "Total Return"
-    const totalReturnText = cells[2].innerText.replace("%", "");
+    const totalReturnText = cells[3].innerText.replace("%", "");
 
     const val = parseFloat(totalReturnText);
     if (!isNaN(val)) {
