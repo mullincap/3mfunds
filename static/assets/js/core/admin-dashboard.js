@@ -826,7 +826,7 @@ async function loadJobHealth() {
     const tbody = document.getElementById("job-health-body");
     tbody.innerHTML = "";
 
-    rows.forEach(r => {
+    rows.forEach((r, index) => {
       let statusClass = "text-muted";
       if (r.status === "SUCCESS") statusClass = "text-success";
       if (r.status === "FAILED") statusClass = "text-danger";
@@ -836,6 +836,7 @@ async function loadJobHealth() {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
+        <td class="text-muted">${index + 1}</td>
         <td class="fw-semibold">${r.job_name}</td>
         <td>${r.last_run || "—"}</td>
         <td class="${agoClass}">${agoText}</td>
@@ -849,5 +850,9 @@ async function loadJobHealth() {
     console.error(err);
   }
 }
+
+
+
+
 
 document.addEventListener("DOMContentLoaded", loadJobHealth);
