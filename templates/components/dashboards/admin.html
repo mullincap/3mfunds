@@ -81,7 +81,7 @@
                             <nav>
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Admin</li>
+                                    <li class="breadcrumb-item active" aria-current="page">Funds</li>
                                 </ol>
                             </nav>
                         </div>
@@ -364,73 +364,73 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                    <div class = "row">
+                                      <div class="col-xl-12">
+                                        <div class="card custom-card">
+                                          <div class="card-header">
+                                            <div class="card-title">Index Health</div>
+                                          </div>
 
-                                <div class = "row">
-                                  <div class="col-xl-12">
-                                    <div class="card custom-card">
-                                      <div class="card-header">
-                                        <div class="card-title">Index Health</div>
-                                      </div>
-
-                                      <div class="card-body">
-                                        <table class="table table-sm mb-0">
-                                          <thead>
-                                            <tr>
-                                              <th>Index</th>
-                                              <th>Last Update</th>
-                                              <th>Age</th>
-                                              <th>Status</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody id="index-health-body">
-                                            <tr><td colspan="4">Loading…</td></tr>
-                                          </tbody>
-                                        </table>
-                                      </div>
+                                          <div class="card-body">
+                                            <table class="table table-sm mb-0">
+                                              <thead>
+                                                <tr>
+                                                  <th>Index</th>
+                                                  <th>Last Update</th>
+                                                  <th>Age</th>
+                                                  <th>Status</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody id="index-health-body">
+                                                <tr><td colspan="4">Loading…</td></tr>
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                        </div>
                                     </div>
-                                    </div>
-                                </div>
+                                    <div class="row">
+                                        <div class="col-xl-12">
+                                            <h6 class="fw-semibold mb-3">
 
-                                <div class="row">
-                                    <div class="col-xl-12">
-                                        <h6 class="fw-semibold mb-3">
-                                        </h6>
-                                        <div class="row">
-                                            <div class="col-xl-12">
-                                                <div class="card custom-card">
-                                                    <div class="card-header">
-                                                        <div class="card-title">Job Health</div>
-                                                    </div>
-                                                    <div class="card-body p-0">
-                                                        <div class="table-responsive" style="padding:2rem; padding-top:10px;">
-                                                            <table class="table text-nowrap table-hover mb-0">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th>#</th>
-                                                                        <th>JOB</th>
-                                                                        <th>LAST (UTC)</th>
-                                                                        <th>ELAPSED</th>
-                                                                        <th>STATUS</th>
-                                                                        <th class="text-end">Duration (s)</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody id="job-health-body">
-                                                                    <tr>
-                                                                        <td colspan="4" class="text-muted text-center">
-                                                                            Loading job health…
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
+                                            </h6>
+                                            <div class="row">
+                                                <div class="col-xl-12">
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="card-title">Job Health</div>
+                                                        </div>
+
+                                                        <div class="card-body p-0">
+                                                            <div class="table-responsive" style="padding:2rem; padding-top:10px;">
+                                                                <table class="table text-nowrap table-hover mb-0">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>#</th>
+                                                                            <th>JOB</th>
+                                                                            <th>LAST (UTC)</th>
+                                                                            <th>ELAPSED</th>
+                                                                            <th>STATUS</th>
+                                                                            <th class="text-end">Duration (s)</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="job-health-body">
+                                                                        <tr>
+                                                                            <td colspan="4" class="text-muted text-center">
+                                                                                Loading job health…
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
+                                </div>
 
                                 <!-- GLOBAL FUND EQUITY CHART (ONE INSTANCE ONLY) -->
                                 <!-- <div class="row mb-4">
@@ -469,41 +469,41 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class = "row">
                       <div class="col-xl-12">
-                        <div class="card custom-card">
+                      <div class="card p-3">
                           <div class="card-header">
-                            <div class="card-title">Index Alerts</div>
+                            <h5 class="mb-0">Index Alerts</h5>
                           </div>
 
                           <div class="card-body p-0">
-                            <div class="table-responsive" style="padding:2rem; padding-top:10px;">
-                              <table class="table text-nowrap table-hover mb-0">
-                                <thead>
-                                  <tr>
-                                    <th>Timestamp (UTC)</th>
-                                    <th>Table</th>
-                                    <th>Alert</th>
-                                    <th>Details</th>
-                                  </tr>
-                                </thead>
-                                <tbody id="alerts-body">
-                                  <tr>
-                                    <td colspan="4" class="text-muted text-center">
-                                      Loading…
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
+                            <table class="table table-sm table-striped mb-0">
+                              <thead>
+                                <tr>
+                                  <th>Timestamp (UTC)</th>
+                                  <th>Table</th>
+                                  <th>Alert</th>
+                                  <th>Details</th>
+                                </tr>
+                              </thead>
+                              <tbody id="alerts-body">
+                                <tr>
+                                  <td colspan="4" class="text-muted text-center">Loading…</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
                           </div>
                         </div>
-                      </div>
                     </div>
+
+
+
 
                   </div>
                     <!-- End::row-2 -->
 
+                </div>
 
 {% endblock %}
 
