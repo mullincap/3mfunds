@@ -1188,6 +1188,52 @@ def api_fund_daily(fund):
 
     return jsonify(rows)
 
+@app.route("/api/drift/daily")
+def api_daily_drift():
+    conn = connect_db()
+    with conn.cursor() as cur:
+        cur.execute("""
+            WITH expected AS (
+                SELECT
+                    snapshot_date,
+                    SUM(equity_after) AS expected_equity
+                FROM fund_portfolio_daily
+                WHERE fund IN ('ALPHA', 'BETA')
+                GROUP BY snapshot_date
+            ),
+            actual_ts AS (
+                SELECT
+                    DATE(timestamp_utc) AS snapshot_date,
+                    MAX(timestamp_utc) AS last_ts
+                FROM investments_timeseries
+                GROUP BY DATE(timestamp_utc)
+            ),
+            actual AS (
+                SELECT
+                    DATE(it.timestamp_utc) AS snapshot_date,
+                    it.portfolio_value AS actual_equity
+                FROM investments_timeseries it
+                JOIN actual_ts a
+                  ON it.timestamp_utc = a.last_ts
+            )
+            SELECT
+                e.snapshot_date,
+                e.expected_equity AS expected_total,
+                a.actual_equity,
+                (a.actual_equity - e.expected_equity) AS drift_abs,
+                (a.actual_equity - e.expected_equity)
+                    / NULLIF(e.expected_equity, 0) AS drift_pct
+            FROM expected e
+            LEFT JOIN actual a
+              ON a.snapshot_date = e.snapshot_date
+            ORDER BY e.snapshot_date DESC
+            LIMIT 100;
+        """)
+        rows = cur.fetchall()
+
+    return jsonify(rows)
+
+
 @app.route("/api/positions")
 def api_positions():
     data = blofin_get_positions()   # wrapper you already use

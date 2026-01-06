@@ -616,124 +616,117 @@ equityChart.render();
 // TAB HANDLER
 // ===============================
 document.querySelectorAll('[data-fund]').forEach(tab => {
-    tab.addEventListener("shown.bs.tab", async (e) => {
-        const fund = e.target.dataset.fund.toUpperCase();
-        const paneId = e.target.getAttribute("href");
-        const fundColor = FUND_COLORS[fund] || "#5e76ff";
+  tab.addEventListener("shown.bs.tab", async (e) => {
+    const fund = e.target.dataset.fund.toUpperCase();
+    const paneId = e.target.getAttribute("href");
+    const fundColor = FUND_COLORS[fund] || "#5e76ff";
 
-        // ===============================
-        // SHOW / HIDE EQUITY CHART
-        // ===============================
-        if (fund === "OVERVIEW") {
-            equityWrapper.style.display = "none";
-            return; // ⛔ do not render chart
-        } else {
-            equityWrapper.style.display = "block";
+    if (fund === "OVERVIEW") {
+      equityWrapper.style.display = "none";
+      return;
+    } else {
+      equityWrapper.style.display = "block";
+    }
+
+    const table = document.querySelector(paneId).querySelector("table");
+    table.classList.add("fund-accent");
+    table.style.setProperty("--fund-color", fundColor);
+
+    const tbody = document.querySelector(paneId).querySelector(".fund-table-body");
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="13" class="text-center text-muted">
+          Loading ${fund}…
+        </td>
+      </tr>
+    `;
+
+    const res = await fetch(`/api/fund/${fund}/daily`);
+    const rows = await res.json();
+
+    const driftRes = await fetch("/api/drift/daily");
+    const driftRows = await driftRes.json();
+
+    const driftByDate = Object.fromEntries(
+      driftRows.map(d => [d.snapshot_date, d])
+    );
+
+    // ---- Chart ----
+    const labels = rows.map(r => r.snapshot_date).reverse();
+    const equity = rows.map(r => Number(r.equity_after)).reverse();
+    const equityTrend = rollingAverage(equity, 5);
+
+    equityChart.updateOptions({
+      xaxis: { categories: labels },
+      colors: [fundColor, `${fundColor}80`]
+    });
+
+    equityChart.updateSeries([
+      { name: "Equity", type: "bar", data: equity },
+      { name: "Trend (5D)", type: "line", data: equityTrend }
+    ], true);
+
+    // ---- Table ----
+    tbody.innerHTML = "";
+
+    rows.forEach(r => {
+      const drift = driftByDate[r.snapshot_date];   // ✅ FIX
+
+      let expectedHtml = "—";
+      let actualHtml   = "—";
+      let driftHtml    = "—";
+      let driftClass   = "text-muted";
+
+      if (drift) {
+        if (drift.expected_total != null) {
+          expectedHtml = `$${Number(drift.expected_total).toLocaleString()}`;
         }
 
-        const table = document
-            .querySelector(paneId)
-            .querySelector("table");
+        if (drift.actual_equity != null) {
+          actualHtml = `$${Number(drift.actual_equity).toLocaleString()}`;
+        }
 
-        // Apply fund accent styling
-        table.classList.add("fund-accent");
-        table.style.setProperty("--fund-color", fundColor);
+        if (drift.drift_abs != null) {
+          driftClass =
+            drift.drift_abs > 0 ? "text-success" :
+            drift.drift_abs < 0 ? "text-danger" :
+            "text-muted";
 
-        const tbody = document
-            .querySelector(paneId)
-            .querySelector(".fund-table-body");
+          driftHtml = `
+            ${drift.drift_abs >= 0 ? "+" : ""}
+            $${Number(drift.drift_abs).toLocaleString()}
+            <span class="fs-11 text-muted">
+              (${(drift.drift_pct * 100).toFixed(2)}%)
+            </span>
+          `;
+        }
+      }
 
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10" class="text-center text-muted">
-                    Loading ${fund}…
-                </td>
-            </tr>
-        `;
-
-        const res = await fetch(`/api/fund/${fund}/daily`);
-        const rows = await res.json();
-
-        // ===============================
-        // CHART DATA
-        // ===============================
-        const labels = rows.map(r => r.snapshot_date).reverse();
-        const equity = rows.map(r => Number(r.equity_after)).reverse();
-        const equityTrend = rollingAverage(equity, 5);
-
-        // Update axes + colors
-        equityChart.updateOptions({
-            xaxis: { categories: labels },
-            colors: [
-                fundColor,
-                `${fundColor}80`
-            ]
-        });
-
-        // Update series
-        equityChart.updateSeries([
-            {
-                name: "Equity",
-                type: "bar",
-                data: equity
-            },
-            {
-                name: "Trend (5D)",
-                type: "line",
-                data: equityTrend
-            }
-        ], true);
-
-        // Ensure correct sizing after tab visibility
-        setTimeout(() => {
-            equityChart.resize();
-        }, 50);
-
-        // ===============================
-        // TABLE RENDER
-        // ===============================
-        tbody.innerHTML = "";
-
-        rows.forEach(r => {
-            const pnlClass =
-                r.pnl > 0 ? "text-success" :
-                r.pnl < 0 ? "text-danger" :
-                "text-muted";
-
-            const retClass =
-                r.total_return > 0 ? "text-success" :
-                r.total_return < 0 ? "text-danger" :
-                "text-muted";
-
-            const darClass =
-                r.dar > 0 ? "text-success" :
-                r.dar < 0 ? "text-danger" :
-                "text-muted";
-
-            tbody.insertAdjacentHTML("beforeend", `
-                <tr>
-                    <td>${r.snapshot_date}</td>
-                    <td>$${Number(r.equity_before).toLocaleString()}</td>
-                    <td>$${Number(r.invested_margin).toLocaleString()}</td>
-                    <td class="${pnlClass}">
-                        ${r.pnl >= 0 ? "+" : ""}$${Number(r.pnl).toLocaleString()}
-                    </td>
-                    <td>$${Number(r.cum_pnl).toLocaleString()}</td>
-                    <td class="${retClass}">
-                        ${(r.total_return * 100).toFixed(2)}%
-                    </td>
-                    <td>$${Number(r.equity_after).toLocaleString()}</td>
-                    <td>$${Number(r.trade_bal).toLocaleString()}</td>
-                    <td>$${Number(r.profit_bal).toLocaleString()}</td>
-                    <td class="${darClass}">
-                        ${(r.dar * 100).toFixed(2)}%
-                    </td>
-                </tr>
-            `);
-        });
+      tbody.insertAdjacentHTML("beforeend", `
+        <tr>
+          <td>${r.snapshot_date}</td>
+          <td>$${Number(r.equity_before).toLocaleString()}</td>
+          <td>$${Number(r.invested_margin).toLocaleString()}</td>
+          <td class="${r.pnl > 0 ? "text-success" : r.pnl < 0 ? "text-danger" : "text-muted"}">
+            ${r.pnl >= 0 ? "+" : ""}$${Number(r.pnl).toLocaleString()}
+          </td>
+          <td>$${Number(r.cum_pnl).toLocaleString()}</td>
+          <td class="${r.total_return > 0 ? "text-success" : r.total_return < 0 ? "text-danger" : "text-muted"}">
+            ${(r.total_return * 100).toFixed(2)}%
+          </td>
+          <td>$${Number(r.equity_after).toLocaleString()}</td>
+          <td>$${Number(r.trade_bal).toLocaleString()}</td>
+          <td>$${Number(r.profit_bal).toLocaleString()}</td>
+          <td>${(r.dar * 100).toFixed(2)}%</td>
+          <td>${expectedHtml}</td>
+          <td>${actualHtml}</td>
+          <td class="${driftClass}">${driftHtml}</td>
+        </tr>
+      `);
     });
+  });
 });
-
 
 import { computePositionStats, fmtUSD, fmtPct, fmtUSDreg, fmtUSDshort} from "./positions_shared.js";
 
