@@ -19,7 +19,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-withdrawals = 3300
+withdrawals = 3400
 # ============ HELPERS ==========================================
 
 
@@ -1536,6 +1536,31 @@ def market_returns():
         out[sym] = round(values[-1], 4)
 
     return jsonify(out)
+
+from flask import jsonify
+from db import connect_db
+
+@app.route("/admin/api/index-alerts")
+def api_index_alerts():
+    conn = connect_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            timestamp_utc,
+            table_name,
+            alert_type,
+            details
+        FROM index_alerts
+        ORDER BY timestamp_utc DESC
+        LIMIT 200
+    """)
+
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(rows)
 
 
 if __name__ == '__main__':

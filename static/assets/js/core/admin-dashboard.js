@@ -851,8 +851,42 @@ async function loadJobHealth() {
   }
 }
 
-
-
-
-
 document.addEventListener("DOMContentLoaded", loadJobHealth);
+
+async function loadIndexAlerts() {
+    const res = await fetch("/admin/api/index-alerts");
+    const rows = await res.json();
+
+    const tbody = document.getElementById("alerts-body");
+    tbody.innerHTML = "";
+
+    if (!rows.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-muted text-center">
+              No alerts
+            </td>
+          </tr>
+        `;
+        return;
+    }
+
+    rows.forEach(r => {
+        const tr = document.createElement("tr");
+
+        if (r.alert_type === "BTC_PRESENT") {
+            tr.classList.add("table-danger");
+        }
+
+        tr.innerHTML = `
+          <td>${r.timestamp_utc}</td>
+          <td><code>${r.table_name}</code></td>
+          <td><strong>${r.alert_type}</strong></td>
+          <td>${r.details}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+loadIndexAlerts();

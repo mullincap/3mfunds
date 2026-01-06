@@ -12,6 +12,7 @@ let gammaChart = null;
 /* ================================
    Math helpers
 ================================ */
+
 function linearRegression(y) {
     const n = y.length;
     const x = Array.from({ length: n }, (_, i) => i + 1);
@@ -42,7 +43,19 @@ function rollingSMA(values, window = 5) {
     });
 }
 
+function endOfCurrentMonthUTC(date) {
+  return new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    0
+  ));
+}
 
+function addDaysUTC(date, days) {
+  const d = new Date(date);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d;
+}
 
 /* ================================
    Formatting helpers
@@ -157,7 +170,15 @@ gammaChart = new ApexCharts(
           }
         },
         grid: { borderColor: "rgba(255,255,255,0.08)", strokeDashArray: 3 },
-        tooltip: { shared: true },
+        tooltip: {
+  shared: true,
+  y: {
+    formatter: v =>
+      (v === null || v === undefined || Number.isNaN(v))
+        ? "—"
+        : `${v.toFixed(2)}%`
+  }
+},
         legend: { labels: { colors: "#ccc" } }
     }
 );
@@ -167,59 +188,121 @@ gammaChart.render();
    Load everything
 ================================ */
 (async function loadGammaLTV() {
-    const res = await fetch("/api/gamma/ltv");
-    const rows = await res.json();
+  const res = await fetch("/api/gamma/ltv");
+  const rows = await res.json();
 
-    /* ---------- CORE SERIES ---------- */
-    const labels = rows.map(r => r.snapshot_date);
-    const equityRaw = rows.map(r => Number(r.equity_0pct_reinv));
-    const baseEquity = equityRaw.find(v => Number.isFinite(v));
+  /* =====================================================
+     CORE SERIES (REAL DATA ONLY)
+  ===================================================== */
+  const baseLabels = rows.map(r => r.snapshot_date);
 
+  const equityRaw = rows.map(r => Number(r.equity_0pct_reinv));
+  const baseEquity = equityRaw.find(v => Number.isFinite(v));
 
-    const equity = equityRaw.map(v =>
-      baseEquity > 0 ? ((v / baseEquity) - 1) * 100 : 0
-    );
+  const equity = equityRaw.map(v =>
+    baseEquity > 0 ? ((v / baseEquity) - 1) * 100 : 0
+  );
 
-    const trend = linearRegression(equity);
-    const sma5 = rollingSMA(equity, 5);
+  const sma5 = rollingSMA(equity, 5);
 
-    const residuals = equity.map((v,i) => v - trend[i]);
-    const sigma = stdDev(residuals);
-    const K = 1.8;
+  /* =====================================================
+     PROJECTION WINDOW (TO MONTH END)
+  ===================================================== */
+  const lastDate = new Date(baseLabels[baseLabels.length - 1]);
+  const endMonth = endOfCurrentMonthUTC(lastDate);
 
-    const upper = trend.map(v => v + K * sigma);
-    const lower = trend.map(v => v - K * sigma);
-
-    const latestUpper = upper[upper.length - 1];
-    const yMax = latestUpper * 1.03; // 5% padding
-
-    gammaChart.updateOptions({ xaxis: { categories: labels } });
-    gammaChart.updateOptions({
-  xaxis: { categories: labels },
-
-  yaxis: {
-    min: 0,
-    max: yMax,
-    title: { text: "Cumulative Market Return (%)", style: { color: "#aaa" } },
-    labels: {
-      formatter: v => `${v.toFixed(1)}%`
-    }
-  },
-
-  tooltip: {
-    shared: true,
-    y: {
-      formatter: v => `${v.toFixed(2)}%`
-    }
+  const futureDates = [];
+  let d = addDaysUTC(lastDate, 1);
+  while (d <= endMonth) {
+    futureDates.push(d.toISOString().slice(0, 10));
+    d = addDaysUTC(d, 1);
   }
-});
-    gammaChart.updateSeries([
-        { name: "Equity", type: "bar", data: equity },
-        { name: "Trendline (LR)", type: "line", data: trend },
-        { name: "5D SMA", type: "line", data: sma5 },
-        { name: "Upper Limit", type: "line", data: upper },
-        { name: "Lower Limit", type: "line", data: lower }
-    ]);
+
+  const labels = baseLabels.concat(futureDates);
+  const totalLen = labels.length;
+
+  /* =====================================================
+     LINEAR REGRESSION (IN-SAMPLE ONLY)
+  ===================================================== */
+  const n = equity.length;
+  const x = Array.from({ length: n }, (_, i) => i + 1);
+
+  const sumX  = x.reduce((a,b)=>a+b,0);
+  const sumY  = equity.reduce((a,b)=>a+b,0);
+  const sumXY = equity.reduce((s,y,i)=>s + (i+1)*y,0);
+  const sumX2 = x.reduce((s,xi)=>s + xi*xi,0);
+
+  const slope =
+    (n * sumXY - sumX * sumY) /
+    (n * sumX2 - sumX * sumX);
+
+  const intercept = (sumY - slope * sumX) / n;
+
+  const trend = Array.from(
+    { length: totalLen },
+    (_, i) => slope * (i + 1) + intercept
+  );
+
+  /* =====================================================
+     CHANNEL (σ FROM REAL DATA ONLY)
+  ===================================================== */
+  const residuals = equity.map(
+    (v, i) => v - (slope * (i + 1) + intercept)
+  );
+
+  const sigma = stdDev(residuals);
+  const K = 1.8;
+
+  const upper = trend.map(v => v + K * sigma);
+  const lower = trend.map(v => v - K * sigma);
+
+  /* =====================================================
+     PAD NON-REAL SERIES
+  ===================================================== */
+  const pad = Array(futureDates.length).fill(null);
+
+  const equityExt = equity.concat(pad);
+  const smaExt = sma5.concat(pad);
+
+  /* =====================================================
+     CHART UPDATE
+  ===================================================== */
+  const yMax = upper[upper.length - 1] * 1.03;
+
+  gammaChart.updateOptions({
+    xaxis: { categories: labels },
+    yaxis: {
+      min: 0,
+      max: yMax,
+      title: { text: "Cumulative Fund Return (%)", style: { color: "#aaa" } },
+      labels: { formatter: v => `${v.toFixed(1)}%` }
+    },
+    tooltip: {
+      shared: true,
+      y: {
+        formatter: v =>
+          (v === null || v === undefined || Number.isNaN(v))
+            ? "—"
+            : `${v.toFixed(2)}%`
+      }
+    }
+  });
+
+  gammaChart.updateSeries([
+    { name: "Equity", type: "bar", data: equityExt },
+    { name: "Trendline (LR)", type: "line", data: trend },
+    { name: "5D SMA", type: "line", data: smaExt },
+    { name: "Upper Limit", type: "line", data: upper },
+    { name: "Lower Limit", type: "line", data: lower }
+  ]);
+
+    // gammaChart.updateSeries([
+    //     { name: "Equity", type: "bar", data: equity },
+    //     { name: "Trendline (LR)", type: "line", data: trend },
+    //     { name: "5D SMA", type: "line", data: sma5 },
+    //     { name: "Upper Limit", type: "line", data: upper },
+    //     { name: "Lower Limit", type: "line", data: lower }
+    // ]);
 
     /* ================= KPI LOGIC (FIXED) ================= */
 
@@ -468,11 +551,10 @@ gammaChart.render();
     setText("cmp-dd", fmtPct(maxDD));
 
     /* ---------- CHANNEL / REGIME ---------- */
-    const n = equity.length;
     const last = equity[n-1];
 
     const channelPos = ((last - lower[n-1]) / (upper[n-1] - lower[n-1])) * 100;
-    const slope = (trend[n-1] - trend[0]) / trend[0] / n;
+
     const monthlyTrend = slope * 100;
 
     const upside = ((upper[n-1] - last) / last) * 100;
