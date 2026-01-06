@@ -890,3 +890,58 @@ async function loadIndexAlerts() {
 }
 
 loadIndexAlerts();
+
+async function loadIndexHealth() {
+  const res = await fetch("/api/admin/index-health");
+  const data = await res.json();
+
+  const tbody = document.getElementById("index-health-body");
+  tbody.innerHTML = "";
+
+  for (const [label, row] of Object.entries(data)) {
+    let cls = "text-success";
+    if (row.status === "warning") cls = "text-warning";
+    if (row.status === "stale") cls = "text-danger";
+
+    const ageSec =
+      row.age_seconds === null || row.age_seconds === undefined
+        ? null
+        : Number(row.age_seconds);
+
+    let age = "—";
+    if (ageSec !== null && !Number.isNaN(ageSec)) {
+      if (ageSec < 60) {
+        age = `${ageSec} sec`;
+      } else if (ageSec < 3600) {
+        age = `${Math.floor(ageSec / 60)} min`;
+      } else {
+        age = `${(ageSec / 3600).toFixed(1)} hrs`;
+      }
+    }
+
+    // Highlight BTC explicitly
+    let symbolClass = "";
+    if (row.first_symbol === "BTC") {
+      symbolClass = "text-danger fw-bold";
+    }
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${label === "primary" ? "Primary" : "Backup"}</td>
+        <td>${row.last_ts ?? "—"}</td>
+        <td>${age}</td>
+        <td class="${symbolClass}">
+          ${row.first_symbol ?? "—"}
+        </td>
+        <td class="${cls} fw-semibold">
+          ${row.status.toUpperCase()}
+        </td>
+      </tr>
+    `;
+  }
+}
+
+loadIndexHealth();
+setInterval(loadIndexHealth, 60_000);
+
+// refresh every minute

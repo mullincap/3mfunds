@@ -1562,6 +1562,68 @@ def api_index_alerts():
 
     return jsonify(rows)
 
+from datetime import datetime, timezone
+
+from datetime import datetime, timezone
+import pymysql
+
+@app.route("/api/admin/index-health")
+def api_admin_index_health():
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    def get_status(table):
+        cur.execute(f"""
+            SELECT
+                timestamp_utc,
+                coin_1
+            FROM {table}
+            ORDER BY timestamp_utc DESC
+            LIMIT 1
+        """)
+        row = cur.fetchone()
+
+        if not row or not row["timestamp_utc"]:
+            return {
+                "table": table,
+                "last_ts": None,
+                "age_seconds": None,
+                "first_symbol": None,
+                "status": "missing"
+            }
+
+        last_ts = row["timestamp_utc"]
+        if last_ts.tzinfo is None:
+            last_ts = last_ts.replace(tzinfo=timezone.utc)
+
+        now = datetime.now(timezone.utc)
+        age_seconds = int((now - last_ts).total_seconds())
+
+        if age_seconds <= 10 * 60:
+            status = "ok"
+        elif age_seconds <= 30 * 60:
+            status = "warning"
+        else:
+            status = "stale"
+
+        return {
+            "table": table,
+            "last_ts": last_ts.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "age_seconds": age_seconds,
+            "first_symbol": row.get("coin_1"),
+            "status": status
+        }
+
+    data = {
+        "primary": get_status("index_top_30_1"),
+        "backup": get_status("index_top_30_1_b")
+    }
+
+    cur.close()
+    conn.close()
+
+    return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
