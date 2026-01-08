@@ -198,9 +198,21 @@ def get_daily_earnings():
 def returns_page():
     series_payload = []  # or {} depending on your JS expectations
 
+    conn = connect_db()
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("SELECT * FROM deploys ORDER BY timestamp_utc DESC")
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
     return render_template(
         "components/returns/returns.html",
-        series_payload=series_payload
+        series_payload=series_payload,
+        rows=rows,
+        deploys_list=rows,
+        show_deploy_sidebar=True
     )
 
 
