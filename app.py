@@ -100,7 +100,6 @@ def fmt_currency(v):
         return f"-${abs(v):,.2f}"
     return f"${v:,.2f}"
 
-
 def get_daily_closes(tz):
     connection = connect_db()
     phx = pytz.timezone("America/Phoenix")
@@ -1488,47 +1487,6 @@ def daily_returns():
         })
 
     return jsonify(data)
-
-# @app.route("/api/market/cumulative")
-# def market_cumulative():
-#     start = request.args.get("start", "2025-09-22")
-#
-#     conn = connect_db()
-#     cur = conn.cursor()
-#
-#     cur.execute("""
-#         SELECT symbol, day, close_price
-#         FROM crypto_price_daily
-#         WHERE day >= %s
-#         ORDER BY symbol, day
-#     """, (start,))
-#
-#     rows = cur.fetchall()
-#     conn.close()
-#
-#     from collections import defaultdict
-#
-#     series = defaultdict(list)
-#
-#     for r in rows:
-#         series[r["symbol"]].append((r["day"], float(r["close_price"])))
-#
-#     out = {}
-#
-#     for symbol, points in series.items():
-#         base = points[0][1]
-#
-#         cum = []
-#         for d, price in points:
-#             ret = (price / base - 1.0) * 100
-#             cum.append({
-#                 "x": d.isoformat(),
-#                 "y": round(ret, 4)
-#             })
-#
-#         out[symbol] = cum
-#
-#     return jsonify(out)
 
 @app.get("/api/market/cumulative")
 def market_cumulative():

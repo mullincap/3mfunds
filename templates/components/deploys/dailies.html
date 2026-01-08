@@ -264,6 +264,13 @@
     font-weight: 600;
   }
 
+
+  .title-subtext {
+    font-weight:100;
+    font-size: 12px;
+  }
+
+
 </style>
 
 
@@ -272,7 +279,7 @@
 
 
     <div class="card-header d-flex align-items-center">
-      <div class="card-title">Daily Performance</div>
+      <div class="card-title">Projected Performance</div>
 
       <div class="ms-auto d-flex gap-2">
 
@@ -293,9 +300,9 @@
         <div class="col-xl-9">
 
           <div class="card">
-            <div class="card-header">
+            <!-- <div class="card-header"> -->
               <!-- <div class="card-title"> 3M Fund </div> -->
-            </div>
+            <!-- </div> -->
             <div class="card-body">
               <div id="gamma-ltv-chart" style="height: 600px;"></div>
               <div id="market-chart" style="height:500px;"></div>
@@ -322,9 +329,130 @@
         <!-- ================= RIGHT: STATS + KPIs ================= -->
         <div class="col-xl-3">
 
+          <!-- ===== Forward Projection KPIs ===== -->
+          <div class="card custom-card">
+            <div class="card-header">
+              <div class="card-title"> Future <span class="title-subtext"> | Expected </span> </div>
+            </div>
+
+            <div class="card-body">
+              <div class="row g-3">
+
+                <div class="col-6">
+                  <div class="kpi-card">
+                    <div class="kpi-label"> Curr Return</div>
+                    <div class="kpi-value" id="cmp-fund-ret">—%</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="kpi-card">
+                    <div class="kpi-label"> Upper MTD</div>
+                    <div class="kpi-value"  id="kpi-mtd-best">—</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="kpi-card">
+                    <div class="kpi-label"> MTD Return</div>
+                    <div class="kpi-value" id="kpi-mtd-return">—</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="kpi-card">
+                    <div class="kpi-label"> Exp. MTD</div>
+                    <div class="kpi-value" id="kpi-mtd-expected">—</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="kpi-card">
+                    <div class="kpi-label"> MTD Remaining </div>
+                    <div class="kpi-value" id="kpi-mtd-remaining">—</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="kpi-card">
+                    <div class="kpi-label"> Lower MTD</div>
+                    <div class="kpi-value"  id="kpi-mtd-worst">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Current Performance ===== -->
+          <div class="card custom-card">
+            <div class="card-header">
+              <div class="card-title"> Present <span class="title-subtext"> | Relative </span> </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Channel Position: </div>
+                      <div class="kpi-value" id="kpi-channel-pos">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Market Regime: </div>
+                      <div class="kpi-value" id="kpi-regime">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Trend Strength: </div>
+                      <div class="kpi-value" id="kpi-trend-strength">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Volatility (σ): </div>
+                      <div class="kpi-value" id="kpi-volatility">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Upside to Upper:</div>
+                      <div class="kpi-value" id="kpi-upside">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Downside to Lower:</div>
+                      <div class="kpi-value" id="kpi-downside">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Deviation vs Trend:</div>
+                      <div class="kpi-value" id="kpi-deviation">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Z-Score</div>
+                      <div class="kpi-value" id="kpi-zscore">—</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+          </div>
+
+
           <!-- ===== Comparative Performance ===== -->
-          <div class="comp-stats mb-4 mt-3">
-            <h6 class="text-muted mb-3">Comparative Performance</h6>
+          <div class="card custom-card mt-3">
+            <div class="card-header">
+              <div class="card-title"> Past <span class="title-subtext"> | Comparative </span>  </div>
+            </div>
+
+            <div class="card-body comp-stats">
 
             <!-- <div class="leverage-toggle">
               <button class="lev-btn active" data-lev="4">4× Levered</button>
@@ -332,11 +460,6 @@
             </div> -->
 
             <!-- FUND -->
-            <div class="stat-row">
-              <span>Fund Return: </span>
-              <strong class="text-success" id="cmp-fund-ret">—%</strong>
-            </div>
-
             <div class="stat-row">
               <span>Total Days: </span>
               <span id="cmp-total-days">—</span>
@@ -491,63 +614,7 @@
           <hr>
 
           <!-- ===== KPI GRID ===== -->
-          <div class="row g-3">
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Channel Position</div>
-                <div class="kpi-value" id="kpi-channel-pos">—</div>
-              </div>
-            </div>
 
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Market Regime</div>
-                <div class="kpi-value" id="kpi-regime">—</div>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Trend Strength</div>
-                <div class="kpi-value" id="kpi-trend-strength">—</div>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Volatility (σ)</div>
-                <div class="kpi-value" id="kpi-volatility">—</div>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Upside to Upper</div>
-                <div class="kpi-value" id="kpi-upside">—</div>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Downside to Lower</div>
-                <div class="kpi-value" id="kpi-downside">—</div>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Deviation vs Trend</div>
-                <div class="kpi-value" id="kpi-deviation">—</div>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="kpi-card">
-                <div class="kpi-label">Z-Score</div>
-                <div class="kpi-value" id="kpi-zscore">—</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

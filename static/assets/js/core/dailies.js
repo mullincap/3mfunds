@@ -57,6 +57,14 @@ function addDaysUTC(date, days) {
   return d;
 }
 
+function fmtUSD(v, signed = true) {
+  if (!Number.isFinite(v)) return "—";
+  const sign = signed && v > 0 ? "+" : "";
+  return `${sign}$${Math.abs(v).toLocaleString(undefined, {
+    maximumFractionDigits: 0
+  })}`;
+}
+
 /* ================================
    Formatting helpers
 ================================ */
@@ -87,6 +95,30 @@ function setTextSafe(id, value) {
 function fmtPct(v, signed = true) {
     if (!Number.isFinite(v)) return "—";
     return `${signed && v > 0 ? "+" : ""}${v.toFixed(2)}%`;
+}
+
+function fmtPctColored(v, signed = true, decimals = 2) {
+  if (!Number.isFinite(v)) {
+    return `<span class="text-muted">—</span>`;
+  }
+
+  const cls =
+    v > 0 ? "text-success" :
+    v < 0 ? "text-danger" :
+            "text-muted";
+
+  const sign = signed && v > 0 ? "+" : "";
+
+  return `
+    <span class="${cls}">
+      ${sign}${v.toFixed(decimals)}%
+    </span>
+  `;
+}
+
+function fmtPctShort(v, signed = true) {
+    if (!Number.isFinite(v)) return "—";
+    return `${signed && v > 0 ? "+" : ""}${v.toFixed(1)}%`;
 }
 
 function formatShortDate(dateStr) {
@@ -152,12 +184,12 @@ gammaChart = new ApexCharts(
         chart: { height: 600, toolbar: { show: false } },
         series: [],
         stroke: {
-            width: [0,3,2,2,2],
+            width: [0,1,3,1,1],
             curve: "smooth",
             dashArray: [0,0,10,6,6]
         },
         markers: { size: 0 },
-        colors: ["#22c55e","#bbf7d0","#3b82f6","#d946ef","#22d3ee"],
+        colors: ["#22c55e","#3b82f6","#bbf7d0","#d946ef","#22d3ee"],
         fill: { opacity: [0.7,1,1,1,1] },
         xaxis: { categories: [], labels: { show: false } },
         yaxis: {
@@ -190,6 +222,19 @@ gammaChart.render();
 (async function loadGammaLTV() {
   const res = await fetch("/api/gamma/ltv");
   const rows = await res.json();
+
+  /* =====================================================
+     LIVE ACCOUNT BALANCE (FOR $ KPIs)
+  ===================================================== */
+  let accountBalance = null;
+
+  try {
+    const acctRes = await fetch("/api/account/summary");
+    const acct = await acctRes.json();
+    accountBalance = Number(acct.total_balance);
+  } catch (e) {
+    console.warn("Account summary unavailable", e);
+  }
 
   /* =====================================================
      CORE SERIES (REAL DATA ONLY)
@@ -290,19 +335,11 @@ gammaChart.render();
 
   gammaChart.updateSeries([
     { name: "Equity", type: "bar", data: equityExt },
-    { name: "Trendline (LR)", type: "line", data: trend },
     { name: "5D SMA", type: "line", data: smaExt },
+    { name: "Trendline", type: "line", data: trend },
     { name: "Upper Limit", type: "line", data: upper },
     { name: "Lower Limit", type: "line", data: lower }
   ]);
-
-    // gammaChart.updateSeries([
-    //     { name: "Equity", type: "bar", data: equity },
-    //     { name: "Trendline (LR)", type: "line", data: trend },
-    //     { name: "5D SMA", type: "line", data: sma5 },
-    //     { name: "Upper Limit", type: "line", data: upper },
-    //     { name: "Lower Limit", type: "line", data: lower }
-    // ]);
 
     /* ================= KPI LOGIC (FIXED) ================= */
 
@@ -316,6 +353,172 @@ gammaChart.render();
 
     // --- Fund return (%)
     const fundReturn = ((endEquity / startEquity) - 1) * 100;
+
+    /* =====================================================
+       FORWARD-LOOKING KPIs (MONTH PROJECTION)
+    ===================================================== */
+
+    // ---- Current equity level
+    const equityNow = endEquity;
+
+    // ---- Month boundaries (UTC)
+    const now = new Date();
+    const monthStartUTC = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      1, 0, 0, 0
+    );
+
+    // ---- Equity at month start
+    let equityMonthStart = null;
+
+    for (let i = 0; i < rows.length; i++) {
+      const ts = Date.parse(rows[i].snapshot_date);
+      if (ts >= monthStartUTC) {
+        equityMonthStart = Number(rows[i].equity_0pct_reinv);
+        break;
+      }
+    }
+
+    // fallback if dataset starts mid-month
+    if (!equityMonthStart) {
+      equityMonthStart = equityLevel[0];
+    }
+
+    // ---- Trendline value at month end
+    const trendMonthEnd = trend[trend.length - 1];
+
+    // ---- KPI calculations
+    const totalReturnPct = ((equityNow / startEquity) - 1) * 100;
+
+    const mtdReturnPct = ((equityNow / equityMonthStart) - 1) * 100;
+
+    // ---- Convert trend % → projected equity
+    const projectedEquityMonthEnd = startEquity * (1 + trendMonthEnd / 100);
+
+    // ---- Expected MTD (from month start → projected end)
+    const expectedMtdPct = (trendMonthEnd);
+
+    // ---- Remaining MTD
+    const remainingMtdPct = trendMonthEnd - totalReturnPct;
+
+    const remainingMtdUsd =
+      accountBalance && Number.isFinite(accountBalance)
+        ? accountBalance * (remainingMtdPct / 100)
+        : null;
+
+    const expectedEquityMonthEnd =
+      accountBalance && Number.isFinite(accountBalance)
+        ? accountBalance * (1 + remainingMtdPct / 100)
+        : null;
+
+    // ---- Best / Worst case (Upper / Lower channel bounds)
+    const upperMonthEnd = upper[upper.length - 1];
+    const lowerMonthEnd = lower[lower.length - 1];
+
+    const bestRemainingPct  = upperMonthEnd - totalReturnPct;
+    const worstRemainingPct = lowerMonthEnd - totalReturnPct;
+
+    const bestRemainingUsd =
+      accountBalance && Number.isFinite(accountBalance)
+        ? accountBalance * (bestRemainingPct / 100)
+        : null;
+
+    const worstRemainingUsd =
+      accountBalance && Number.isFinite(accountBalance)
+        ? accountBalance * (worstRemainingPct / 100)
+        : null;
+
+
+
+
+    // ---- UI updates
+    setText("kpi-total-return", fmtPct(totalReturnPct));
+
+    const mtdClass =
+      mtdReturnPct > 0 ? "text-success" :
+      mtdReturnPct < 0 ? "text-danger" :
+      "text-muted";
+
+    const mtdHtml = `
+      <span class="${mtdClass}">
+        ${fmtPctShort(mtdReturnPct)}
+      </span>
+    `;
+
+    document.getElementById("kpi-mtd-return").innerHTML = mtdHtml;
+
+    const expClass =
+      expectedMtdPct > 0 ? "text-success" :
+      expectedMtdPct < 0 ? "text-danger" :
+      "text-muted";
+
+    const expectedHtml = `
+      <span class="${expClass}">
+        ${fmtUSD(expectedEquityMonthEnd, false)}
+      </span>
+      <div class="text-muted small">
+        (${fmtUSD(remainingMtdUsd)})
+      </div>
+    `;
+
+    document.getElementById("kpi-mtd-expected").innerHTML = expectedHtml;
+
+    const remClass =
+      remainingMtdPct > 0 ? "text-success" :
+      remainingMtdPct < 0 ? "text-danger" :
+      "text-muted";
+
+    const remainingHtml = `
+      <span class="${remClass}">
+        ${fmtPctShort(remainingMtdPct)}
+      </span>
+    `;
+
+    document.getElementById("kpi-mtd-remaining").innerHTML = remainingHtml;
+
+    const bestClass =
+      bestRemainingPct > 0 ? "text-success" :
+      bestRemainingPct < 0 ? "text-danger" :
+      "text-muted";
+
+    const bestEndBalance =
+      accountBalance && Number.isFinite(bestRemainingUsd)
+        ? accountBalance + bestRemainingUsd
+        : null;
+
+    const bestHtml = `
+      <span class="${bestClass}">
+        ${fmtUSD(bestEndBalance, false)}
+      </span>
+      <div class="text-muted small">
+        (${fmtUSD(bestRemainingUsd)})
+      </div>
+    `;
+
+    document.getElementById("kpi-mtd-best").innerHTML = bestHtml;
+
+    const worstClass =
+      worstRemainingPct > 0 ? "text-success" :
+      worstRemainingPct < 0 ? "text-danger" :
+      "text-muted";
+
+    const worstEndBalance =
+      accountBalance && Number.isFinite(worstRemainingUsd)
+        ? accountBalance + worstRemainingUsd
+        : null;
+
+    const worstHtml = `
+      <span class="${worstClass}">
+        ${fmtUSD(worstEndBalance, false)}
+      </span>
+      <div class="text-muted small">
+        (${fmtUSD(worstRemainingUsd)})
+      </div>
+    `;
+
+    document.getElementById("kpi-mtd-worst").innerHTML = worstHtml;
+
 
     // --- Daily returns (log-safe)
     const dailyReturns = [];
@@ -494,7 +697,8 @@ gammaChart.render();
     }
 
     // ---- UI updates
-    setText("cmp-fund-ret", fmtPct(fundReturn));
+    // setText("cmp-fund-ret", fmtPct(fundReturn));
+    document.getElementById("cmp-fund-ret").innerHTML = fmtPctColored(fundReturn);
     setText("cmp-cagr", cagr !== null ? fmtPct(cagr * 100) : "—");
     setText("cmp-sortino", sortino !== null ? sortino.toFixed(2) : "—");
 
@@ -755,8 +959,6 @@ async function loadMarketChart() {
   const res = await fetch("/api/market/cumulative?start=2025-09-22");
   const data = await res.json();
 
-
-
   const COLORS = {
     BTC: "#f7931a",
     ETH: "#627eea",
@@ -772,8 +974,7 @@ async function loadMarketChart() {
     QQQ: "#6b7280",
     DXY: "#a78bfa",
     GOLD: "#facc15",
-    XAG: "#C0C0C0",
-
+    XAG: "#C0C0C0"
   };
 
   function legendHeader(label) {
@@ -796,12 +997,37 @@ async function loadMarketChart() {
     })),
 
     legendHeader("Macros"),
-    ...["SPY","QQQ","DXY","GOLD", "XAG"].filter(s => data[s]).map(sym => ({
+    ...["SPY","QQQ","DXY","GOLD","XAG"].filter(s => data[s]).map(sym => ({
       name: sym,
       data: data[sym],
       color: COLORS[sym]
     }))
   ];
+
+  /* ===============================
+     X-AXIS EXTENSION TO MONTH END
+  =============================== */
+
+  // Find FIRST and LAST dates across all series
+  let firstDate = null;
+  let lastDate = null;
+
+  Object.values(data).forEach(arr => {
+    if (!arr?.length) return;
+
+    const start = new Date(arr[0][0]);
+    const end   = new Date(arr[arr.length - 1][0]);
+
+    if (!firstDate || start < firstDate) firstDate = start;
+    if (!lastDate  || end   > lastDate)  lastDate  = end;
+  });
+
+  // End of month (UTC)
+  const endOfMonthUTC = new Date(Date.UTC(
+    lastDate.getUTCFullYear(),
+    lastDate.getUTCMonth() + 1,
+    0
+  ));
 
   const options = {
     chart: {
@@ -812,9 +1038,21 @@ async function loadMarketChart() {
     },
     stroke: { width: 2, curve: "smooth" },
     fill: { opacity: 0.25 },
-    xaxis: { type: "datetime" },
+    // xaxis: {
+    //   type: "datetime",
+    //   min: lastDate.getTime(),
+    //   max: endOfMonthUTC.getTime()
+    // },
+    xaxis: {
+      type: "datetime",
+      min: firstDate.getTime(),     // ✅ keep all data
+      max: endOfMonthUTC.getTime()  // ✅ extend to month end
+    },
     yaxis: {
-      title: { text: "Cumulative Return (%)", style: { color: "#aaa" } },
+      title: {
+        text: "Cumulative Market Return (%)",
+        style: { color: "#aaa" }
+      },
       labels: { formatter: v => `${v.toFixed(1)}%` }
     },
     tooltip: {
@@ -831,17 +1069,18 @@ async function loadMarketChart() {
       itemMargin: { horizontal: 10, vertical: 6 }
     },
     grid: { borderColor: "rgba(255,255,255,0.08)" },
-    dataLabels: { enabled: false }
+    dataLabels: { enabled: false },
+    series
   };
 
   const chart = new ApexCharts(
     document.querySelector("#market-chart"),
-    { ...options, series }
+    options
   );
 
   await chart.render();
 
-  // 👇 ONLY BTC visible at load
+  // 👇 Only BTC visible on load
   Object.keys(data).forEach(sym => {
     if (sym !== "BTC") chart.hideSeries(sym);
   });
