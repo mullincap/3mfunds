@@ -181,7 +181,7 @@ function alphaBadge(assetRet, fundRet) {
 gammaChart = new ApexCharts(
     document.querySelector("#gamma-ltv-chart"),
     {
-        chart: { height: 600, toolbar: { show: false } },
+        chart: { height: 800, toolbar: { show: false } },
         series: [],
         stroke: {
             width: [0,1,3,1,1],
@@ -1032,7 +1032,7 @@ async function loadMarketChart() {
   const options = {
     chart: {
       type: "area",
-      height: 500,
+      height: 600,
       toolbar: { show: false },
       zoom: { enabled: false }
     },

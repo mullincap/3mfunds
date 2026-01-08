@@ -340,37 +340,37 @@
 
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Curr Return</div>
+                    <div class="kpi-label"> Total Return</div>
                     <div class="kpi-value" id="cmp-fund-ret">—%</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Upper MTD</div>
+                    <div class="kpi-label"> Bullish EoM</div>
                     <div class="kpi-value"  id="kpi-mtd-best">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> MTD Return</div>
+                    <div class="kpi-label"> Return MTD </div>
                     <div class="kpi-value" id="kpi-mtd-return">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Exp. MTD</div>
+                    <div class="kpi-label"> Expected EoM</div>
                     <div class="kpi-value" id="kpi-mtd-expected">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> MTD Remaining </div>
+                    <div class="kpi-label"> Remaining MTD </div>
                     <div class="kpi-value" id="kpi-mtd-remaining">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Lower MTD</div>
+                    <div class="kpi-label"> Bearish EoM</div>
                     <div class="kpi-value"  id="kpi-mtd-worst">—</div>
                   </div>
                 </div>
@@ -383,8 +383,77 @@
             <div class="card-header">
               <div class="card-title"> Present <span class="title-subtext"> | Relative </span> </div>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
+            <div class="card-body comp-stats">
+
+                  <!-- FUND -->
+                  <div class="stat-row">
+                    <span>Total Days: </span>
+                    <span id="cmp-total-days">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Sharpe Ratio:</span>
+                    <span id="cmp-sharpe">—</span>
+                  </div>
+
+                  <div class="stat-row mb-3">
+                    <span>Max 24h Drawdown:</span>
+                    <span id="cmp-dd">—%</span>
+                  </div>
+
+                  <hr>
+
+                  <div class="stat-row">
+                    <span>Win Rate:</span>
+                    <span id="cmp-winrate">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Avg Day:</span>
+                    <span id="cmp-avg-day">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Avg Win:</span>
+                    <span id="cmp-avg-win">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Avg Loss:</span>
+                    <span id="cmp-avg-loss">—</span>
+                  </div>
+
+                  <hr>
+                  <!-- METRICS -->
+                  <div class="stat-row">
+                    <span>Sortino Ratio:</span>
+                    <span id="cmp-sortino">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Calmar Ratio:</span>
+                    <span id="cmp-calmar">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Profit Factor:</span>
+                    <span id="cmp-profit-factor">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Ulcer Index:</span>
+                    <span id="cmp-ulcer">—</span>
+                  </div>
+
+                  <div class="stat-row">
+                    <span>Omega Ratio:</span>
+                    <span id="cmp-omega">—</span>
+                  </div>
+
+                  <hr>
+
+                  <div class="row g-3">
+
                   <div class="col-6">
                     <div class="kpi-card">
                       <div class="kpi-label">Channel Position: </div>
@@ -415,22 +484,15 @@
 
                   <div class="col-6">
                     <div class="kpi-card">
-                      <div class="kpi-label">Upside to Upper:</div>
-                      <div class="kpi-value" id="kpi-upside">—</div>
-                    </div>
-                  </div>
-
-                  <div class="col-6">
-                    <div class="kpi-card">
-                      <div class="kpi-label">Downside to Lower:</div>
-                      <div class="kpi-value" id="kpi-downside">—</div>
-                    </div>
-                  </div>
-
-                  <div class="col-6">
-                    <div class="kpi-card">
-                      <div class="kpi-label">Deviation vs Trend:</div>
+                      <div class="kpi-label">Trend Deviation:</div>
                       <div class="kpi-value" id="kpi-deviation">—</div>
+                    </div>
+                  </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Upside:</div>
+                      <div class="kpi-value" id="kpi-upside">—</div>
                     </div>
                   </div>
 
@@ -440,6 +502,14 @@
                       <div class="kpi-value" id="kpi-zscore">—</div>
                     </div>
                   </div>
+
+                  <div class="col-6">
+                    <div class="kpi-card">
+                      <div class="kpi-label">Downside:</div>
+                      <div class="kpi-value" id="kpi-downside">—</div>
+                    </div>
+                  </div>
+
                 </div>
 
               </div>
@@ -459,23 +529,6 @@
               <button class="lev-btn" data-lev="1">Unlevered</button>
             </div> -->
 
-            <!-- FUND -->
-            <div class="stat-row">
-              <span>Total Days: </span>
-              <span id="cmp-total-days">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Sharpe Ratio:</span>
-              <span id="cmp-sharpe">—</span>
-            </div>
-
-            <div class="stat-row mb-3">
-              <span>Max 24h Drawdown:</span>
-              <span id="cmp-dd">—%</span>
-            </div>
-
-            <hr>
 
             <!-- CRYPTO -->
             <div class="stat-row">
@@ -561,57 +614,7 @@
               <span id="cmp-xag-ret">—%</span>
             </div>
 
-            <hr>
-
-            <div class="stat-row">
-              <span>Win Rate:</span>
-              <span id="cmp-winrate">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Avg Day:</span>
-              <span id="cmp-avg-day">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Avg Win:</span>
-              <span id="cmp-avg-win">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Avg Loss:</span>
-              <span id="cmp-avg-loss">—</span>
-            </div>
-
-            <hr>
-            <!-- METRICS -->
-            <div class="stat-row">
-              <span>Sortino Ratio:</span>
-              <span id="cmp-sortino">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Calmar Ratio:</span>
-              <span id="cmp-calmar">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Profit Factor:</span>
-              <span id="cmp-profit-factor">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Ulcer Index:</span>
-              <span id="cmp-ulcer">—</span>
-            </div>
-
-            <div class="stat-row">
-              <span>Omega Ratio:</span>
-              <span id="cmp-omega">—</span>
-            </div>
           </div>
-
-          <hr>
 
           <!-- ===== KPI GRID ===== -->
 
