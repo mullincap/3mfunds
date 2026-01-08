@@ -807,9 +807,7 @@ async function loadPositions() {
 
       tbody.insertAdjacentHTML("beforeend", `
       <tr>
-        <td><strong>${p.instId}</strong></td>
-
-        <td>${p.leverage}×</td>
+        <td><strong>${p.instId}</strong></td>        
 
         <td>$${Number(p.averagePrice).toFixed(5)}</td>
 
