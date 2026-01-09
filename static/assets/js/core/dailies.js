@@ -175,6 +175,21 @@ function alphaBadge(assetRet, fundRet) {
   `;
 }
 
+function fmtUSDCompact(value, signed = false) {
+  if (!Number.isFinite(value)) return "—";
+
+  const abs = Math.abs(value);
+  const sign = signed && value > 0 ? "+" : "";
+
+  if (abs >= 1_000_000) {
+    return `${sign}$${(abs / 1_000_000).toFixed(2)}m`;
+  }
+  if (abs >= 1_000) {
+    return `${sign}$${(abs / 1_000).toFixed(1)}k`;
+  }
+  return `${sign}$${abs.toFixed(2)}`;
+}
+
 /* ================================
    ApexCharts init
 ================================ */
@@ -454,13 +469,17 @@ gammaChart.render();
       "text-muted";
 
     const expectedHtml = `
-      <span class="${expClass}">
-        ${fmtUSD(expectedEquityMonthEnd, false)}
-      </span>
-      <div class="text-muted small">
-        (${fmtUSD(remainingMtdUsd)})
+      <div class="kpi-inline">
+        <span class="${expClass}">
+          ${fmtUSD(expectedEquityMonthEnd, false)}
+        </span>
+        <span class="kpi-delta">
+          (${fmtUSDCompact(remainingMtdUsd, true)})
+        </span>
       </div>
     `;
+
+      document.getElementById("kpi-mtd-expected").innerHTML = expectedHtml;
 
     document.getElementById("kpi-mtd-expected").innerHTML = expectedHtml;
 
@@ -488,11 +507,13 @@ gammaChart.render();
         : null;
 
     const bestHtml = `
-      <span class="${bestClass}">
-        ${fmtUSD(bestEndBalance, false)}
-      </span>
-      <div class="text-muted small">
-        (${fmtUSD(bestRemainingUsd)})
+      <div class="kpi-inline">
+        <span class="${bestClass}">
+          ${fmtUSD(bestEndBalance, false)}
+        </span>
+        <span class="kpi-delta">
+          (${fmtUSDCompact(bestRemainingUsd, true)})
+        </span>
       </div>
     `;
 
@@ -509,11 +530,13 @@ gammaChart.render();
         : null;
 
     const worstHtml = `
-      <span class="${worstClass}">
-        ${fmtUSD(worstEndBalance, false)}
-      </span>
-      <div class="text-muted small">
-        (${fmtUSD(worstRemainingUsd)})
+      <div class="kpi-inline">
+        <span class="${worstClass}">
+          ${fmtUSD(worstEndBalance, false)}
+        </span>
+        <span class="kpi-delta">
+          (${fmtUSDCompact(worstRemainingUsd, true)})
+        </span>
       </div>
     `;
 

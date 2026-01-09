@@ -270,6 +270,20 @@
     font-size: 12px;
   }
 
+  /* Inline KPI value + delta */
+  .kpi-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .kpi-inline .kpi-delta {
+    font-size: 11px;
+    color: #9ca3af;
+    white-space: nowrap;
+  }
+
 
 </style>
 
@@ -340,37 +354,37 @@
 
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Total Return</div>
+                    <div class="kpi-label"> Total Return: </div>
                     <div class="kpi-value" id="cmp-fund-ret">—%</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Bullish EoM</div>
+                    <div class="kpi-label"> Bull EOM: </div>
                     <div class="kpi-value"  id="kpi-mtd-best">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Return MTD </div>
+                    <div class="kpi-label"> Return MTD: </div>
                     <div class="kpi-value" id="kpi-mtd-return">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Expected EoM</div>
+                    <div class="kpi-label"> Base EOM: </div>
                     <div class="kpi-value" id="kpi-mtd-expected">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Remaining MTD </div>
+                    <div class="kpi-label"> Remaining MTD: </div>
                     <div class="kpi-value" id="kpi-mtd-remaining">—</div>
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="kpi-card">
-                    <div class="kpi-label"> Bearish EoM</div>
+                    <div class="kpi-label"> Bear EOM: </div>
                     <div class="kpi-value"  id="kpi-mtd-worst">—</div>
                   </div>
                 </div>
