@@ -19,7 +19,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-withdrawals = 3400
+withdrawals = 3700
 # ============ HELPERS ==========================================
 
 
