@@ -222,7 +222,7 @@ window.loadMainChart = function(days) {
                             },
 
                             yaxis: {
-                                min: 17000,
+                                min: 15000,
                                 max: max => max * 1.3,
                                 labels: {
                                     formatter: v => "$" + Math.round(v).toLocaleString(),
